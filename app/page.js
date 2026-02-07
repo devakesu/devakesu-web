@@ -85,42 +85,6 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
-  // Scroll reveal effect
-  useEffect(() => {
-    const revealElements = document.querySelectorAll('.reveal');
-
-    const revealOnScroll = () => {
-      revealElements.forEach((el) => {
-        const elementTop = el.getBoundingClientRect().top;
-        const windowHeight = window.innerHeight;
-
-        if (elementTop < windowHeight - 100) {
-          el.classList.add('visible');
-        }
-      });
-    };
-
-    revealOnScroll(); // Initial check
-
-    // Throttle scroll event for better performance
-    let scrollTimeout;
-    const throttledScroll = () => {
-      if (!scrollTimeout) {
-        scrollTimeout = setTimeout(() => {
-          revealOnScroll();
-          scrollTimeout = null;
-        }, 100);
-      }
-    };
-
-    window.addEventListener('scroll', throttledScroll, { passive: true });
-
-    return () => {
-      window.removeEventListener('scroll', throttledScroll);
-      if (scrollTimeout) clearTimeout(scrollTimeout);
-    };
-  }, []);
-
   const mindMapContent = {
     tech: {
       title: 'TECH_STACK',
@@ -146,6 +110,13 @@ export default function Home() {
       title: 'CONNECT',
       content: '',
     },
+  };
+
+  const handlePanelKeyDown = (event, nodeId) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      setActiveNode(activeNode === nodeId ? null : nodeId);
+    }
   };
 
   return (
@@ -434,7 +405,7 @@ export default function Home() {
               <span className="text-xs uppercase tracking-wider">STATUS</span>
             </div>
             <div className="panel-body">
-              <div className="text-4xl mb-2">🗃️</div>
+              <div className="text-4xl mb-2" aria-hidden="true">🗃️</div>
               <p className="text-sm font-bold text-cyan-400 uppercase tracking-wide">
                 Select a module
               </p>
@@ -444,7 +415,10 @@ export default function Home() {
           {/* IDEAS PANEL */}
           <div
             className={`terminal-panel ${activeNode === 'ideas' ? 'panel-active' : ''}`}
+            role="button"
+            tabIndex={0}
             onClick={() => setActiveNode(activeNode === 'ideas' ? null : 'ideas')}
+            onKeyDown={(e) => handlePanelKeyDown(e, 'ideas')}
           >
             <div className="panel-header">
               <div className="flex items-center gap-2">
@@ -455,7 +429,7 @@ export default function Home() {
               <span className="text-xs uppercase tracking-wider">CORE_VALUES</span>
             </div>
             <div className="panel-body">
-              <div className="text-4xl mb-2">🧠</div>
+              <div className="text-4xl mb-2" aria-hidden="true">🧠</div>
               <p className="text-sm text-neutral-400">Philosophy & Ethics</p>
             </div>
             {activeNode === 'ideas' && (
@@ -470,7 +444,10 @@ export default function Home() {
           {/* TECH PANEL */}
           <div
             className={`terminal-panel ${activeNode === 'tech' ? 'panel-active' : ''}`}
+            role="button"
+            tabIndex={0}
             onClick={() => setActiveNode(activeNode === 'tech' ? null : 'tech')}
+            onKeyDown={(e) => handlePanelKeyDown(e, 'tech')}
           >
             <div className="panel-header">
               <div className="flex items-center gap-2">
@@ -481,7 +458,7 @@ export default function Home() {
               <span className="text-xs uppercase tracking-wider">TECH_STACK</span>
             </div>
             <div className="panel-body">
-              <div className="text-4xl mb-2">⚡</div>
+              <div className="text-4xl mb-2" aria-hidden="true">⚡</div>
               <p className="text-sm text-neutral-400">Systems & Code</p>
             </div>
             {activeNode === 'tech' && (
@@ -496,7 +473,10 @@ export default function Home() {
           {/* ARSENAL PANEL */}
           <div
             className={`terminal-panel ${activeNode === 'projects' ? 'panel-active' : ''}`}
+            role="button"
+            tabIndex={0}
             onClick={() => setActiveNode(activeNode === 'projects' ? null : 'projects')}
+            onKeyDown={(e) => handlePanelKeyDown(e, 'projects')}
           >
             <div className="panel-header">
               <div className="flex items-center gap-2">
@@ -507,7 +487,7 @@ export default function Home() {
               <span className="text-xs uppercase tracking-wider">THE_ARSENAL</span>
             </div>
             <div className="panel-body">
-              <div className="text-4xl mb-2">⚙️</div>
+              <div className="text-4xl mb-2" aria-hidden="true">⚙️</div>
               <p className="text-sm text-neutral-400">Tools & Environment</p>
             </div>
             {activeNode === 'projects' && (
@@ -530,7 +510,10 @@ export default function Home() {
           {/* FUTURE PANEL */}
           <div
             className={`terminal-panel ${activeNode === 'dreams' ? 'panel-active' : ''}`}
+            role="button"
+            tabIndex={0}
             onClick={() => setActiveNode(activeNode === 'dreams' ? null : 'dreams')}
+            onKeyDown={(e) => handlePanelKeyDown(e, 'dreams')}
           >
             <div className="panel-header">
               <div className="flex items-center gap-2">
@@ -541,7 +524,7 @@ export default function Home() {
               <span className="text-xs uppercase tracking-wider">FUTURE_STATE</span>
             </div>
             <div className="panel-body">
-              <div className="text-4xl mb-2">🚀</div>
+              <div className="text-4xl mb-2" aria-hidden="true">🚀</div>
               <p className="text-sm text-neutral-400">Vision & Dreams</p>
             </div>
             {activeNode === 'dreams' && (
@@ -556,7 +539,10 @@ export default function Home() {
           {/* CONTACT PANEL */}
           <div
             className={`terminal-panel ${activeNode === 'contact' ? 'panel-active' : ''}`}
+            role="button"
+            tabIndex={0}
             onClick={() => setActiveNode(activeNode === 'contact' ? null : 'contact')}
+            onKeyDown={(e) => handlePanelKeyDown(e, 'contact')}
           >
             <div className="panel-header">
               <div className="flex items-center gap-2">
@@ -567,7 +553,7 @@ export default function Home() {
               <span className="text-xs uppercase tracking-wider">CONNECT</span>
             </div>
             <div className="panel-body">
-              <div className="text-4xl mb-2">📡</div>
+              <div className="text-4xl mb-2" aria-hidden="true">📡</div>
               <p className="text-sm text-neutral-400">Communication Channels</p>
             </div>
             {activeNode === 'contact' && (

@@ -31,7 +31,7 @@ jobs:
 
       # 🔍 TRIVY: Scan for known vulnerabilities in dependencies
       - name: Run Trivy Vulnerability Scanner
-        uses: aquasecurity/trivy-action@master # Latest stable version
+        uses: aquasecurity/trivy-action@0.28.0 # Pinned version
         with:
           scan-type: 'fs'
           ignore-unfixed: true
@@ -85,14 +85,14 @@ jobs:
       - name: Generate SBOM
         uses: anchore/sbom-action@v0
         with:
-          path: ./dist
+          path: ./.next
           format: spdx-json
-          output-file: ./dist/sbom.spdx.json
+          output-file: ./.next/sbom.spdx.json
 
       # 🗜️ ZIP ARTIFACT (Required for hashing folders correctly)
       - name: Zip Build Output
         run: |
-          cd dist
+          cd .next
           zip -r ../site_artifact.zip ./*
 
       # 🔑 CALCULATE HASH (For Provenance)
@@ -144,4 +144,8 @@ jobs:
           curl -X POST \
             "$COOLIFY_BASE_URL/api/v1/deploy?uuid=$COOLIFY_APP_ID" \
             -H "Authorization: Bearer $COOLIFY_API_TOKEN" \
-            -H "Content-Type: application/json"
+            -H "Content-Type: application/json" \
+            --fail-with-body \
+            --retry 3 \
+            --retry-delay 5 \
+            --max-time 30

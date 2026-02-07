@@ -2,6 +2,9 @@
   "name": "devakesu-web",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=20.9.0"
+  },
   "scripts": {
     "dev": "next dev --turbopack",
     "dev:https": "next dev --turbopack --experimental-https",
@@ -17,6 +20,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "4.1.18",
     "autoprefixer": "^10.4.24",
     "eslint": "^10",
     "eslint-config-next": "16.1.6",

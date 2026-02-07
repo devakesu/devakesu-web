@@ -33,8 +33,8 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline'", // Next.js requires unsafe-inline for hydration
-              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com", // Tailwind + Google Fonts
+              "script-src 'self'",
+              "style-src 'self' https://fonts.googleapis.com", // Tailwind + Google Fonts
               "font-src 'self' https://fonts.gstatic.com data:",
               "img-src 'self' data: https: blob:",
               "connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com",
@@ -55,12 +55,12 @@ const nextConfig = {
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
+            value: 'public, max-age=3600',
           },
         ],
       },
       {
-        source: '/:all*(svg|jpg|jpeg|png|webp|avif|ico)',
+        source: '/:all*.(svg|jpg|jpeg|png|webp|avif|ico)',
         headers: [
           {
             key: 'Cache-Control',
