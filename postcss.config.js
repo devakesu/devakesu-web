@@ -1,7 +1,6 @@
-// ✅ Tailwind v3 PostCSS config  -  NO @tailwindcss/postcss!
+// ✅ Tailwind v4 PostCSS config using @tailwindcss/postcss
 module.exports = {
   plugins: {
-    tailwindcss: {},
-    autoprefixer: {},
+    '@tailwindcss/postcss': {},
   },
 };

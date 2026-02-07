@@ -6,9 +6,9 @@
 [![Security Scan: Trivy](https://img.shields.io/badge/Security-Trivy%20Scanned-blue)](.github/workflows/deploy.yml)
 [![Build Status](https://img.shields.io/badge/Build-Passing-success)](.github/workflows/deploy.yml)
 
-[![Next.js](https://img.shields.io/badge/Next.js-15.5.12-black?logo=next.js)](https://nextjs.org)
-[![React](https://img.shields.io/badge/React-19.0-61DAFB?logo=react&logoColor=white)](https://react.dev)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4.18-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
+[![Next.js](https://img.shields.io/badge/Next.js-16.1.6-black?logo=next.js)](https://nextjs.org)
+[![React](https://img.shields.io/badge/React-19.2-61DAFB?logo=react&logoColor=white)](https://react.dev)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.1.18-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
 [![Node.js](https://img.shields.io/badge/Node.js-20.x-339933?logo=node.js&logoColor=white)](https://nodejs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 
@@ -53,8 +53,8 @@
 
 ## 🛠️ Tech Stack
 
-- **Framework**: Next.js 15.5.12 (App Router)
-- **Styling**: Tailwind CSS 3.4.18
+- **Framework**: Next.js 16.1.6 (App Router)
+- **Styling**: Tailwind CSS 4.1.18
 - **Fonts**: Space Grotesk, JetBrains Mono
 - **Icons**: React Icons 5.5.0
 - **Deployment**: Coolify (Self-hosted)
