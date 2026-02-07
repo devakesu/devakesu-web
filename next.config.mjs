@@ -55,6 +55,8 @@ const nextConfig = {
         headers: [
           {
             key: 'Cache-Control',
+            // Reduced from 1 year to 1 hour because JS files are not content-hashed
+            // and browsers need to pick up updates without waiting for cache expiration
             value: 'public, max-age=3600',
           },
         ],
