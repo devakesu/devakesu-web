@@ -1,0 +1,44 @@
+// === PARALLAX BACKGROUND MOTION ===
+
+(function () {
+  'use strict';
+
+  if (typeof window === 'undefined') return;
+
+  try {
+    const parallaxLayers = document.querySelectorAll('.parallax-layer');
+    if (parallaxLayers.length === 0) return;
+
+    // Add will-change for better performance
+    parallaxLayers.forEach((layer) => {
+      layer.style.willChange = 'transform';
+    });
+
+    // Throttle mousemove with requestAnimationFrame
+    let ticking = false;
+    let lastX = 0;
+    let lastY = 0;
+
+    document.addEventListener(
+      'mousemove',
+      (e) => {
+        lastX = (e.clientX / window.innerWidth - 0.5) * 2;
+        lastY = (e.clientY / window.innerHeight - 0.5) * 2;
+
+        if (!ticking) {
+          window.requestAnimationFrame(() => {
+            parallaxLayers.forEach((layer, i) => {
+              const depth = parseFloat(layer.getAttribute('data-depth')) || (i + 1) * 0.02;
+              layer.style.transform = `translate3d(${lastX * depth * -30}px, ${lastY * depth * -30}px, 0)`;
+            });
+            ticking = false;
+          });
+          ticking = true;
+        }
+      },
+      { passive: true }
+    );
+  } catch (error) {
+    // Silently fail if there are issues
+  }
+})();
