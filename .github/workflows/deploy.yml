@@ -85,6 +85,9 @@ jobs:
   build-push-sign:
     name: 🏗️ Build, Push & Sign
     needs: audit
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -223,6 +226,9 @@ jobs:
   deploy:
     name: 🚀 Deploy to Coolify
     needs: build-push-sign
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     permissions: {}
     steps:
