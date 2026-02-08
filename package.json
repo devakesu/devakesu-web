@@ -20,7 +20,6 @@
     "react-icons": "5.5.0"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "3.3.3",
     "@tailwindcss/postcss": "4.1.18",
     "autoprefixer": "10.4.24",
     "eslint": "^9.17.0",
