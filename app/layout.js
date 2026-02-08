@@ -166,7 +166,6 @@ export const metadata = {
 
   // Icons & Manifest
   icons: {
-    icon: [{ url: '/favicon.svg', type: 'image/svg+xml' }],
     apple: [{ url: '/profile.jpg', sizes: '180x180', type: 'image/jpeg' }],
   },
 
