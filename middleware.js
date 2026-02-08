@@ -19,8 +19,8 @@ export function middleware(request) {
   });
 
   // Build CSP with nonce - add WebSocket support for development
-  const connectSrc = "connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com" + 
-    (process.env.NODE_ENV !== 'production' ? ' ws: wss:' : '');
+  const wsPolicy = process.env.NODE_ENV !== 'production' ? ' ws: wss:' : '';
+  const connectSrc = `connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com${wsPolicy}`;
   
   const cspHeader = [
     "default-src 'self'",
@@ -52,11 +52,13 @@ export const config = {
      * - api/ (API routes)
      * - _next/static/ (static files from Next.js)
      * - _next/image/ (image optimization files)
-     * - favicon files
-     * - Static files from /public directory (js/, *.svg, *.jpg, *.jpeg, *.png, *.gif, *.webp)
+     * - favicon files (favicon.ico, favicon.svg, etc.)
+     * - js/ (static JavaScript files in /public/js/)
+     * - Static assets ending with: .svg, .jpg, .jpeg, .png, .gif, .webp
      * 
-     * This excludes static assets from middleware processing to reduce overhead
-     * on cacheable resources that don't need CSP nonce injection.
+     * This excludes static assets from middleware processing to reduce overhead.
+     * Note: In Next.js, only static files from /public have file extensions in URLs.
+     * Page routes and API routes are pathname-based and don't use file extensions.
      */
     {
       source: '/((?!api/|_next/static/|_next/image/|favicon\\.|js/|.*\\.(?:svg|jpg|jpeg|png|gif|webp)$).*)',
