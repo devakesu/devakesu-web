@@ -1,7 +1,7 @@
-// middleware.js
+// proxy.js
 import { NextResponse } from 'next/server';
 
-export function middleware(request) {
+export function proxy(request) {
   // Generate a random nonce for each request with proper entropy (192 bits)
   const nonceArray = new Uint8Array(24);
   crypto.getRandomValues(nonceArray);

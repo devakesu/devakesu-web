@@ -1,6 +1,6 @@
 {
   "name": "devakesu-web",
-  "version": "0.1.0",
+  "version": "1.0.1",
   "private": true,
   "engines": {
     "node": ">=20.9.0"
@@ -11,7 +11,7 @@
     "prebuild": "node scripts/generate-meta.js",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "eslint ."
   },
   "dependencies": {
     "next": "16.1.6",
@@ -23,7 +23,7 @@
     "@eslint/eslintrc": "3.3.3",
     "@tailwindcss/postcss": "4.1.18",
     "autoprefixer": "10.4.24",
-    "eslint": "10.0.0",
+    "eslint": "^9.17.0",
     "eslint-config-next": "16.1.6",
     "postcss": "8.5.6",
     "tailwindcss": "4.1.18"
