@@ -74,18 +74,19 @@ export default function Home() {
     };
   }, []);
 
-  // Update time every second for UTC+5:30
+  // Update time every second for UTC+5:30 (IST)
   useEffect(() => {
     const updateTime = () => {
-      const now = new Date();
-      const utcOffset = 5.5 * 60 * 60 * 1000; // UTC+5:30 in milliseconds
-      const istTime = new Date(now.getTime() + utcOffset);
+      const formatter = new Intl.DateTimeFormat('en-GB', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+        timeZone: 'Asia/Kolkata',
+      });
 
-      const hours = String(istTime.getUTCHours()).padStart(2, '0');
-      const minutes = String(istTime.getUTCMinutes()).padStart(2, '0');
-      const seconds = String(istTime.getUTCSeconds()).padStart(2, '0');
-
-      setCurrentTime(`${hours}:${minutes}:${seconds}`);
+      const formattedTime = formatter.format(new Date());
+      setCurrentTime(formattedTime);
     };
 
     updateTime(); // Initial call
