@@ -31,7 +31,8 @@ COPY package.json package-lock.json ./
 RUN npm ci \
     --no-audit \
     --no-fund \
-    --prefer-offline
+    --prefer-offline \
+    --ignore-scripts
 
 # ===============================
 # 2. Build layer
