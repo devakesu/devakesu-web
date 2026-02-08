@@ -52,7 +52,8 @@
       },
       { passive: true }
     );
-  } catch {
+  } catch (error) {
     // Silently fail if there are issues
+    void error; // Mark error as intentionally unused
   }
 })();
