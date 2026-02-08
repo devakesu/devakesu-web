@@ -29,8 +29,8 @@
     document.addEventListener("mousemove", (e) => {
       if (!ticking) {
         window.requestAnimationFrame(() => {
-          glow.style.left = `${e.clientX}px`;
-          glow.style.top = `${e.clientY}px`;
+          // Compose transform with the CSS centering offset (-50%, -50%)
+          glow.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0) translate(-50%, -50%)`;
           ticking = false;
         });
         ticking = true;
