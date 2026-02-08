@@ -28,9 +28,7 @@ ENV APP_COMMIT_SHA=${APP_COMMIT_SHA}
 COPY package.json package-lock.json ./
 
 # Use npm ci for clean install
-RUN npm install -g npm@latest && \
-    npm ci \
-    --ignore-scripts \
+RUN npm ci \
     --no-audit \
     --no-fund \
     --prefer-offline
@@ -39,7 +37,6 @@ RUN npm install -g npm@latest && \
 # 2. Build layer
 # ===============================
 FROM ${NODE_IMAGE} AS builder
-RUN npm install -g npm@latest
 
 ARG SOURCE_DATE_EPOCH
 ARG APP_COMMIT_SHA

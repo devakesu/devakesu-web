@@ -12,9 +12,6 @@ on:
 # 🔒 LOCK DOWN PERMISSIONS (Least Privilege)
 permissions:
   contents: read
-  id-token: write # Required for Sigstore signing
-  actions: read
-  packages: write # Required for GHCR push
 
 jobs:
   # ------------------------------------------------------------------
@@ -23,6 +20,8 @@ jobs:
   guard:
     name: 🛡️ Build Guard
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
@@ -40,6 +39,8 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     name: 🛡️ Security Audit
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       # 🛡️ HARDEN RUNNER: Monitor network traffic
       - name: Harden Runner
@@ -67,6 +68,10 @@ jobs:
     name: 🏗️ Build, Push & Sign
     needs: audit
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # Required for Sigstore signing
+      packages: write # Required for GHCR push
     outputs:
       digest: ${{ steps.build.outputs.digest }}
       image: ${{ steps.image.outputs.image }}
@@ -126,7 +131,7 @@ jobs:
 
       # Install cosign
       - name: Install cosign
-        uses: sigstore/cosign-installer@v3
+        uses: sigstore/cosign-installer@6e04d228eb30da1757ee4e1dd75a0ec73a653e06 # v3.7.0
 
       # 📦 GENERATE SBOM
       - name: Generate SBOM
@@ -201,6 +206,8 @@ jobs:
     name: 🚀 Deploy to Coolify
     needs: build-push-sign
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Trigger Coolify Deploy
         env:
@@ -208,6 +215,6 @@ jobs:
           COOLIFY_APP_ID: ${{ secrets.COOLIFY_APP_ID }}
           COOLIFY_API_TOKEN: ${{ secrets.COOLIFY_API_TOKEN }}
         run: |
-          curl \
+          curl --fail --show-error --retry 3 --retry-delay 5 -X POST \
             "$COOLIFY_BASE_URL/api/v1/deploy?uuid=$COOLIFY_APP_ID" \
             -H "Authorization: Bearer $COOLIFY_API_TOKEN"
