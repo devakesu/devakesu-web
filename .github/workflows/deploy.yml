@@ -118,7 +118,7 @@ jobs:
       id-token: write
       contents: write
     # We use the generic generator for static assets
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@5c9e58c4c4e2d8e5c0c1d9e7b7d4c5f9d2e1a0b3 # v2.0.0
     with:
       base64-subjects: '${{ needs.build.outputs.hashes }}'
       upload-assets: true
