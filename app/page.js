@@ -49,27 +49,40 @@ export default function Home() {
   // Fetch Build Metadata
   useEffect(() => {
     let timeoutId;
+    let isMounted = true;
+    const controller = new AbortController();
     
-    fetch('/meta.json')
+    fetch('/meta.json', { signal: controller.signal })
       .then((res) => res.json())
       .then((data) => {
-        setMeta(data);
-        timeoutId = setTimeout(() => setBooting(false), 800);
+        if (isMounted) {
+          setMeta(data);
+          timeoutId = setTimeout(() => {
+            if (isMounted) setBooting(false);
+          }, 800);
+        }
       })
-      .catch(() => {
+      .catch((error) => {
+        // Ignore abort errors (happens when component unmounts)
+        if (error.name === 'AbortError' || !isMounted) return;
+        
         // Fallback if fetch fails (local dev mode)
-        setMeta({
-          build_id: 'DEV_MODE',
-          commit_sha: 'HEAD',
-          branch: 'main',
-          timestamp: new Date().toISOString(),
-          audit_status: 'SKIPPED',
-          signature_status: 'UNSIGNED',
-        });
-        setBooting(false);
+        if (isMounted) {
+          setMeta({
+            build_id: 'DEV_MODE',
+            commit_sha: 'HEAD',
+            branch: 'main',
+            timestamp: new Date().toISOString(),
+            audit_status: 'SKIPPED',
+            signature_status: 'UNSIGNED',
+          });
+          setBooting(false);
+        }
       });
     
     return () => {
+      isMounted = false;
+      controller.abort();
       if (timeoutId) clearTimeout(timeoutId);
     };
   }, []);

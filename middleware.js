@@ -24,7 +24,7 @@ export function middleware(request) {
   
   const cspDirectives = [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`,
+    `script-src 'self' 'nonce-${nonce}'`,
     `style-src 'self' 'nonce-${nonce}' 'unsafe-inline' https://fonts.googleapis.com`,
     "font-src 'self' https://fonts.gstatic.com data:",
     "img-src 'self' data: blob: https://grainy-gradients.vercel.app",
@@ -66,12 +66,6 @@ export const config = {
      * Note: In Next.js, only static files from /public have file extensions in URLs.
      * Page routes and API routes are pathname-based and don't use file extensions.
      */
-    {
-      source: '/((?!api/|_next/static/|_next/image/|favicon\\.|js/|.*\\.(?:svg|jpg|jpeg|png|gif|webp|ico|avif|json)$).*)',
-      missing: [
-        { type: 'header', key: 'next-router-prefetch' },
-        { type: 'header', key: 'purpose', value: 'prefetch' },
-      ],
-    },
+    '/((?!api/|_next/static/|_next/image/|favicon\\.|js/|.*\\.(?:svg|jpg|jpeg|png|gif|webp|ico|avif|json)$).*)',
   ],
 };

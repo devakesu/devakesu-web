@@ -186,9 +186,9 @@ export const metadata = {
 export default async function RootLayout({ children }) {
   // Note: Reading headers() makes this layout render dynamically (disables static optimization).
   // This is an intentional tradeoff for security: per-request nonces in CSP provide strong
-  // XSS protection via 'strict-dynamic'. The nonce is required for inline scripts loaded
-  // via Next.js Script component with our CSP policy.
-  const nonce = (await headers()).get('x-nonce');
+  // XSS protection. The nonce is required for inline scripts loaded via Next.js Script component.
+  const headersList = await headers();
+  const nonce = headersList.get('x-nonce') || undefined;
   
   return (
     <html lang="en" className={`${jetbrainsMono.variable} ${spaceGrotesk.variable}`}>
