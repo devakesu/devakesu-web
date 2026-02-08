@@ -48,7 +48,7 @@ const nextConfig = {
       // in typical public/ paths. They explicitly avoid matching /_next/ routes
       // to preserve Next.js's default immutable caching for hashed build assets.
       {
-        source: '/:path((?!_next).)*.:ext(svg|jpg|jpeg|png|webp|avif|ico)',
+        source: '/:path((?!_next/).*)*\\.:ext(svg|jpg|jpeg|png|webp|avif|ico)',
         headers: [
           {
             key: 'Cache-Control',
