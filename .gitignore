@@ -20,6 +20,9 @@
 # production
 /build
 
+# Build-time generated files
+/public/meta.json
+
 # misc
 .DS_Store
 *.pem

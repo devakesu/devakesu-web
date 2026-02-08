@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "dev:https": "next dev --turbopack --experimental-https",
+    "prebuild": "node scripts/generate-meta.js",
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint"

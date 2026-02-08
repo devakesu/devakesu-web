@@ -22,7 +22,7 @@ export default function Home() {
   const [meta, setMeta] = useState(null);
   const [booting, setBooting] = useState(true);
 
-  // Calculate Real Age (Uptime)
+  // Approximate uptime in years based on birth year
   const birthYear = 2006;
   const uptime = new Date().getFullYear() - birthYear;
 
