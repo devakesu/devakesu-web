@@ -33,7 +33,7 @@ const buildId = process.env.GITHUB_RUN_NUMBER ||
                 process.env.BUILD_ID || 
                 (isCI ? 'CI_BUILD' : 'LOCAL_BUILD');
 
-const commitSha = (process.env.GITHUB_SHA || gitCommand('git rev-parse HEAD', 'unknown')).substring(0, 7);
+const commitSha = (process.env.GITHUB_SHA || gitCommand('git rev-parse HEAD', 'unknown')).slice(0, 7);
 
 const branch = process.env.GITHUB_REF 
   ? process.env.GITHUB_REF.replace('refs/heads/', '')
@@ -42,10 +42,10 @@ const branch = process.env.GITHUB_REF
 const timestamp = new Date().toISOString();
 
 const auditStatus = process.env.AUDIT_STATUS || 
-                   (isCI ? 'PASSED' : 'SKIPPED (dev)');
+                   (isCI ? 'NOT_RUN' : 'SKIPPED (dev)');
 
 const signatureStatus = process.env.SIGNATURE_STATUS || 
-                       (isCI ? 'VERIFIED' : 'UNSIGNED (dev)');
+                       (isCI ? 'NOT_VERIFIED' : 'UNSIGNED (dev)');
 
 // Create metadata object
 const meta = {
