@@ -1,0 +1,155 @@
+name: Secure Build & Deploy
+
+on:
+  push:
+    branches: ['main']
+  workflow_dispatch:
+
+# 🔒 LOCK DOWN PERMISSIONS (Least Privilege)
+permissions:
+  contents: read
+  id-token: write # Required for Sigstore signing
+  actions: read
+
+jobs:
+  # ------------------------------------------------------------------
+  # JOB 1: SECURITY AUDIT (SAST + SCA)
+  # ------------------------------------------------------------------
+  audit:
+    name: 🛡️ Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      # 🛡️ HARDEN RUNNER: Monitor network traffic
+      - name: Harden Runner
+        uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142 # v2.7.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout Code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      # 🔍 TRIVY: Scan for known vulnerabilities in dependencies
+      - name: Run Trivy Vulnerability Scanner
+        uses: aquasecurity/trivy-action@915b19bbe73b92a6cf82a1bc12b087c9a19a5fe2 # v0.28.0
+        with:
+          scan-type: 'fs'
+          ignore-unfixed: true
+          format: 'table'
+          exit-code: '1'
+          severity: 'CRITICAL,HIGH'
+
+  # ------------------------------------------------------------------
+  # JOB 2: BUILD, SBOM & METADATA INJECTION
+  #
+  # This job builds the site and generates SLSA provenance for audit
+  # purposes. The actual deployment is handled by Coolify (Job 4),
+  # which builds from source and generates meta.json via prebuild script.
+  # ------------------------------------------------------------------
+  build:
+    name: 🏗️ Build & Sign
+    needs: audit
+    runs-on: ubuntu-latest
+    outputs:
+      hashes: ${{ steps.hash.outputs.hashes }}
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142 # v2.7.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout Code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
+        with:
+          node-version: 20
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build Project
+        env:
+          AUDIT_STATUS: 'PASSED (Trivy)'
+          SIGNATURE_STATUS: 'SLSA_PROVENANCE_GENERATED'
+        run: npm run build
+
+      # 📦 CREATE SBOM (Software Bill of Materials)
+      - name: Generate SBOM for .next
+        uses: anchore/sbom-action@f325610c9f50a54015d37c8d16cb3b0e2c8f4de0 # v0.18.0
+        with:
+          path: ./.next
+          format: spdx-json
+          output-file: ./sbom-next.spdx.json
+
+      - name: Generate SBOM for public
+        uses: anchore/sbom-action@f325610c9f50a54015d37c8d16cb3b0e2c8f4de0 # v0.18.0
+        with:
+          path: ./public
+          format: spdx-json
+          output-file: ./sbom-public.spdx.json
+
+      # 🗜️ ZIP ARTIFACT (Required for hashing folders correctly)
+      - name: Zip Build Output
+        run: |
+          zip -r site_artifact.zip .next public sbom-next.spdx.json sbom-public.spdx.json
+
+      # 🔑 CALCULATE HASH (For Provenance)
+      - name: Generate Hash for SLSA
+        id: hash
+        run: |
+          echo "hashes=$(sha256sum site_artifact.zip | base64 -w0)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: site_artifact
+          path: site_artifact.zip
+          if-no-files-found: error
+
+  # ------------------------------------------------------------------
+  # JOB 3: SLSA PROVENANCE (The "Verified" Checkmark)
+  # ------------------------------------------------------------------
+  provenance:
+    name: 🔏 Generate Provenance
+    needs: build
+    permissions:
+      actions: read
+      id-token: write
+      contents: write
+    # We use the generic generator for static assets
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@68bad40844440577b33778c9f29077a3388838e9 # v1.4.0
+    with:
+      base64-subjects: '${{ needs.build.outputs.hashes }}'
+      upload-assets: true
+      compile-generator: true # High security mode
+
+  # ------------------------------------------------------------------
+  # JOB 4: DEPLOY
+  # 
+  # Note: Coolify builds directly from the repository source code.
+  # The site_artifact.zip and its SLSA provenance are generated for
+  # audit purposes but are not directly deployed. Coolify will run
+  # 'npm run build' which generates meta.json via the prebuild script.
+  # ------------------------------------------------------------------
+  deploy:
+    name: 🚀 Deploy to Coolify
+    needs: [build, provenance]
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+    steps:
+      - name: Trigger Coolify Deploy
+        env:
+          COOLIFY_BASE_URL: ${{ secrets.COOLIFY_BASE_URL }}
+          COOLIFY_APP_ID: ${{ secrets.COOLIFY_APP_ID }}
+          COOLIFY_API_TOKEN: ${{ secrets.COOLIFY_API_TOKEN }}
+        run: |
+          curl -X POST \
+            "$COOLIFY_BASE_URL/api/v1/deploy?uuid=$COOLIFY_APP_ID" \
+            -H "Authorization: Bearer $COOLIFY_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            --fail-with-body \
+            --retry 3 \
+            --retry-delay 5 \
+            --max-time 30

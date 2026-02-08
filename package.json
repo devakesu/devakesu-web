@@ -1,0 +1,31 @@
+{
+  "name": "devakesu-web",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "dev:https": "next dev --turbopack --experimental-https",
+    "prebuild": "node scripts/generate-meta.js",
+    "build": "next build --turbopack",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "16.1.6",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "react-icons": "5.5.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "3.3.3",
+    "@tailwindcss/postcss": "4.1.18",
+    "autoprefixer": "10.4.24",
+    "eslint": "10.0.0",
+    "eslint-config-next": "16.1.6",
+    "postcss": "8.5.6",
+    "tailwindcss": "4.1.18"
+  }
+}
