@@ -43,18 +43,19 @@ const nextConfig = {
           },
         ],
       },
-      // Image asset caching rules
-      // Reduced from immutable because public/ assets are not content-hashed
-      // and browsers need to pick up updates without long cache times
-      ...['svg', 'jpg', 'jpeg', 'png', 'webp', 'avif', 'ico'].map((ext) => ({
-        source: `/:path*\\.${ext}`,
+      // Image asset caching rules for public/ directory assets only
+      // These match root-level assets (like /profile.jpg) and subdirectory assets
+      // in typical public/ paths. They explicitly avoid matching /_next/ routes
+      // to preserve Next.js's default immutable caching for hashed build assets.
+      {
+        source: '/:path((?!_next/).*)*\\.:ext(svg|jpg|jpeg|png|webp|avif|ico)',
         headers: [
           {
             key: 'Cache-Control',
             value: 'public, max-age=3600',
           },
         ],
-      })),
+      },
     ];
   },
 

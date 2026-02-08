@@ -24,13 +24,17 @@
     let scrollSpeed = 0;
     let ticking = false;
     let cooldownId = null;
+    let lastCursorX = 0;
+    let lastCursorY = 0;
 
     // Track cursor for glow movement (throttled)
     document.addEventListener("mousemove", (e) => {
+      lastCursorX = e.clientX;
+      lastCursorY = e.clientY;
       if (!ticking) {
         window.requestAnimationFrame(() => {
           // Compose transform with the CSS centering offset (-50%, -50%)
-          glow.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0) translate(-50%, -50%)`;
+          glow.style.transform = `translate3d(${lastCursorX}px, ${lastCursorY}px, 0) translate(-50%, -50%)`;
           ticking = false;
         });
         ticking = true;
@@ -43,12 +47,13 @@
       scrollSpeed = Math.min(delta / 100, 2.5);
       lastScrollY = window.scrollY;
 
-      glow.style.transform = `translate(-50%, -50%) scale(${1 + scrollSpeed * 0.3})`;
+      // Compose scroll scaling with current cursor position to avoid jumps
+      glow.style.transform = `translate3d(${lastCursorX}px, ${lastCursorY}px, 0) translate(-50%, -50%) scale(${1 + scrollSpeed * 0.3})`;
       glow.style.opacity = Math.min(0.4 + scrollSpeed * 0.25, 1);
 
       clearTimeout(cooldownId);
       cooldownId = setTimeout(() => {
-        glow.style.transform = `translate(-50%, -50%) scale(1)`;
+        glow.style.transform = `translate3d(${lastCursorX}px, ${lastCursorY}px, 0) translate(-50%, -50%) scale(1)`;
         glow.style.opacity = 0.4;
       }, 200);
     }, { passive: true });

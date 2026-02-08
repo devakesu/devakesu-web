@@ -876,6 +876,12 @@ export default function Home() {
                     <span aria-hidden="true">
                       👨‍💻🌳⚛️🔬🎨🧪✨️👷🏽‍♀️🔭🎵🏏🍽🌷💅❤️☮️⚖️♻️🏳️‍🌈
                     </span>
+                    <span className="sr-only">
+                      Technology: coding, React, and science.
+                      Creative pursuits: art, experimentation, and innovation.
+                      Hobbies: astronomy, music, cricket, food, gardening, and self-care.
+                      Values: love, peace, justice, sustainability, and LGBTQ+ equality.
+                    </span>
                   </div>
                   <div>
                     <span className="text-cyan-400">&gt; SERVER:</span> Kochi, IN{' '}
