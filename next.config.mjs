@@ -44,12 +44,66 @@ const nextConfig = {
         ],
       },
       {
-        source: '/:all*.(svg|jpg|jpeg|png|webp|avif|ico)',
+        source: '/:path*\\.svg',
         headers: [
           {
             key: 'Cache-Control',
             // Reduced from immutable because public/ assets are not content-hashed
             // and browsers need to pick up updates without long cache times
+            value: 'public, max-age=3600',
+          },
+        ],
+      },
+      {
+        source: '/:path*\\.jpg',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=3600',
+          },
+        ],
+      },
+      {
+        source: '/:path*\\.jpeg',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=3600',
+          },
+        ],
+      },
+      {
+        source: '/:path*\\.png',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=3600',
+          },
+        ],
+      },
+      {
+        source: '/:path*\\.webp',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=3600',
+          },
+        ],
+      },
+      {
+        source: '/:path*\\.avif',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=3600',
+          },
+        ],
+      },
+      {
+        source: '/:path*\\.ico',
+        headers: [
+          {
+            key: 'Cache-Control',
             value: 'public, max-age=3600',
           },
         ],
