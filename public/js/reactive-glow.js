@@ -7,6 +7,13 @@
   if (typeof window === "undefined" || !document.body) return;
 
   try {
+    const prefersReducedMotion =
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // Skip reactive glow effects for users who prefer reduced motion
+    if (prefersReducedMotion) return;
+
     const glow = document.createElement("div");
     glow.className = "reactive-glow";
     glow.setAttribute('aria-hidden', 'true');
