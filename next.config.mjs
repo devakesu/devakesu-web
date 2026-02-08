@@ -43,12 +43,12 @@ const nextConfig = {
           },
         ],
       },
-      // Image asset caching rules for public/ directory assets only
-      // These match root-level assets (like /profile.jpg) and subdirectory assets
-      // in typical public/ paths. They explicitly avoid matching /_next/ routes
-      // to preserve Next.js's default immutable caching for hashed build assets.
+      // Image asset caching rules for public/ directory assets
+      // Matches root-level and subdirectory image files like /profile.jpg, /file.svg
+      // Next.js automatically applies its own long-term caching to /_next/ assets,
+      // so those won't be affected by this rule even if the pattern technically matches.
       {
-        source: '/:path((?!_next/).*)*\\.:ext(svg|jpg|jpeg|png|webp|avif|ico)',
+        source: '/:path*\\.(svg|jpg|jpeg|png|webp|avif|ico)',
         headers: [
           {
             key: 'Cache-Control',
