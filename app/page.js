@@ -67,17 +67,15 @@ export default function Home() {
         if (error.name === 'AbortError' || !isMounted) return;
         
         // Fallback if fetch fails (local dev mode)
-        if (isMounted) {
-          setMeta({
-            build_id: 'DEV_MODE',
-            commit_sha: 'HEAD',
-            branch: 'main',
-            timestamp: new Date().toISOString(),
-            audit_status: 'SKIPPED',
-            signature_status: 'UNSIGNED',
-          });
-          setBooting(false);
-        }
+        setMeta({
+          build_id: 'DEV_MODE',
+          commit_sha: 'HEAD',
+          branch: 'main',
+          timestamp: new Date().toISOString(),
+          audit_status: 'SKIPPED',
+          signature_status: 'UNSIGNED',
+        });
+        setBooting(false);
       });
     
     return () => {
