@@ -81,8 +81,8 @@ export default function Home() {
       });
     
     return () => {
-      isMounted = false;
       controller.abort();
+      isMounted = false;
       if (timeoutId) clearTimeout(timeoutId);
     };
   }, []);
