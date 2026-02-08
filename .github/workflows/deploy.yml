@@ -75,17 +75,24 @@ jobs:
         run: npm run build
 
       # 📦 CREATE SBOM (Software Bill of Materials)
-      - name: Generate SBOM
+      - name: Generate SBOM for .next
         uses: anchore/sbom-action@f325610c9f50a54015d37c8d16cb3b0e2c8f4de0 # v0.18.0
         with:
-          path: ./
+          path: ./.next
           format: spdx-json
-          output-file: ./sbom.spdx.json
+          output-file: ./sbom-next.spdx.json
+
+      - name: Generate SBOM for public
+        uses: anchore/sbom-action@f325610c9f50a54015d37c8d16cb3b0e2c8f4de0 # v0.18.0
+        with:
+          path: ./public
+          format: spdx-json
+          output-file: ./sbom-public.spdx.json
 
       # 🗜️ ZIP ARTIFACT (Required for hashing folders correctly)
       - name: Zip Build Output
         run: |
-          zip -r site_artifact.zip .next public sbom.spdx.json
+          zip -r site_artifact.zip .next public sbom-next.spdx.json sbom-public.spdx.json
 
       # 🔑 CALCULATE HASH (For Provenance)
       - name: Generate Hash for SLSA
