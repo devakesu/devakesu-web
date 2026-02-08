@@ -21,7 +21,13 @@ build
 # Misc
 .DS_Store
 *.pem
+.env
+.env.*
+*.env
+*.env.*
 .env*.local
+!.env.example
+!.env*.example
 
 # IDE
 .vscode
