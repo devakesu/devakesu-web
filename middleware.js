@@ -5,7 +5,7 @@ export function middleware(request) {
   // Generate a random nonce for each request with proper entropy (192 bits)
   const nonceArray = new Uint8Array(24);
   crypto.getRandomValues(nonceArray);
-  const nonce = btoa(String.fromCharCode(...nonceArray));
+  const nonce = btoa(Array.from(nonceArray, b => String.fromCharCode(b)).join(''));
   
   // Clone the request headers
   const requestHeaders = new Headers(request.headers);
