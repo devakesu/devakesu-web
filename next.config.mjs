@@ -43,6 +43,16 @@ const nextConfig = {
           },
         ],
       },
+      // Prevent caching of build metadata to ensure fresh info after deployments
+      {
+        source: '/meta.json',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-store',
+          },
+        ],
+      },
       // Preserve Next.js's immutable caching for hashed build assets
       // This rule must come before the general image caching rule to take precedence
       {
