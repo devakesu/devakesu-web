@@ -440,13 +440,14 @@ export default function Home() {
               <div className="text-4xl mb-2" aria-hidden="true">🧠</div>
               <p className="text-sm text-neutral-400">Philosophy & Ethics</p>
             </div>
-            {activeNode === 'ideas' && (
-              <div className="panel-content" id="ideas-content">
-                <p className="text-sm text-neutral-300 leading-relaxed">
-                  {mindMapContent.ideas.content}
-                </p>
-              </div>
-            )}
+            <div
+              className={`panel-content ${activeNode === 'ideas' ? '' : 'hidden'}`}
+              id="ideas-content"
+            >
+              <p className="text-sm text-neutral-300 leading-relaxed">
+                {mindMapContent.ideas.content}
+              </p>
+            </div>
           </div>
 
           {/* TECH PANEL */}
@@ -471,13 +472,14 @@ export default function Home() {
               <div className="text-4xl mb-2" aria-hidden="true">⚡</div>
               <p className="text-sm text-neutral-400">Systems & Code</p>
             </div>
-            {activeNode === 'tech' && (
-              <div className="panel-content" id="tech-content">
-                <p className="text-sm text-neutral-300 leading-relaxed">
-                  {mindMapContent.tech.content}
-                </p>
-              </div>
-            )}
+            <div
+              className={`panel-content ${activeNode === 'tech' ? '' : 'hidden'}`}
+              id="tech-content"
+            >
+              <p className="text-sm text-neutral-300 leading-relaxed">
+                {mindMapContent.tech.content}
+              </p>
+            </div>
           </div>
 
           {/* ARSENAL PANEL */}
@@ -502,21 +504,22 @@ export default function Home() {
               <div className="text-4xl mb-2" aria-hidden="true">⚙️</div>
               <p className="text-sm text-neutral-400">Tools & Environment</p>
             </div>
-            {activeNode === 'projects' && (
-              <div className="panel-content" id="projects-content">
-                <div className="space-y-3 text-sm text-neutral-300 leading-relaxed">
-                  <p>
-                    <strong className="text-cyan-400">Legion 7i:</strong> Intel Core i9-14900HX @
-                    2.20 GHz, 32GB RAM, RTX 4070, 3200x2000 165Hz.
-                  </p>
-                  <p>
-                    <strong className="text-cyan-400">Samsung Galaxy S24U:</strong> Snapdragon 8 Gen
-                    3, 12GB RAM, Adreno 750, 3120x1440 120Hz QHD+.
-                  </p>
-                  <p className="text-neutral-400 italic">Power where it matters.</p>
-                </div>
+            <div
+              className={`panel-content ${activeNode === 'projects' ? '' : 'hidden'}`}
+              id="projects-content"
+            >
+              <div className="space-y-3 text-sm text-neutral-300 leading-relaxed">
+                <p>
+                  <strong className="text-cyan-400">Legion 7i:</strong> Intel Core i9-14900HX @
+                  2.20 GHz, 32GB RAM, RTX 4070, 3200x2000 165Hz.
+                </p>
+                <p>
+                  <strong className="text-cyan-400">Samsung Galaxy S24U:</strong> Snapdragon 8 Gen
+                  3, 12GB RAM, Adreno 750, 3120x1440 120Hz QHD+.
+                </p>
+                <p className="text-neutral-400 italic">Power where it matters.</p>
               </div>
-            )}
+            </div>
           </div>
 
           {/* FUTURE PANEL */}
@@ -541,13 +544,14 @@ export default function Home() {
               <div className="text-4xl mb-2" aria-hidden="true">🚀</div>
               <p className="text-sm text-neutral-400">Vision & Dreams</p>
             </div>
-            {activeNode === 'dreams' && (
-              <div className="panel-content" id="dreams-content">
-                <p className="text-sm text-neutral-300 leading-relaxed">
-                  {mindMapContent.dreams.content}
-                </p>
-              </div>
-            )}
+            <div
+              className={`panel-content ${activeNode === 'dreams' ? '' : 'hidden'}`}
+              id="dreams-content"
+            >
+              <p className="text-sm text-neutral-300 leading-relaxed">
+                {mindMapContent.dreams.content}
+              </p>
+            </div>
           </div>
 
           {/* CONTACT PANEL */}
@@ -572,101 +576,115 @@ export default function Home() {
               <div className="text-4xl mb-2" aria-hidden="true">📡</div>
               <p className="text-sm text-neutral-400">Communication Channels</p>
             </div>
-            {activeNode === 'contact' && (
-              <div className="panel-content" id="contact-content">
-                <div className="space-y-2">
-                  <p className="text-sm">
-                    <a href="mailto:fusion@devakesu.com" className="text-cyan-400 hover:underline">
-                      fusion@devakesu.com
-                    </a>
-                  </p>
-                  <div className="flex flex-wrap items-center gap-3 mt-3">
-                    <a
-                      href="https://www.linkedin.com/in/devakesu"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
-                      title="LinkedIn"
-                    >
-                      <FaLinkedin />
-                    </a>
-                    <a
-                      href="https://github.com/devakesu/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
-                      title="GitHub"
-                    >
-                      <FaGithub />
-                    </a>
-                    <a
-                      href="https://www.instagram.com/deva.kesu/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
-                      title="Instagram"
-                    >
-                      <FaInstagram />
-                    </a>
-                    <a
-                      href="https://g.dev/devakesu"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
-                      title="Google Developer"
-                    >
-                      <FaGoogle />
-                    </a>
-                    <a
-                      href="https://x.com/devakesu"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
-                      title="X (Twitter)"
-                    >
-                      <FaXTwitter />
-                    </a>
-                    <a
-                      href="https://www.facebook.com/deva4kesu"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
-                      title="Facebook"
-                    >
-                      <FaFacebook />
-                    </a>
-                    <a
-                      href="https://www.reddit.com/user/devakesu/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
-                      title="Reddit"
-                    >
-                      <FaReddit />
-                    </a>
-                    <a
-                      href="https://pin.it/A7QjJQvTE"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
-                      title="Pinterest"
-                    >
-                      <FaPinterest />
-                    </a>
-                    <a
-                      href="https://t.me/devakesu"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
-                      title="Telegram"
-                    >
-                      <FaTelegram />
-                    </a>
-                  </div>
-                  <p className="text-sm text-neutral-400 mt-3">@devakesu</p>
+            <div
+              className={`panel-content ${activeNode === 'contact' ? '' : 'hidden'}`}
+              id="contact-content"
+            >
+              <div className="space-y-2">
+                <p className="text-sm">
+                  <a 
+                    href="mailto:fusion@devakesu.com" 
+                    className="text-cyan-400 hover:underline"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    fusion@devakesu.com
+                  </a>
+                </p>
+                <div className="flex flex-wrap items-center gap-3 mt-3">
+                  <a
+                    href="https://www.linkedin.com/in/devakesu"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
+                    title="LinkedIn"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <FaLinkedin />
+                  </a>
+                  <a
+                    href="https://github.com/devakesu/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
+                    title="GitHub"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <FaGithub />
+                  </a>
+                  <a
+                    href="https://www.instagram.com/deva.kesu/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
+                    title="Instagram"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <FaInstagram />
+                  </a>
+                  <a
+                    href="https://g.dev/devakesu"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
+                    title="Google Developer"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <FaGoogle />
+                  </a>
+                  <a
+                    href="https://x.com/devakesu"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
+                    title="X (Twitter)"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <FaXTwitter />
+                  </a>
+                  <a
+                    href="https://www.facebook.com/deva4kesu"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
+                    title="Facebook"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <FaFacebook />
+                  </a>
+                  <a
+                    href="https://www.reddit.com/user/devakesu/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
+                    title="Reddit"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <FaReddit />
+                  </a>
+                  <a
+                    href="https://pin.it/A7QjJQvTE"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
+                    title="Pinterest"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <FaPinterest />
+                  </a>
+                  <a
+                    href="https://t.me/devakesu"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
+                    title="Telegram"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <FaTelegram />
+                  </a>
                 </div>
+                <p className="text-sm text-neutral-400 mt-3">@devakesu</p>
               </div>
-            )}
+            </div>
           </div>
         </div>
       </section>
