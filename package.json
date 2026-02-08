@@ -11,7 +11,7 @@
     "prebuild": "node scripts/generate-meta.js",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "next lint"
   },
   "dependencies": {
     "next": "16.1.6",
