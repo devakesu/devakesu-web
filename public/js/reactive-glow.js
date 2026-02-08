@@ -92,7 +92,7 @@
         if (navigator.vibrate) {
           try {
             navigator.vibrate(25);
-          } catch (e) {
+          } catch {
             // Vibration not supported
           }
         }
@@ -106,7 +106,7 @@
       },
       { passive: true }
     );
-  } catch (error) {
+  } catch {
     // Silently fail if there are issues
   }
 })();

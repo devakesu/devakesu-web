@@ -31,7 +31,9 @@ function getMetadataBaseUrl() {
   try {
     return new URL(siteUrl);
   } catch (error) {
-    console.warn(`Invalid NEXT_PUBLIC_SITE_URL: ${siteUrl}, falling back to default`);
+    console.warn(
+      `Invalid NEXT_PUBLIC_SITE_URL: ${siteUrl}, falling back to default. Reason: ${error instanceof Error ? error.message : String(error)}`
+    );
     return new URL('https://devakesu.com');
   }
 }

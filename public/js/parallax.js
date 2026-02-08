@@ -52,7 +52,7 @@
       },
       { passive: true }
     );
-  } catch (error) {
+  } catch {
     // Silently fail if there are issues
   }
 })();

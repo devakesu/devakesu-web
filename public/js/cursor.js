@@ -66,7 +66,7 @@
       // Fallback for older browsers
       revealItems.forEach((el) => el.classList.add('visible'));
     }
-  } catch (error) {
+  } catch {
     // Silently fail if there are issues
   }
 })();
