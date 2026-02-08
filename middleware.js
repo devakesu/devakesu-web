@@ -19,8 +19,8 @@ export function middleware(request) {
   });
 
   // Build CSP with nonce - add WebSocket support for development
-  const wsPolicy = process.env.NODE_ENV !== 'production' ? ' ws: wss:' : '';
-  const connectSrc = `connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com${wsPolicy}`;
+  const devWebSocketProtocols = process.env.NODE_ENV !== 'production' ? ' ws: wss:' : '';
+  const connectSrc = `connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com${devWebSocketProtocols}`;
   
   const cspHeader = [
     "default-src 'self'",
