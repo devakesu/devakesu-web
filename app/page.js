@@ -3,7 +3,7 @@
 // Note: This is a large client component. Consider refactoring to split static content
 // into server components in the future to reduce client-side JS bundle size.
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import {
   FaLinkedin,
@@ -26,13 +26,13 @@ export default function Home() {
   const birthYear = 2006;
   const uptime = new Date().getFullYear() - birthYear;
 
-  const taglines = [
+  const taglines = useMemo(() => [
     'Human. Machine. Something in between.',
     'Signal found. Noise reduced.',
     'Unlearning defaults, engineering futures.',
     'System awake // latency minimal.',
     'Building kinder tech in a chaotic world.',
-  ];
+  ], []);
 
   const [currentTagline, setCurrentTagline] = useState(0);
   const [currentTime, setCurrentTime] = useState('');
@@ -44,7 +44,7 @@ export default function Home() {
     }, 3000); // Change every 3 seconds
 
     return () => clearInterval(interval);
-  }, [taglines.length]);
+  }, [taglines]);
 
   // Fetch Build Metadata
   useEffect(() => {
