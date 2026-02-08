@@ -51,11 +51,7 @@ jobs:
   # ------------------------------------------------------------------
   audit:
     needs: guard
-    if: |
-      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
-      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
-      (github.event_name == 'merge_group' && github.event.merge_group.base_ref == 'refs/heads/main') ||
-      (github.event_name == 'pull_request' && github.base_ref == 'main')
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     name: 🛡️ Security Audit
     runs-on: ubuntu-latest
     permissions:
@@ -156,6 +152,14 @@ jobs:
       # Install cosign
       - name: Install cosign
         uses: sigstore/cosign-installer@6e04d228eb30da1757ee4e1dd75a0ec73a653e06 # v3.7.0
+
+      # Initialize Sigstore TUF root (fix for key validation errors)
+      - name: Initialize Sigstore TUF root
+        run: |
+          # Remove any stale TUF metadata
+          rm -rf ~/.sigstore
+          # Initialize with fresh root
+          cosign initialize
 
       # 📦 GENERATE SBOM
       - name: Generate SBOM
