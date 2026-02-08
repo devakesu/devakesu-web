@@ -876,6 +876,11 @@ export default function Home() {
                     <span aria-hidden="true">
                       👨‍💻🌳⚛️🔬🎨🧪✨️👷🏽‍♀️🔭🎵🏏🍽🌷💅❤️☮️⚖️♻️🏳️‍🌈
                     </span>
+                    <span className="sr-only">
+                      Interests include coding, nature, React, science, art, experimentation,
+                      innovation, building and engineering, astronomy, music, cricket, food,
+                      gardening, self-care, love, peace, justice, sustainability, and LGBTQ+ equality.
+                    </span>
                   </div>
                   <div>
                     <span className="text-cyan-400">&gt; SERVER:</span> Kochi, IN{' '}

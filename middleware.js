@@ -22,7 +22,7 @@ export function middleware(request) {
   const devWebSocketProtocols = process.env.NODE_ENV !== 'production' ? ' ws: wss:' : '';
   const connectSrc = `connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com${devWebSocketProtocols}`;
   
-  const cspHeader = [
+  const cspDirectives = [
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`,
     `style-src 'self' 'nonce-${nonce}' 'unsafe-inline' https://fonts.googleapis.com`,
@@ -36,8 +36,14 @@ export function middleware(request) {
     "media-src 'self'",
     "worker-src 'self' blob:",
     "manifest-src 'self'",
-    'upgrade-insecure-requests',
-  ].join('; ');
+  ];
+  
+  // Only upgrade insecure requests in production to avoid breaking local dev
+  if (process.env.NODE_ENV === 'production') {
+    cspDirectives.push('upgrade-insecure-requests');
+  }
+  
+  const cspHeader = cspDirectives.join('; ');
 
   // Set CSP header on response
   response.headers.set('Content-Security-Policy', cspHeader);

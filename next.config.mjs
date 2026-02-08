@@ -43,11 +43,12 @@ const nextConfig = {
           },
         ],
       },
-      // Image asset caching rules
-      // Reduced from immutable because public/ assets are not content-hashed
-      // and browsers need to pick up updates without long cache times
+      // Image asset caching rules for public/ directory assets only
+      // Reduced cache time because public/ assets are not content-hashed
+      // and browsers need to pick up updates. Excludes /_next/static/** which
+      // has its own immutable caching for hashed build assets.
       ...['svg', 'jpg', 'jpeg', 'png', 'webp', 'avif', 'ico'].map((ext) => ({
-        source: `/:path*\\.${ext}`,
+        source: `/((?!_next/).)*\\.${ext}`,
         headers: [
           {
             key: 'Cache-Control',
