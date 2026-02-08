@@ -10,7 +10,6 @@ permissions:
   contents: read
   id-token: write # Required for Sigstore signing
   actions: read
-  security-events: write # Required for uploading SARIF results
 
 jobs:
   # ------------------------------------------------------------------

@@ -29,25 +29,7 @@ const nextConfig = {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=()',
           },
-          {
-            key: 'Content-Security-Policy',
-            value: [
-              "default-src 'self'",
-              "script-src 'self' 'unsafe-inline'", // Next.js requires unsafe-inline for hydration
-              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com", // Next.js and next/font require unsafe-inline
-              "font-src 'self' https://fonts.gstatic.com data:",
-              "img-src 'self' data: https: blob:",
-              "connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com",
-              "frame-ancestors 'self'",
-              "base-uri 'self'",
-              "form-action 'self'",
-              "object-src 'none'",
-              "media-src 'self'",
-              "worker-src 'self' blob:",
-              "manifest-src 'self'",
-              'upgrade-insecure-requests',
-            ].join('; '),
-          },
+          // CSP is now handled by middleware.js for proper nonce support
         ],
       },
       {

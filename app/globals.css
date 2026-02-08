@@ -20,6 +20,26 @@ html {
   .glitch::after {
     animation: none !important;
   }
+
+  /* Turn off other flicker/pulse-style animations for reduced-motion users */
+  .noise-flicker,
+  .noise-flicker::before,
+  .noise-flicker::after,
+  .flicker,
+  .flicker::before,
+  .flicker::after,
+  .vhs-flicker,
+  .vhs-flicker::before,
+  .vhs-flicker::after,
+  .signal-pulse,
+  .signal-pulse::before,
+  .signal-pulse::after,
+  .click-burst,
+  .click-burst::before,
+  .click-burst::after {
+    animation: none !important;
+    transition: none !important;
+  }
 }
 
 body {
@@ -27,7 +47,7 @@ body {
   overflow-x: hidden;
   background-color: #0a0a0a;
   color: white;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
 }
 
 /* ========================= */

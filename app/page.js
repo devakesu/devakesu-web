@@ -677,7 +677,7 @@ export default function Home() {
           {'//'} BUILD_LOG.db
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="border border-neutral-700 p-6 hover-glow transition-all duration-300">
+          <div className="relative border border-neutral-700 p-6 hover-glow transition-all duration-300">
             <div className="absolute -top-2 -left-2 h-2 w-2 bg-cyan-400"></div>
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-xl font-bold text-cyan-400">GhostClass</h3>
@@ -736,7 +736,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="border border-neutral-700 p-6 hover-glow transition-all duration-300">
+          <div className="relative border border-neutral-700 p-6 hover-glow transition-all duration-300">
             <div className="absolute -top-2 -left-2 h-2 w-2 bg-cyan-400"></div>
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-xl font-bold text-cyan-400">KaamBazaar™</h3>
@@ -779,7 +779,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="border border-neutral-700 p-6 hover-glow transition-all duration-300">
+          <div className="relative border border-neutral-700 p-6 hover-glow transition-all duration-300">
             <div className="absolute -top-2 -left-2 h-2 w-2 bg-cyan-400"></div>
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-xl font-bold text-cyan-400">What&apos;s Next?</h3>
