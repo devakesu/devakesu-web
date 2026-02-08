@@ -5,7 +5,7 @@ export function middleware(request) {
   // Generate a random nonce for each request with proper entropy (192 bits)
   const nonceArray = new Uint8Array(24);
   crypto.getRandomValues(nonceArray);
-  const nonce = Buffer.from(nonceArray).toString('base64');
+  const nonce = btoa(Array.from(nonceArray, b => String.fromCharCode(b)).join(''));
   
   // Clone the request headers
   const requestHeaders = new Headers(request.headers);
@@ -22,10 +22,10 @@ export function middleware(request) {
   const cspHeader = [
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`,
-    `style-src 'self' 'nonce-${nonce}' https://fonts.googleapis.com`,
+    `style-src 'self' 'nonce-${nonce}' 'unsafe-inline' https://fonts.googleapis.com`,
     "font-src 'self' https://fonts.gstatic.com data:",
     "img-src 'self' data: https: blob:",
-    "connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com",
+    "connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com ws: wss:",
     "frame-ancestors 'self'",
     "base-uri 'self'",
     "form-action 'self'",

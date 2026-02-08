@@ -48,7 +48,9 @@ const nextConfig = {
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
+            // Reduced from immutable because public/ assets are not content-hashed
+            // and browsers need to pick up updates without long cache times
+            value: 'public, max-age=3600',
           },
         ],
       },
