@@ -45,11 +45,13 @@ export default function Home() {
 
   // Fetch Build Metadata
   useEffect(() => {
+    let timeoutId;
+    
     fetch('/meta.json')
       .then((res) => res.json())
       .then((data) => {
         setMeta(data);
-        setTimeout(() => setBooting(false), 800);
+        timeoutId = setTimeout(() => setBooting(false), 800);
       })
       .catch(() => {
         // Fallback if fetch fails (local dev mode)
@@ -63,6 +65,10 @@ export default function Home() {
         });
         setBooting(false);
       });
+    
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, []);
 
   // Update time every second for UTC+5:30
@@ -419,6 +425,8 @@ export default function Home() {
             tabIndex={0}
             onClick={() => setActiveNode(activeNode === 'ideas' ? null : 'ideas')}
             onKeyDown={(e) => handlePanelKeyDown(e, 'ideas')}
+            aria-expanded={activeNode === 'ideas'}
+            aria-controls="ideas-content"
           >
             <div className="panel-header">
               <div className="flex items-center gap-2">
@@ -433,7 +441,7 @@ export default function Home() {
               <p className="text-sm text-neutral-400">Philosophy & Ethics</p>
             </div>
             {activeNode === 'ideas' && (
-              <div className="panel-content">
+              <div className="panel-content" id="ideas-content">
                 <p className="text-sm text-neutral-300 leading-relaxed">
                   {mindMapContent.ideas.content}
                 </p>
@@ -448,6 +456,8 @@ export default function Home() {
             tabIndex={0}
             onClick={() => setActiveNode(activeNode === 'tech' ? null : 'tech')}
             onKeyDown={(e) => handlePanelKeyDown(e, 'tech')}
+            aria-expanded={activeNode === 'tech'}
+            aria-controls="tech-content"
           >
             <div className="panel-header">
               <div className="flex items-center gap-2">
@@ -462,7 +472,7 @@ export default function Home() {
               <p className="text-sm text-neutral-400">Systems & Code</p>
             </div>
             {activeNode === 'tech' && (
-              <div className="panel-content">
+              <div className="panel-content" id="tech-content">
                 <p className="text-sm text-neutral-300 leading-relaxed">
                   {mindMapContent.tech.content}
                 </p>
@@ -477,6 +487,8 @@ export default function Home() {
             tabIndex={0}
             onClick={() => setActiveNode(activeNode === 'projects' ? null : 'projects')}
             onKeyDown={(e) => handlePanelKeyDown(e, 'projects')}
+            aria-expanded={activeNode === 'projects'}
+            aria-controls="projects-content"
           >
             <div className="panel-header">
               <div className="flex items-center gap-2">
@@ -491,7 +503,7 @@ export default function Home() {
               <p className="text-sm text-neutral-400">Tools & Environment</p>
             </div>
             {activeNode === 'projects' && (
-              <div className="panel-content">
+              <div className="panel-content" id="projects-content">
                 <div className="space-y-3 text-sm text-neutral-300 leading-relaxed">
                   <p>
                     <strong className="text-cyan-400">Legion 7i:</strong> Intel Core i9-14900HX @
@@ -514,6 +526,8 @@ export default function Home() {
             tabIndex={0}
             onClick={() => setActiveNode(activeNode === 'dreams' ? null : 'dreams')}
             onKeyDown={(e) => handlePanelKeyDown(e, 'dreams')}
+            aria-expanded={activeNode === 'dreams'}
+            aria-controls="dreams-content"
           >
             <div className="panel-header">
               <div className="flex items-center gap-2">
@@ -528,7 +542,7 @@ export default function Home() {
               <p className="text-sm text-neutral-400">Vision & Dreams</p>
             </div>
             {activeNode === 'dreams' && (
-              <div className="panel-content">
+              <div className="panel-content" id="dreams-content">
                 <p className="text-sm text-neutral-300 leading-relaxed">
                   {mindMapContent.dreams.content}
                 </p>
@@ -543,6 +557,8 @@ export default function Home() {
             tabIndex={0}
             onClick={() => setActiveNode(activeNode === 'contact' ? null : 'contact')}
             onKeyDown={(e) => handlePanelKeyDown(e, 'contact')}
+            aria-expanded={activeNode === 'contact'}
+            aria-controls="contact-content"
           >
             <div className="panel-header">
               <div className="flex items-center gap-2">
@@ -557,7 +573,7 @@ export default function Home() {
               <p className="text-sm text-neutral-400">Communication Channels</p>
             </div>
             {activeNode === 'contact' && (
-              <div className="panel-content">
+              <div className="panel-content" id="contact-content">
                 <div className="space-y-2">
                   <p className="text-sm">
                     <a href="mailto:fusion@devakesu.com" className="text-cyan-400 hover:underline">

@@ -7,7 +7,24 @@ html {
   scroll-behavior: smooth;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  html {
+    /* Disable smooth scrolling and relax mandatory snapping for reduced-motion users */
+    scroll-behavior: auto;
+    scroll-snap-type: y proximity;
+  }
+
+  /* Turn off glitch animations for reduced-motion users */
+  .glitch,
+  .glitch::before,
+  .glitch::after {
+    animation: none !important;
+  }
+}
+
 body {
+  position: relative;
+  overflow-x: hidden;
   background-color: #0a0a0a;
   color: white;
   font-family: 'Space Grotesk', sans-serif;
@@ -386,11 +403,6 @@ body {
     transform: scale(3);
     opacity: 0;
   }
-}
-
-body {
-  position: relative;
-  overflow-x: hidden;
 }
 
 /* ========================= */
