@@ -87,15 +87,15 @@ export default function Home() {
 
   // Update time every second for UTC+5:30 (IST)
   useEffect(() => {
-    const updateTime = () => {
-      const formatter = new Intl.DateTimeFormat('en-GB', {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false,
-        timeZone: 'Asia/Kolkata',
-      });
+    const formatter = new Intl.DateTimeFormat('en-GB', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+      timeZone: 'Asia/Kolkata',
+    });
 
+    const updateTime = () => {
       const formattedTime = formatter.format(new Date());
       setCurrentTime(formattedTime);
     };
