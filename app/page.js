@@ -122,7 +122,8 @@ export default function Home() {
   };
 
   const handlePanelKeyDown = (event, nodeId) => {
-    if (event.key === 'Enter' || event.key === ' ') {
+    // Only handle keyboard events on the panel container itself, not on interactive children
+    if ((event.key === 'Enter' || event.key === ' ') && event.currentTarget === event.target) {
       event.preventDefault();
       setActiveNode(activeNode === nodeId ? null : nodeId);
     }

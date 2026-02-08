@@ -43,17 +43,18 @@ const nextConfig = {
           },
         ],
       },
-      {
-        source: '/:all*.(svg|jpg|jpeg|png|webp|avif|ico)',
+      // Image asset caching rules
+      // Reduced from immutable because public/ assets are not content-hashed
+      // and browsers need to pick up updates without long cache times
+      ...['svg', 'jpg', 'jpeg', 'png', 'webp', 'avif', 'ico'].map((ext) => ({
+        source: `/:path*\\.${ext}`,
         headers: [
           {
             key: 'Cache-Control',
-            // Reduced from immutable because public/ assets are not content-hashed
-            // and browsers need to pick up updates without long cache times
             value: 'public, max-age=3600',
           },
         ],
-      },
+      })),
     ];
   },
 
