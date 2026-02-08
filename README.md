@@ -151,7 +151,7 @@ devakesu-web/
 
 - ✅ No tracking scripts or analytics
 - ✅ No cookies or local storage
-- ✅ No third-party data sharing
+- ⚠️ Minimal third-party request: Background noise SVG loaded from `https://grainy-gradients.vercel.app/noise.svg` (receives IP address and user-agent like any HTTP request)
 - ✅ GDPR compliant by design
 - ✅ Client-side only architecture
 

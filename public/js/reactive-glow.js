@@ -1,10 +1,10 @@
 // === REACTIVE GLOW SYSTEM (Cursor + Scroll + Click Burst) ===
 // Cyan glow follows cursor, pulses on scroll, and bursts on click.
 
-(function() {
+(function () {
   'use strict';
-  
-  if (typeof window === "undefined" || !document.body) return;
+
+  if (typeof window === 'undefined' || !document.body) return;
 
   try {
     const prefersReducedMotion =
@@ -14,8 +14,8 @@
     // Skip reactive glow effects for users who prefer reduced motion
     if (prefersReducedMotion) return;
 
-    const glow = document.createElement("div");
-    glow.className = "reactive-glow";
+    const glow = document.createElement('div');
+    glow.className = 'reactive-glow';
     glow.setAttribute('aria-hidden', 'true');
     glow.style.willChange = 'transform, opacity';
     document.body.appendChild(glow);
@@ -30,70 +30,82 @@
     let currentScale = 1;
 
     // Track cursor for glow movement (throttled)
-    document.addEventListener("mousemove", (e) => {
-      lastCursorX = e.clientX;
-      lastCursorY = e.clientY;
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          // Compose transform with the CSS centering offset and current scale
-          glow.style.transform = `translate3d(${lastCursorX}px, ${lastCursorY}px, 0) translate(-50%, -50%) scale(${currentScale})`;
-          ticking = false;
-        });
-        ticking = true;
-      }
-    }, { passive: true });
+    document.addEventListener(
+      'mousemove',
+      (e) => {
+        lastCursorX = e.clientX;
+        lastCursorY = e.clientY;
+        if (!ticking) {
+          window.requestAnimationFrame(() => {
+            // Compose transform with the CSS centering offset and current scale
+            glow.style.transform = `translate3d(${lastCursorX}px, ${lastCursorY}px, 0) translate(-50%, -50%) scale(${currentScale})`;
+            ticking = false;
+          });
+          ticking = true;
+        }
+      },
+      { passive: true }
+    );
 
     // Scroll velocity → pulse strength (throttled with rAF)
-    window.addEventListener("scroll", () => {
-      if (!scrollTicking) {
-        window.requestAnimationFrame(() => {
-          const delta = Math.abs(window.scrollY - lastScrollY);
-          scrollSpeed = Math.min(delta / 100, 2.5);
-          lastScrollY = window.scrollY;
+    window.addEventListener(
+      'scroll',
+      () => {
+        if (!scrollTicking) {
+          window.requestAnimationFrame(() => {
+            const delta = Math.abs(window.scrollY - lastScrollY);
+            scrollSpeed = Math.min(delta / 100, 2.5);
+            lastScrollY = window.scrollY;
 
-          // Update current scale and apply with cursor position to avoid jumps
-          currentScale = 1 + scrollSpeed * 0.3;
-          glow.style.transform = `translate3d(${lastCursorX}px, ${lastCursorY}px, 0) translate(-50%, -50%) scale(${currentScale})`;
-          glow.style.opacity = Math.min(0.4 + scrollSpeed * 0.25, 1);
-
-          clearTimeout(cooldownId);
-          cooldownId = setTimeout(() => {
-            currentScale = 1;
+            // Update current scale and apply with cursor position to avoid jumps
+            currentScale = 1 + scrollSpeed * 0.3;
             glow.style.transform = `translate3d(${lastCursorX}px, ${lastCursorY}px, 0) translate(-50%, -50%) scale(${currentScale})`;
-            glow.style.opacity = 0.4;
-          }, 200);
+            glow.style.opacity = Math.min(0.4 + scrollSpeed * 0.25, 1);
 
-          scrollTicking = false;
-        });
-        scrollTicking = true;
-      }
-    }, { passive: true });
+            clearTimeout(cooldownId);
+            cooldownId = setTimeout(() => {
+              currentScale = 1;
+              glow.style.transform = `translate3d(${lastCursorX}px, ${lastCursorY}px, 0) translate(-50%, -50%) scale(${currentScale})`;
+              glow.style.opacity = 0.4;
+            }, 200);
+
+            scrollTicking = false;
+          });
+          scrollTicking = true;
+        }
+      },
+      { passive: true }
+    );
 
     // Click Burst + Haptic Feedback
-    document.addEventListener("click", (e) => {
-      const burst = document.createElement("div");
-      burst.className = "click-burst";
-      burst.setAttribute('aria-hidden', 'true');
-      burst.style.left = `${e.clientX}px`;
-      burst.style.top = `${e.clientY}px`;
-      document.body.appendChild(burst);
+    document.addEventListener(
+      'click',
+      (e) => {
+        const burst = document.createElement('div');
+        burst.className = 'click-burst';
+        burst.setAttribute('aria-hidden', 'true');
+        burst.style.left = `${e.clientX}px`;
+        burst.style.top = `${e.clientY}px`;
+        document.body.appendChild(burst);
 
-      // Mobile vibration feedback (if supported)
-      if (navigator.vibrate) {
-        try {
-          navigator.vibrate(25);
-        } catch (e) {
-          // Vibration not supported
+        // Mobile vibration feedback (if supported)
+        if (navigator.vibrate) {
+          try {
+            navigator.vibrate(25);
+          } catch (e) {
+            // Vibration not supported
+          }
         }
-      }
-      
-      // Animate then remove
-      setTimeout(() => {
-        if (burst.parentNode) {
-          burst.remove();
-        }
-      }, 700);
-    }, { passive: true });
+
+        // Animate then remove
+        setTimeout(() => {
+          if (burst.parentNode) {
+            burst.remove();
+          }
+        }, 700);
+      },
+      { passive: true }
+    );
   } catch (error) {
     // Silently fail if there are issues
   }
