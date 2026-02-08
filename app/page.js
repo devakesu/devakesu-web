@@ -53,7 +53,12 @@ export default function Home() {
     const controller = new AbortController();
     
     fetch('/meta.json', { signal: controller.signal })
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`Failed to load /meta.json: ${res.status} ${res.statusText}`);
+        }
+        return res.json();
+      })
       .then((data) => {
         if (isMounted) {
           setMeta(data);
