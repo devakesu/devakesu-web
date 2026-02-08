@@ -27,6 +27,7 @@ build
 *.env.*
 !.env.example
 !.env.*.example
+!*.env.example
 
 # IDE
 .vscode
