@@ -877,9 +877,10 @@ export default function Home() {
                       👨‍💻🌳⚛️🔬🎨🧪✨️👷🏽‍♀️🔭🎵🏏🍽🌷💅❤️☮️⚖️♻️🏳️‍🌈
                     </span>
                     <span className="sr-only">
-                      Interests include coding, nature, React, science, art, experimentation,
-                      innovation, building and engineering, astronomy, music, cricket, food,
-                      gardening, self-care, love, peace, justice, sustainability, and LGBTQ+ equality.
+                      Technology: coding, React, and science.
+                      Creative pursuits: art, experimentation, and innovation.
+                      Hobbies: astronomy, music, cricket, food, gardening, and self-care.
+                      Values: love, peace, justice, sustainability, and LGBTQ+ equality.
                     </span>
                   </div>
                   <div>
