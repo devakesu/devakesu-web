@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      actions: write # Required for npm cache operations
+      actions: read # Allow cache restore without high-privilege write access
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
