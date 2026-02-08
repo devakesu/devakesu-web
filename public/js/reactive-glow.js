@@ -16,6 +16,7 @@
     let lastScrollY = window.scrollY;
     let scrollSpeed = 0;
     let ticking = false;
+    let cooldownId = null;
 
     // Track cursor for glow movement (throttled)
     document.addEventListener("mousemove", (e) => {
@@ -38,8 +39,8 @@
       glow.style.transform = `translate(-50%, -50%) scale(${1 + scrollSpeed * 0.3})`;
       glow.style.opacity = Math.min(0.4 + scrollSpeed * 0.25, 1);
 
-      clearTimeout(glow._cooldown);
-      glow._cooldown = setTimeout(() => {
+      clearTimeout(cooldownId);
+      cooldownId = setTimeout(() => {
         glow.style.transform = `translate(-50%, -50%) scale(1)`;
         glow.style.opacity = 0.4;
       }, 200);

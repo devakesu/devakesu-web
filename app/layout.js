@@ -1,7 +1,7 @@
-// app/layout.js
 import './globals.css';
 import Script from 'next/script';
 import { JetBrains_Mono, Space_Grotesk } from 'next/font/google';
+import { headers } from 'next/headers';
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
@@ -187,7 +187,9 @@ export const metadata = {
   },
 };
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
+  const nonce = (await headers()).get('x-nonce');
+  
   return (
     <html lang="en" className={`${jetbrainsMono.variable} ${spaceGrotesk.variable}`}>
       <head>
@@ -195,9 +197,9 @@ export default function RootLayout({ children }) {
       </head>
       <body className="ambient-noise">
         {children}
-        <Script src="/js/cursor.js" strategy="lazyOnload" />
-        <Script src="/js/parallax.js" strategy="lazyOnload" />
-        <Script src="/js/reactive-glow.js" strategy="lazyOnload" />
+        <Script src="/js/cursor.js" strategy="lazyOnload" nonce={nonce} />
+        <Script src="/js/parallax.js" strategy="lazyOnload" nonce={nonce} />
+        <Script src="/js/reactive-glow.js" strategy="lazyOnload" nonce={nonce} />
       </body>
     </html>
   );
