@@ -137,7 +137,7 @@ export default function Home() {
     // Only handle keyboard events on the panel container itself, not on interactive children
     if ((event.key === 'Enter' || event.key === ' ') && event.currentTarget === event.target) {
       event.preventDefault();
-      setActiveNode(activeNode === nodeId ? null : nodeId);
+      setActiveNode((prevActiveNode) => (prevActiveNode === nodeId ? null : nodeId));
     }
   };
 
