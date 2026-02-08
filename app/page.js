@@ -1,5 +1,8 @@
 'use client';
 
+// Note: This is a large client component. Consider refactoring to split static content
+// into server components in the future to reduce client-side JS bundle size.
+
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import {
