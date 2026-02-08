@@ -206,8 +206,7 @@ jobs:
     name: 🚀 Deploy to Coolify
     needs: build-push-sign
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
+    permissions: {}
     steps:
       - name: Trigger Coolify Deploy
         env:
