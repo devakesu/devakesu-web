@@ -27,7 +27,7 @@ export function middleware(request) {
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`,
     `style-src 'self' 'nonce-${nonce}' 'unsafe-inline' https://fonts.googleapis.com`,
     "font-src 'self' https://fonts.gstatic.com data:",
-    "img-src 'self' data: https: blob:",
+    "img-src 'self' data: blob: https://grainy-gradients.vercel.app",
     connectSrc,
     "frame-ancestors 'self'",
     "base-uri 'self'",
@@ -54,14 +54,14 @@ export const config = {
      * - _next/image/ (image optimization files)
      * - favicon files (favicon.ico, favicon.svg, etc.)
      * - js/ (static JavaScript files in /public/js/)
-     * - Static assets ending with: .svg, .jpg, .jpeg, .png, .gif, .webp
+     * - Static assets ending with: .svg, .jpg, .jpeg, .png, .gif, .webp, .ico, .avif, .json
      * 
      * This excludes static assets from middleware processing to reduce overhead.
      * Note: In Next.js, only static files from /public have file extensions in URLs.
      * Page routes and API routes are pathname-based and don't use file extensions.
      */
     {
-      source: '/((?!api/|_next/static/|_next/image/|favicon\\.|js/|.*\\.(?:svg|jpg|jpeg|png|gif|webp)$).*)',
+      source: '/((?!api/|_next/static/|_next/image/|favicon\\.|js/|.*\\.(?:svg|jpg|jpeg|png|gif|webp|ico|avif|json)$).*)',
       missing: [
         { type: 'header', key: 'next-router-prefetch' },
         { type: 'header', key: 'purpose', value: 'prefetch' },
