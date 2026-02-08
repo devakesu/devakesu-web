@@ -43,11 +43,20 @@ const nextConfig = {
           },
         ],
       },
+      // Preserve Next.js's immutable caching for hashed build assets
+      // This rule must come before the general image caching rule to take precedence
+      {
+        source: '/_next/static/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
       // Image asset caching rules for public/ directory assets
       // Matches root-level and subdirectory image files like /profile.jpg, /file.svg
-      // This pattern technically matches /_next/ paths too, but Next.js framework
-      // headers for /_next/static/** (immutable, long-term cache) are applied by
-      // the framework and take precedence over user-defined headers.
+      // The more specific /_next/static rule above ensures build assets keep immutable caching
       {
         source: '/:path*\\.(svg|jpg|jpeg|png|webp|avif|ico)',
         headers: [
