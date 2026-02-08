@@ -25,8 +25,19 @@ export const viewport = {
   colorScheme: 'dark',
 };
 
+// Helper function to safely construct URL with validation
+function getMetadataBaseUrl() {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://devakesu.com';
+  try {
+    return new URL(siteUrl);
+  } catch (error) {
+    console.warn(`Invalid NEXT_PUBLIC_SITE_URL: ${siteUrl}, falling back to default`);
+    return new URL('https://devakesu.com');
+  }
+}
+
 export const metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://devakesu.com'),
+  metadataBase: getMetadataBaseUrl(),
 
   // Basic Metadata
   title: {
