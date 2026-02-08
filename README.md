@@ -27,7 +27,7 @@
 
 - ✅ **SLSA Level 3 Provenance** - Supply chain security
 - ✅ **Trivy Vulnerability Scanning** - Automated CVE detection
-- ✅ **Security Headers** - CSP, X-Frame-Options, CORS protection
+- ✅ **Security Headers** - CSP, X-Frame-Options
 - ✅ **No Third-Party Tracking** - Privacy-first approach
 - ✅ **XSS/CSRF Protection** - React & Next.js built-in
 - ✅ **Secure Dependencies** - Regular audits & updates
