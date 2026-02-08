@@ -192,7 +192,7 @@ Edit `app/page.js` to update:
 
 ### Build Metadata
 
-The terminal displays real build data from `/public/meta.json`, which is generated during CI/CD deployment.
+The terminal displays real build data from `/public/meta.json`, which is automatically generated during the build process via the `prebuild` script. In production (Coolify), it uses environment variables from the git repository. In CI, it includes audit and provenance status.
 
 ---
 

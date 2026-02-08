@@ -40,6 +40,10 @@ jobs:
 
   # ------------------------------------------------------------------
   # JOB 2: BUILD, SBOM & METADATA INJECTION
+  #
+  # This job builds the site and generates SLSA provenance for audit
+  # purposes. The actual deployment is handled by Coolify (Job 4),
+  # which builds from source and generates meta.json via prebuild script.
   # ------------------------------------------------------------------
   build:
     name: 🏗️ Build & Sign
@@ -63,19 +67,6 @@ jobs:
 
       - name: Install Dependencies
         run: npm ci
-
-      # 🧬 INJECT METADATA
-      - name: Inject Real Build Metadata
-        id: meta
-        run: |
-          echo '{
-            "build_id": "'"$GITHUB_RUN_NUMBER"'",
-            "commit_sha": "'"${GITHUB_SHA::7}"'",
-            "branch": "'"${GITHUB_REF#refs/heads/}"'",
-            "timestamp": "'"$(date -u +"%Y-%m-%dT%H:%M:%SZ")"'",
-            "audit_status": "PASSED (Trivy)",
-            "signature_status": "SLSA_PROVENANCE_GENERATED"
-          }' > public/meta.json
 
       - name: Build Project
         run: npm run build
@@ -126,6 +117,11 @@ jobs:
 
   # ------------------------------------------------------------------
   # JOB 4: DEPLOY
+  # 
+  # Note: Coolify builds directly from the repository source code.
+  # The site_artifact.zip and its SLSA provenance are generated for
+  # audit purposes but are not directly deployed. Coolify will run
+  # 'npm run build' which generates meta.json via the prebuild script.
   # ------------------------------------------------------------------
   deploy:
     name: 🚀 Deploy to Coolify
