@@ -92,9 +92,9 @@
         if (navigator.vibrate) {
           try {
             navigator.vibrate(25);
-          } catch (e) {
+          } catch (error) {
             // Vibration not supported
-            void e; // Mark error as intentionally unused
+            void error; // Mark error as intentionally unused
           }
         }
 
