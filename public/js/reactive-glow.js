@@ -23,6 +23,7 @@
     let lastScrollY = window.scrollY;
     let scrollSpeed = 0;
     let ticking = false;
+    let scrollTicking = false;
     let cooldownId = null;
     let lastCursorX = 0;
     let lastCursorY = 0;
@@ -42,23 +43,30 @@
       }
     }, { passive: true });
 
-    // Scroll velocity → pulse strength
+    // Scroll velocity → pulse strength (throttled with rAF)
     window.addEventListener("scroll", () => {
-      const delta = Math.abs(window.scrollY - lastScrollY);
-      scrollSpeed = Math.min(delta / 100, 2.5);
-      lastScrollY = window.scrollY;
+      if (!scrollTicking) {
+        window.requestAnimationFrame(() => {
+          const delta = Math.abs(window.scrollY - lastScrollY);
+          scrollSpeed = Math.min(delta / 100, 2.5);
+          lastScrollY = window.scrollY;
 
-      // Update current scale and apply with cursor position to avoid jumps
-      currentScale = 1 + scrollSpeed * 0.3;
-      glow.style.transform = `translate3d(${lastCursorX}px, ${lastCursorY}px, 0) translate(-50%, -50%) scale(${currentScale})`;
-      glow.style.opacity = Math.min(0.4 + scrollSpeed * 0.25, 1);
+          // Update current scale and apply with cursor position to avoid jumps
+          currentScale = 1 + scrollSpeed * 0.3;
+          glow.style.transform = `translate3d(${lastCursorX}px, ${lastCursorY}px, 0) translate(-50%, -50%) scale(${currentScale})`;
+          glow.style.opacity = Math.min(0.4 + scrollSpeed * 0.25, 1);
 
-      clearTimeout(cooldownId);
-      cooldownId = setTimeout(() => {
-        currentScale = 1;
-        glow.style.transform = `translate3d(${lastCursorX}px, ${lastCursorY}px, 0) translate(-50%, -50%) scale(${currentScale})`;
-        glow.style.opacity = 0.4;
-      }, 200);
+          clearTimeout(cooldownId);
+          cooldownId = setTimeout(() => {
+            currentScale = 1;
+            glow.style.transform = `translate3d(${lastCursorX}px, ${lastCursorY}px, 0) translate(-50%, -50%) scale(${currentScale})`;
+            glow.style.opacity = 0.4;
+          }, 200);
+
+          scrollTicking = false;
+        });
+        scrollTicking = true;
+      }
     }, { passive: true });
 
     // Click Burst + Haptic Feedback
