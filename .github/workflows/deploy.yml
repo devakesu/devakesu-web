@@ -95,6 +95,8 @@ jobs:
       actions: write # Required for cache and artifact operations
       id-token: write # Required for Sigstore signing
       packages: write # Required for GHCR push
+    env:
+      COSIGN_TUF_ROOT: ${{ runner.temp }}/sigstore-tuf-root
     outputs:
       digest: ${{ steps.build.outputs.digest }}
       image: ${{ steps.image.outputs.image }}
@@ -159,8 +161,6 @@ jobs:
 
       # Initialize Sigstore TUF root (fix for key validation errors)
       - name: Initialize Sigstore TUF root
-        env:
-          COSIGN_TUF_ROOT: ${{ runner.temp }}/sigstore-tuf-root
         run: |
           # Remove any stale TUF metadata only from the isolated TUF root
           rm -rf "$COSIGN_TUF_ROOT"
