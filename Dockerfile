@@ -65,7 +65,8 @@ COPY --link . .
 
 # Validate required build args
 RUN set -e; \
-    : "${APP_COMMIT_SHA:?APP_COMMIT_SHA is required}";
+    : "${APP_COMMIT_SHA:?APP_COMMIT_SHA is required}"; \
+    : "${BUILD_ID:?BUILD_ID is required}";
 
 # Build with minimal resources and clean cache
 RUN npm run build && \
