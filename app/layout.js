@@ -95,12 +95,10 @@ export const metadata = {
     'devanarayanan',
     'kesu',
     'devakesu.com',
-    'devakesu',
 
     // Interests
     'technology',
     'nature',
-    'science',
     'research',
     'art',
     'chemistry',
@@ -113,7 +111,6 @@ export const metadata = {
     'beauty',
     'love',
     'peace',
-    'justice',
     'recycling',
     'inclusivity',
   ],
