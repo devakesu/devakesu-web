@@ -600,6 +600,7 @@ export default function Home() {
                     rel="noopener noreferrer"
                     className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
                     title="LinkedIn"
+                    aria-label="LinkedIn"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <FaLinkedin />
@@ -610,6 +611,7 @@ export default function Home() {
                     rel="noopener noreferrer"
                     className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
                     title="GitHub"
+                    aria-label="GitHub"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <FaGithub />
@@ -620,6 +622,7 @@ export default function Home() {
                     rel="noopener noreferrer"
                     className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
                     title="Instagram"
+                    aria-label="Instagram"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <FaInstagram />
@@ -630,6 +633,7 @@ export default function Home() {
                     rel="noopener noreferrer"
                     className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
                     title="Google Developer"
+                    aria-label="Google Developer"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <FaGoogle />
@@ -640,6 +644,7 @@ export default function Home() {
                     rel="noopener noreferrer"
                     className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
                     title="X (Twitter)"
+                    aria-label="X (Twitter)"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <FaXTwitter />
@@ -650,6 +655,7 @@ export default function Home() {
                     rel="noopener noreferrer"
                     className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
                     title="Facebook"
+                    aria-label="Facebook"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <FaFacebook />
@@ -660,6 +666,7 @@ export default function Home() {
                     rel="noopener noreferrer"
                     className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
                     title="Reddit"
+                    aria-label="Reddit"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <FaReddit />
@@ -670,6 +677,7 @@ export default function Home() {
                     rel="noopener noreferrer"
                     className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
                     title="Pinterest"
+                    aria-label="Pinterest"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <FaPinterest />
@@ -680,6 +688,7 @@ export default function Home() {
                     rel="noopener noreferrer"
                     className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
                     title="Telegram"
+                    aria-label="Telegram"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <FaTelegram />
