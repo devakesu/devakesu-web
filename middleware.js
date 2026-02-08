@@ -48,19 +48,18 @@ export function middleware(request) {
 export const config = {
   matcher: [
     /*
-     * Match all request paths except for the ones starting with:
+     * Match all request paths except for:
      * - api/ (API routes)
-     * - _next/static/ (static files)
+     * - _next/static/ (static files from Next.js)
      * - _next/image/ (image optimization files)
-     * - favicon.ico, favicon.svg (favicon files)
-     * - js/ (static JavaScript files in public/js directory)
+     * - favicon files
+     * - Static files from /public directory (js/, *.svg, *.jpg, *.jpeg, *.png, *.gif, *.webp)
      * 
-     * Note: Image files are handled by _next/image and _next/static exclusions.
-     * This negative lookahead pattern excludes static assets from middleware processing
-     * to avoid unnecessary CSP header overhead on cacheable resources.
+     * This excludes static assets from middleware processing to reduce overhead
+     * on cacheable resources that don't need CSP nonce injection.
      */
     {
-      source: '/((?!api/|_next/static/|_next/image/|favicon\\.ico$|favicon\\.svg$|js/).*)',
+      source: '/((?!api/|_next/static/|_next/image/|favicon\\.|js/|.*\\.(?:svg|jpg|jpeg|png|gif|webp)$).*)',
       missing: [
         { type: 'header', key: 'next-router-prefetch' },
         { type: 'header', key: 'purpose', value: 'prefetch' },
