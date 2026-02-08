@@ -1,0 +1,43 @@
+# Git
+.git
+.gitignore
+
+# Dependencies
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Next.js
+.next
+out
+*.tsbuildinfo
+next-env.d.ts
+
+# Build
+dist
+build
+
+# Misc
+.DS_Store
+*.pem
+.env*.local
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE
+.vscode
+.idea
+
+# GitHub
+.github
+
+# Testing
+coverage
+.nyc_output
+
+# Certificates
+certificates/

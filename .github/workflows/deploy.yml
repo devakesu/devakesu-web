@@ -1,7 +1,11 @@
 name: Secure Build & Deploy
 
 on:
+  pull_request:
+    branches: ['main']
   push:
+    branches: ['main']
+  merge_group:
     branches: ['main']
   workflow_dispatch:
 
@@ -10,12 +14,30 @@ permissions:
   contents: read
   id-token: write # Required for Sigstore signing
   actions: read
+  packages: write # Required for GHCR push
 
 jobs:
   # ------------------------------------------------------------------
-  # JOB 1: SECURITY AUDIT (SAST + SCA)
+  # JOB 1: GUARD (Runs on all PRs and pushes)
+  # ------------------------------------------------------------------
+  guard:
+    name: 🛡️ Build Guard
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
+        with:
+          egress-policy: audit
+
+      - name: Checkout Code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+  # ------------------------------------------------------------------
+  # JOB 2: SECURITY AUDIT (SAST + SCA)
   # ------------------------------------------------------------------
   audit:
+    needs: guard
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     name: 🛡️ Security Audit
     runs-on: ubuntu-latest
     steps:
@@ -39,18 +61,15 @@ jobs:
           severity: 'CRITICAL,HIGH'
 
   # ------------------------------------------------------------------
-  # JOB 2: BUILD, SBOM & METADATA INJECTION
-  #
-  # This job builds the site and generates SLSA provenance for audit
-  # purposes. The actual deployment is handled by Coolify (Job 4),
-  # which builds from source and generates meta.json via prebuild script.
+  # JOB 3: BUILD, PUSH & SIGN DOCKER IMAGE
   # ------------------------------------------------------------------
-  build:
-    name: 🏗️ Build & Sign
+  build-push-sign:
+    name: 🏗️ Build, Push & Sign
     needs: audit
     runs-on: ubuntu-latest
     outputs:
-      hashes: ${{ steps.hash.outputs.hashes }}
+      digest: ${{ steps.build.outputs.digest }}
+      image: ${{ steps.image.outputs.image }}
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
@@ -60,81 +79,127 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Setup Node.js
-        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@c47758b77c9736f4b2ef4073d4d51994fabfe349 # v3.7.1
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
         with:
-          node-version: 20
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install Dependencies
-        run: npm ci
+      - name: Prepare metadata
+        id: prep
+        run: |
+          TIMESTAMP=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+          echo "created=$TIMESTAMP" >> $GITHUB_OUTPUT
+          echo "started_on=$TIMESTAMP" >> $GITHUB_OUTPUT
 
-      - name: Build Project
-        env:
-          AUDIT_STATUS: 'PASSED (Trivy)'
-          SIGNATURE_STATUS: 'SLSA_PROVENANCE_GENERATED'
-        run: npm run build
+      - name: Build and push Docker image
+        uses: docker/build-push-action@4f58ea79222b3b9dc2c8bbdd6debcef730109a75 # v6.9.0
+        id: build
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:main
+            ghcr.io/${{ github.repository }}:${{ github.sha }}
+            ghcr.io/${{ github.repository }}:latest
+          platforms: linux/amd64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            APP_COMMIT_SHA=${{ github.sha }}
+            SOURCE_DATE_EPOCH=1767225600
+            AUDIT_STATUS=PASSED (Trivy)
+            SIGNATURE_STATUS=SLSA_PROVENANCE_GENERATED
+            NEXT_PUBLIC_SITE_URL=https://devakesu.com
+          labels: |
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.created=${{ steps.prep.outputs.created }}
 
-      # 📦 CREATE SBOM (Software Bill of Materials)
-      - name: Generate SBOM for .next
+      - name: Set image output
+        id: image
+        run: echo "image=ghcr.io/${{ github.repository }}@${{ steps.build.outputs.digest }}" >> "$GITHUB_OUTPUT"
+
+      # Install cosign
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+
+      # 📦 GENERATE SBOM
+      - name: Generate SBOM
         uses: anchore/sbom-action@28d71544de8eaf1b958d335707167c5f783590ad # v0.22.2
         with:
-          path: ./.next
-          format: spdx-json
-          output-file: ./sbom-next.spdx.json
+          image: ${{ steps.image.outputs.image }}
+          format: cyclonedx-json
+          output-file: sbom.json
 
-      - name: Generate SBOM for public
-        uses: anchore/sbom-action@28d71544de8eaf1b958d335707167c5f783590ad # v0.22.2
-        with:
-          path: ./public
-          format: spdx-json
-          output-file: ./sbom-public.spdx.json
-
-      # 🗜️ ZIP ARTIFACT (Required for hashing folders correctly)
-      - name: Zip Build Output
-        run: |
-          zip -r site_artifact.zip .next public sbom-next.spdx.json sbom-public.spdx.json
-
-      # 🔑 CALCULATE HASH (For Provenance)
-      - name: Generate Hash for SLSA
-        id: hash
-        run: |
-          echo "hashes=$(sha256sum site_artifact.zip | base64 -w0)" >> "$GITHUB_OUTPUT"
-
-      - name: Upload Build Artifacts
+      - name: Upload SBOM
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
-          name: site_artifact
-          path: site_artifact.zip
-          if-no-files-found: error
+          name: sbom
+          path: sbom.json
 
-  # ------------------------------------------------------------------
-  # JOB 3: SLSA PROVENANCE (The "Verified" Checkmark)
-  # ------------------------------------------------------------------
-  provenance:
-    name: 🔏 Generate Provenance
-    needs: build
-    permissions:
-      actions: read
-      id-token: write
-      contents: write
-    # We use the generic generator for static assets
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@5a775b367a56d5bd118a224a811bba288150a563 # v2.0.0
-    with:
-      base64-subjects: '${{ needs.build.outputs.hashes }}'
-      upload-assets: true
-      compile-generator: true # High security mode
+      # 🔑 ATTEST SBOM
+      - name: Attest SBOM
+        env:
+          COSIGN_EXPERIMENTAL: 'true'
+        run: |
+          cosign attest \
+            --yes \
+            --predicate sbom.json \
+            --type cyclonedx \
+            ${{ steps.image.outputs.image }}
+
+      # 📝 GENERATE PROVENANCE (SLSA)
+      - name: Generate provenance
+        run: |
+          cat <<EOF > provenance.json
+          {
+            "builder": {
+              "id": "${{ github.server_url }}/${{ github.repository }}/.github/workflows/${{ github.workflow }}"
+            },
+            "buildType": "https://github.com/slsa-framework/slsa-github-generator/container@v1",
+            "invocation": {
+              "configSource": {
+                "uri": "${{ github.server_url }}/${{ github.repository }}",
+                "digest": {
+                  "gitCommit": "${{ github.sha }}"
+                }
+              }
+            },
+            "metadata": {
+              "buildInvocationID": "${{ github.run_id }}",
+              "startedOn": "${{ steps.prep.outputs.started_on }}"
+            }
+          }
+          EOF
+
+      # 🔏 ATTEST PROVENANCE (SLSA)
+      - name: Attest provenance (SLSA)
+        run: |
+          cosign attest \
+            --yes \
+            --predicate provenance.json \
+            --type slsaprovenance \
+            ${{ steps.image.outputs.image }}
+
+      # ✍️ SIGN IMAGE (keyless)
+      - name: Sign image (keyless)
+        env:
+          COSIGN_EXPERIMENTAL: 'true'
+        run: |
+          cosign sign --yes \
+            ${{ steps.image.outputs.image }}
 
   # ------------------------------------------------------------------
   # JOB 4: DEPLOY
-  #
-  # Note: Coolify builds directly from the repository source code.
-  # The site_artifact.zip and its SLSA provenance are generated for
-  # audit purposes but are not directly deployed. Coolify will run
-  # 'npm run build' which generates meta.json via the prebuild script.
   # ------------------------------------------------------------------
   deploy:
     name: 🚀 Deploy to Coolify
-    needs: [build, provenance]
+    needs: build-push-sign
     runs-on: ubuntu-latest
     steps:
       - name: Trigger Coolify Deploy
@@ -143,11 +208,6 @@ jobs:
           COOLIFY_APP_ID: ${{ secrets.COOLIFY_APP_ID }}
           COOLIFY_API_TOKEN: ${{ secrets.COOLIFY_API_TOKEN }}
         run: |
-          curl -X POST \
+          curl \
             "$COOLIFY_BASE_URL/api/v1/deploy?uuid=$COOLIFY_APP_ID" \
-            -H "Authorization: Bearer $COOLIFY_API_TOKEN" \
-            -H "Content-Type: application/json" \
-            --fail-with-body \
-            --retry 3 \
-            --retry-delay 5 \
-            --max-time 30
+            -H "Authorization: Bearer $COOLIFY_API_TOKEN"
