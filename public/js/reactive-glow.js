@@ -29,8 +29,7 @@
     document.addEventListener("mousemove", (e) => {
       if (!ticking) {
         window.requestAnimationFrame(() => {
-          glow.style.left = `${e.clientX}px`;
-          glow.style.top = `${e.clientY}px`;
+          glow.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
           ticking = false;
         });
         ticking = true;

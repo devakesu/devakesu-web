@@ -16,6 +16,11 @@
     const parallaxLayers = document.querySelectorAll('.parallax-layer');
     if (parallaxLayers.length === 0) return;
 
+    // Cache depth values per layer during initialization
+    const layerDepths = Array.from(parallaxLayers).map((layer, i) => {
+      return parseFloat(layer.getAttribute('data-depth')) || (i + 1) * 0.02;
+    });
+
     // Add will-change for better performance
     parallaxLayers.forEach((layer) => {
       layer.style.willChange = 'transform';
@@ -35,7 +40,7 @@
         if (!ticking) {
           window.requestAnimationFrame(() => {
             parallaxLayers.forEach((layer, i) => {
-              const depth = parseFloat(layer.getAttribute('data-depth')) || (i + 1) * 0.02;
+              const depth = layerDepths[i];
               layer.style.transform = `translate3d(${lastX * depth * -30}px, ${lastY * depth * -30}px, 0)`;
             });
             ticking = false;

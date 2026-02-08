@@ -873,7 +873,9 @@ export default function Home() {
                   </div>
                   <div>
                     <span className="text-cyan-400">&gt; INTERESTS:</span>{' '}
-                    👨‍💻🌳⚛️🔬🎨🧪✨️👷🏽‍♀️🔭🎵🏏🍽🌷💅❤️☮️⚖️♻️🏳️‍🌈
+                    <span aria-hidden="true">
+                      👨‍💻🌳⚛️🔬🎨🧪✨️👷🏽‍♀️🔭🎵🏏🍽🌷💅❤️☮️⚖️♻️🏳️‍🌈
+                    </span>
                   </div>
                   <div>
                     <span className="text-cyan-400">&gt; SERVER:</span> Kochi, IN{' '}
