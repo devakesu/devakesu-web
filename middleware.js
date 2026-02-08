@@ -18,13 +18,10 @@ export function middleware(request) {
     },
   });
 
-  // Build CSP with nonce
-  const connectSrc = [
-    "connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com",
-    process.env.NODE_ENV !== 'production' ? 'ws: wss:' : '',
-  ]
-    .filter(Boolean)
-    .join(' ');
+  // Build CSP with nonce - add WebSocket support for development
+  const connectSrc = "connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com" + 
+    (process.env.NODE_ENV !== 'production' ? ' ws: wss:' : '');
+  
   const cspHeader = [
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`,
@@ -52,18 +49,18 @@ export const config = {
   matcher: [
     /*
      * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
+     * - api/ (API routes)
+     * - _next/static/ (static files)
+     * - _next/image/ (image optimization files)
      * - favicon.ico, favicon.svg (favicon files)
-     * - /js/ (static JavaScript files in public/js directory)
-     * - Files ending with common image extensions (static images)
+     * - js/ (static JavaScript files in public/js directory)
      * 
+     * Note: Image files are handled by _next/image and _next/static exclusions.
      * This negative lookahead pattern excludes static assets from middleware processing
      * to avoid unnecessary CSP header overhead on cacheable resources.
      */
     {
-      source: '/((?!api/|_next/static/|_next/image/|favicon\\.ico|favicon\\.svg|js/|.*\\.(jpg|jpeg|png|svg|gif|webp)$).*)',
+      source: '/((?!api/|_next/static/|_next/image/|favicon\\.ico$|favicon\\.svg$|js/).*)',
       missing: [
         { type: 'header', key: 'next-router-prefetch' },
         { type: 'header', key: 'purpose', value: 'prefetch' },
