@@ -19,13 +19,19 @@ export function middleware(request) {
   });
 
   // Build CSP with nonce
+  const connectSrc = [
+    "connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com",
+    process.env.NODE_ENV !== 'production' ? 'ws: wss:' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
   const cspHeader = [
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`,
     `style-src 'self' 'nonce-${nonce}' 'unsafe-inline' https://fonts.googleapis.com`,
     "font-src 'self' https://fonts.gstatic.com data:",
     "img-src 'self' data: https: blob:",
-    "connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com ws: wss:",
+    connectSrc,
     "frame-ancestors 'self'",
     "base-uri 'self'",
     "form-action 'self'",
@@ -50,9 +56,11 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico, favicon.svg (favicon files)
+     * - js/* (static JavaScript files)
+     * - *.jpg, *.jpeg, *.png, *.svg, *.gif, *.webp (static images)
      */
     {
-      source: '/((?!api|_next/static|_next/image|favicon.ico|favicon.svg).*)',
+      source: '/((?!api|_next/static|_next/image|favicon.ico|favicon.svg|js/|.*\\.(?:jpg|jpeg|png|svg|gif|webp)$).*)',
       missing: [
         { type: 'header', key: 'next-router-prefetch' },
         { type: 'header', key: 'purpose', value: 'prefetch' },

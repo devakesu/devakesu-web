@@ -218,7 +218,6 @@ export default function Home() {
                       alt="Kesu Profile"
                       width={200}
                       height={200}
-                      priority
                       className="profile-image"
                     />
                   </div>

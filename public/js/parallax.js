@@ -6,6 +6,13 @@
   if (typeof window === 'undefined') return;
 
   try {
+    const prefersReducedMotion =
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // Skip parallax effect for users who prefer reduced motion
+    if (prefersReducedMotion) return;
+
     const parallaxLayers = document.querySelectorAll('.parallax-layer');
     if (parallaxLayers.length === 0) return;
 

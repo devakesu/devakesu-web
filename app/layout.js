@@ -193,7 +193,6 @@ export default async function RootLayout({ children }) {
   return (
     <html lang="en" className={`${jetbrainsMono.variable} ${spaceGrotesk.variable}`}>
       <head>
-        <link rel="preload" href="/profile.jpg" as="image" type="image/jpeg" />
       </head>
       <body className="ambient-noise">
         {children}

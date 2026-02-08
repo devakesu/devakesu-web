@@ -6,35 +6,41 @@
   if (typeof window === "undefined" || !document.body) return;
 
   try {
-    // ====== Laser Beam Cursor ======
-    const laser = document.createElement("div");
-    laser.setAttribute('aria-hidden', 'true');
-    Object.assign(laser.style, {
-      position: "fixed",
-      top: "0",
-      left: "0",
-      width: "2px",
-      height: "2px",
-      background: "#00ffff",
-      boxShadow: "0 0 12px #00ffff",
-      pointerEvents: "none",
-      zIndex: "9999",
-      transition: "transform 0.02s linear",
-      willChange: "transform",
-    });
-    document.body.appendChild(laser);
+    const prefersReducedMotion =
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    // Throttle mousemove for performance
-    let ticking = false;
-    window.addEventListener("mousemove", (e) => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          laser.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
-          ticking = false;
-        });
-        ticking = true;
-      }
-    }, { passive: true });
+    // ====== Laser Beam Cursor ======
+    if (!prefersReducedMotion) {
+      const laser = document.createElement("div");
+      laser.setAttribute('aria-hidden', 'true');
+      Object.assign(laser.style, {
+        position: "fixed",
+        top: "0",
+        left: "0",
+        width: "2px",
+        height: "2px",
+        background: "#00ffff",
+        boxShadow: "0 0 12px #00ffff",
+        pointerEvents: "none",
+        zIndex: "9999",
+        transition: "transform 0.02s linear",
+        willChange: "transform",
+      });
+      document.body.appendChild(laser);
+
+      // Throttle mousemove for performance
+      let ticking = false;
+      window.addEventListener("mousemove", (e) => {
+        if (!ticking) {
+          window.requestAnimationFrame(() => {
+            laser.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
+            ticking = false;
+          });
+          ticking = true;
+        }
+      }, { passive: true });
+    }
 
     // ====== Scroll Reveal ======
     const revealItems = document.querySelectorAll(".reveal");
