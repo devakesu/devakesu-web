@@ -18,7 +18,9 @@
 
     // Cache depth values per layer during initialization
     const layerDepths = Array.from(parallaxLayers).map((layer, i) => {
-      return parseFloat(layer.getAttribute('data-depth')) || (i + 1) * 0.02;
+      const depthAttr = layer.getAttribute('data-depth');
+      const parsedDepth = depthAttr !== null ? parseFloat(depthAttr) : NaN;
+      return Number.isNaN(parsedDepth) ? (i + 1) * 0.02 : parsedDepth;
     });
 
     // Add will-change for better performance

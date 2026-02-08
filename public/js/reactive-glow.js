@@ -26,6 +26,7 @@
     let cooldownId = null;
     let lastCursorX = 0;
     let lastCursorY = 0;
+    let currentScale = 1;
 
     // Track cursor for glow movement (throttled)
     document.addEventListener("mousemove", (e) => {
@@ -33,8 +34,8 @@
       lastCursorY = e.clientY;
       if (!ticking) {
         window.requestAnimationFrame(() => {
-          // Compose transform with the CSS centering offset (-50%, -50%)
-          glow.style.transform = `translate3d(${lastCursorX}px, ${lastCursorY}px, 0) translate(-50%, -50%)`;
+          // Compose transform with the CSS centering offset and current scale
+          glow.style.transform = `translate3d(${lastCursorX}px, ${lastCursorY}px, 0) translate(-50%, -50%) scale(${currentScale})`;
           ticking = false;
         });
         ticking = true;
@@ -47,13 +48,15 @@
       scrollSpeed = Math.min(delta / 100, 2.5);
       lastScrollY = window.scrollY;
 
-      // Compose scroll scaling with current cursor position to avoid jumps
-      glow.style.transform = `translate3d(${lastCursorX}px, ${lastCursorY}px, 0) translate(-50%, -50%) scale(${1 + scrollSpeed * 0.3})`;
+      // Update current scale and apply with cursor position to avoid jumps
+      currentScale = 1 + scrollSpeed * 0.3;
+      glow.style.transform = `translate3d(${lastCursorX}px, ${lastCursorY}px, 0) translate(-50%, -50%) scale(${currentScale})`;
       glow.style.opacity = Math.min(0.4 + scrollSpeed * 0.25, 1);
 
       clearTimeout(cooldownId);
       cooldownId = setTimeout(() => {
-        glow.style.transform = `translate3d(${lastCursorX}px, ${lastCursorY}px, 0) translate(-50%, -50%) scale(1)`;
+        currentScale = 1;
+        glow.style.transform = `translate3d(${lastCursorX}px, ${lastCursorY}px, 0) translate(-50%, -50%) scale(${currentScale})`;
         glow.style.opacity = 0.4;
       }, 200);
     }, { passive: true });
