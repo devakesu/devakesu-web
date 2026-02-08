@@ -56,11 +56,14 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico, favicon.svg (favicon files)
-     * - js/* (static JavaScript files)
-     * - *.jpg, *.jpeg, *.png, *.svg, *.gif, *.webp (static images)
+     * - /js/ (static JavaScript files in public/js directory)
+     * - Files ending with common image extensions (static images)
+     * 
+     * This negative lookahead pattern excludes static assets from middleware processing
+     * to avoid unnecessary CSP header overhead on cacheable resources.
      */
     {
-      source: '/((?!api|_next/static|_next/image|favicon.ico|favicon.svg|js/|.*\\.(?:jpg|jpeg|png|svg|gif|webp)$).*)',
+      source: '/((?!api/|_next/static/|_next/image/|favicon\\.ico|favicon\\.svg|js/|.*\\.(jpg|jpeg|png|svg|gif|webp)$).*)',
       missing: [
         { type: 'header', key: 'next-router-prefetch' },
         { type: 'header', key: 'purpose', value: 'prefetch' },
