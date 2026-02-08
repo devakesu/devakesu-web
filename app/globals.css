@@ -47,7 +47,8 @@ body {
   overflow-x: hidden;
   background-color: #0a0a0a;
   color: white;
-  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  /* CSS variable defined by next/font in layout.js via spaceGrotesk.variable */
+  font-family: var(--font-space-grotesk, 'Space Grotesk', system-ui, sans-serif);
 }
 
 /* ========================= */

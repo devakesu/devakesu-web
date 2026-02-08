@@ -2,8 +2,10 @@
 import { NextResponse } from 'next/server';
 
 export function middleware(request) {
-  // Generate a random nonce for each request
-  const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
+  // Generate a random nonce for each request with proper entropy
+  const nonceArray = new Uint8Array(16);
+  crypto.getRandomValues(nonceArray);
+  const nonce = Buffer.from(nonceArray).toString('base64');
   
   // Clone the request headers
   const requestHeaders = new Headers(request.headers);
