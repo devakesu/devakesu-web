@@ -33,8 +33,8 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self'",
-              "style-src 'self' https://fonts.googleapis.com", // Tailwind + Google Fonts
+              "script-src 'self' 'unsafe-inline'", // Next.js requires unsafe-inline for hydration
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com", // Next.js and next/font require unsafe-inline
               "font-src 'self' https://fonts.gstatic.com data:",
               "img-src 'self' data: https: blob:",
               "connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com",

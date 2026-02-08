@@ -1,6 +1,6 @@
 # 🚀 DEVAKESU - Portfolio
 
-**Where code meets conscience.** A brutalist × cyberpunk portfolio built with Next.js 15.
+**Where code meets conscience.** A brutalist × cyberpunk portfolio built with Next.js 16.
 
 [![Security: SLSA Level 3](https://img.shields.io/badge/SLSA-Level%203-brightgreen)](https://slsa.dev)
 [![Security Scan: Trivy](https://img.shields.io/badge/Security-Trivy%20Scanned-blue)](.github/workflows/deploy.yml)
@@ -34,7 +34,7 @@
 
 ### ⚡ Performance
 
-- **Next.js 15** with Turbopack - Lightning-fast builds
+- **Next.js 16** with Turbopack - Lightning-fast builds
 - **RequestAnimationFrame** - Smooth 60fps animations
 - **Lazy Loading** - Scripts load on demand
 - **Image Optimization** - AVIF/WebP support

@@ -36,7 +36,7 @@
       lastScrollY = window.scrollY;
 
       glow.style.transform = `translate(-50%, -50%) scale(${1 + scrollSpeed * 0.3})`;
-      glow.style.opacity = 0.4 + scrollSpeed * 0.25;
+      glow.style.opacity = Math.min(0.4 + scrollSpeed * 0.25, 1);
 
       clearTimeout(glow._cooldown);
       glow._cooldown = setTimeout(() => {
