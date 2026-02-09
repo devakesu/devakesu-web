@@ -56,7 +56,7 @@ function MarkdownContent({ content }) {
   const elements = [];
   let currentList = [];
   
-  processed.forEach((item, idx) => {
+  processed.forEach((item) => {
     if (item.type === 'li') {
       currentList.push(item);
     } else {

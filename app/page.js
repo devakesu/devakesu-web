@@ -271,9 +271,16 @@ export default function Home() {
 
       // Ignore key events when focus is inside interactive/input elements
       const target = event.target;
-      const isInteractive = target.matches('input, textarea, select, button, a, [contenteditable="true"]');
       
-      if (isInteractive) {
+      // Guard against non-Element targets (e.g., document/window)
+      if (!(target instanceof Element)) {
+        return;
+      }
+      
+      // Use closest to check for interactive elements in the ancestor chain
+      const interactiveAncestor = target.closest('input, textarea, select, button, a, [contenteditable="true"]');
+      
+      if (interactiveAncestor) {
         return;
       }
 

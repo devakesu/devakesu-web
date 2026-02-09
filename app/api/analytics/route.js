@@ -19,8 +19,35 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Invalid pageTitle' }, { status: 400 });
     }
 
-    if (customParams && (typeof customParams !== 'object' || JSON.stringify(customParams).length > 1000)) {
-      return NextResponse.json({ error: 'Invalid customParams' }, { status: 400 });
+    if (referrer && (typeof referrer !== 'string' || referrer.length > 500)) {
+      return NextResponse.json({ error: 'Invalid referrer' }, { status: 400 });
+    }
+
+    if (customParams) {
+      if (typeof customParams !== 'object' || Array.isArray(customParams) || customParams === null) {
+        return NextResponse.json({ error: 'Invalid customParams: must be a plain object' }, { status: 400 });
+      }
+      
+      const keys = Object.keys(customParams);
+      if (keys.length > 20) {
+        return NextResponse.json({ error: 'Invalid customParams: too many keys (max 20)' }, { status: 400 });
+      }
+      
+      for (const key of keys) {
+        if (typeof key !== 'string' || key.length > 100) {
+          return NextResponse.json({ error: 'Invalid customParams: key too long' }, { status: 400 });
+        }
+        
+        const value = customParams[key];
+        const valueType = typeof value;
+        if (valueType !== 'string' && valueType !== 'number' && valueType !== 'boolean' && value !== null) {
+          return NextResponse.json({ error: 'Invalid customParams: values must be string/number/boolean/null' }, { status: 400 });
+        }
+        
+        if (valueType === 'string' && value.length > 500) {
+          return NextResponse.json({ error: 'Invalid customParams: string value too long' }, { status: 400 });
+        }
+      }
     }
 
     // Get client ID and session ID from request
