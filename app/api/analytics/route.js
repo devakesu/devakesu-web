@@ -6,6 +6,7 @@ import { sendAnalyticsEvent, getClientId, getSessionId } from '@/lib/analytics';
 const rateLimitMap = new Map();
 const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
 const RATE_LIMIT_MAX_REQUESTS = 60; // 60 requests per minute per IP
+const MAX_MAP_SIZE = 10000; // Prevent memory bloat
 
 function checkRateLimit(ip) {
   const now = Date.now();
@@ -17,6 +18,16 @@ function checkRateLimit(ip) {
       count: 1,
       resetTime: now + RATE_LIMIT_WINDOW_MS,
     });
+    
+    // Lazy cleanup: remove expired entries when map grows large
+    if (rateLimitMap.size > MAX_MAP_SIZE) {
+      for (const [key, value] of rateLimitMap.entries()) {
+        if (now > value.resetTime) {
+          rateLimitMap.delete(key);
+        }
+      }
+    }
+    
     return true;
   }
 
@@ -27,16 +38,6 @@ function checkRateLimit(ip) {
   record.count++;
   return true;
 }
-
-// Cleanup old entries periodically
-setInterval(() => {
-  const now = Date.now();
-  for (const [ip, record] of rateLimitMap.entries()) {
-    if (now > record.resetTime) {
-      rateLimitMap.delete(ip);
-    }
-  }
-}, 5 * 60 * 1000); // Clean up every 5 minutes
 
 export async function POST(request) {
   try {
