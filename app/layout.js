@@ -2,6 +2,7 @@ import './globals.css';
 import Script from 'next/script';
 import { JetBrains_Mono, Space_Grotesk } from 'next/font/google';
 import { headers } from 'next/headers';
+import Analytics from '@/components/Analytics';
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
@@ -168,6 +169,10 @@ export const metadata = {
 
   // Icons & Manifest
   icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/profile.jpg', sizes: '180x180', type: 'image/jpeg' },
+    ],
     apple: [{ url: '/profile.jpg', sizes: '180x180', type: 'image/jpeg' }],
   },
 
@@ -191,12 +196,12 @@ export default async function RootLayout({ children }) {
   // XSS protection. The nonce is required for inline scripts loaded via Next.js Script component.
   const headersList = await headers();
   const nonce = headersList.get('x-nonce') || undefined;
-  
+
   return (
     <html lang="en" className={`${jetbrainsMono.variable} ${spaceGrotesk.variable}`}>
-      <head>
-      </head>
+      <head></head>
       <body className="ambient-noise">
+        <Analytics />
         {children}
         <Script src="/js/cursor.js" strategy="lazyOnload" nonce={nonce} />
         <Script src="/js/parallax.js" strategy="lazyOnload" nonce={nonce} />

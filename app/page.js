@@ -5,6 +5,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
+import { useAnalytics } from '@/components/Analytics';
 import {
   FaLinkedin,
   FaGithub,
@@ -18,6 +19,7 @@ import {
 import { FaXTwitter } from 'react-icons/fa6';
 
 export default function Home() {
+  const { trackEvent } = useAnalytics();
   const [activeNode, setActiveNode] = useState(null);
   const [meta, setMeta] = useState(null);
   const [booting, setBooting] = useState(true);
@@ -144,6 +146,16 @@ export default function Home() {
       event.preventDefault();
       setActiveNode((prevActiveNode) => (prevActiveNode === nodeId ? null : nodeId));
     }
+  };
+
+  // Track social media link clicks
+  const handleSocialClick = (platform) => {
+    trackEvent('social_link_click', { platform });
+  };
+
+  // Track project link clicks
+  const handleProjectClick = (project, linkType) => {
+    trackEvent('project_link_click', { project, link_type: linkType });
   };
 
   return (
@@ -618,7 +630,10 @@ export default function Home() {
                     className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
                     title="LinkedIn"
                     aria-label="LinkedIn"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSocialClick('linkedin');
+                    }}
                   >
                     <FaLinkedin />
                   </a>
