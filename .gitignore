@@ -63,4 +63,7 @@ Thumbs.db
 logs
 *.log
 
+# Temporary tools
+actionlint
+
 certificates
