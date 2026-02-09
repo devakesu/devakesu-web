@@ -157,36 +157,17 @@ jobs:
 
       # Install cosign
       - name: Install cosign
-        uses: sigstore/cosign-installer@6e04d228eb30da1757ee4e1dd75a0ec73a653e06 # v3.7.0
+        uses: sigstore/cosign-installer@7e8b541eb2e61bf99390e1afd4be13a184e9ebc5 # v3.10.1
 
-      # Force fresh Sigstore TUF root initialization (clear caches, then initialize)
-      - name: Clear Sigstore TUF cache and reinitialize
+      # Initialize Sigstore with latest TUF root
+      - name: Initialize Sigstore
         run: |
-          set -e  # Exit immediately if any command fails
-          
-          # Force clean all Sigstore caches
-          rm -rf ~/.sigstore ~/.cache/sigstore
-          
-          # Set environment variables to force fresh TUF root download
-          export SIGSTORE_ROOT_FILE=""
-          export TUF_ROOT=https://tuf-repo-cdn.sigstore.dev
-          
-          # Initialize with latest TUF root (retry up to 3 times)
-          for i in {1..3}; do
-            echo "Attempt $i: Initializing Sigstore TUF root..."
-            if cosign initialize; then
-              echo "✅ Sigstore TUF initialization successful"
-              break
-            else
-              if [ "$i" -lt 3 ]; then
-                echo "⚠️ Attempt $i failed, retrying..."
-                sleep 5
-              else
-                echo "❌ Failed to initialize Sigstore after 3 attempts"
-                exit 1
-              fi
-            fi
-          done
+          cosign version
+          if cosign initialize --mirror=https://tuf-repo-cdn.sigstore.dev --root=https://tuf-repo-cdn.sigstore.dev/5.root.json; then
+            echo "✅ Sigstore TUF initialization successful"
+          else
+            echo "⚠️ Manual TUF initialization failed (exit code: $?), relying on automatic initialization"
+          fi
 
       # 📦 GENERATE SBOM
       - name: Generate SBOM
