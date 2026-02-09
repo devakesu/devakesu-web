@@ -233,7 +233,7 @@ The terminal displays real build data from `/public/meta.json`, which is automat
 
 ### Favicon
 
-The favicon is located at `app/favicon.svg` (Next.js App Router convention). Browsers automatically request `/favicon.ico`, but Next.js serves the SVG favicon defined in the metadata. No additional configuration needed.
+The favicon is located at `public/favicon.svg` and is referenced via `metadata.icons` as `/favicon.svg` (Next.js App Router–compatible setup). Browsers automatically request `/favicon.ico`, but Next.js serves the SVG favicon defined in the metadata configuration. No additional configuration needed.
 
 ---
 
@@ -376,4 +376,4 @@ _Love is the only way to rescue humanity from all evils._
 ---
 
 **Last Updated**: February 9, 2026  
-**Version**: 1.0.5
+**Version**: 1.1.0
