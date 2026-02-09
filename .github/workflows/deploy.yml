@@ -1,12 +1,11 @@
 name: Secure Build & Deploy
 
 on:
-  pull_request:
-    branches: ['main']
+  pull_request:  # Trigger on PRs to any branch
   push:
-    branches: ['main']
+    branches: ['main']  # Only auto-deploy from main
   merge_group:
-    branches: ['main']
+    branches: ['main']  # Only auto-deploy from main
   workflow_dispatch:
 
 # 🔒 LOCK DOWN PERMISSIONS (Least Privilege)
@@ -52,10 +51,10 @@ jobs:
   audit:
     needs: guard
     if: |
-      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
-      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
-      (github.event_name == 'merge_group' && github.event.merge_group.base_ref == 'refs/heads/main') ||
-      (github.event_name == 'pull_request' && github.base_ref == 'main')
+      github.event_name == 'push' ||
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'merge_group' ||
+      github.event_name == 'pull_request'
     name: 🛡️ Security Audit
     runs-on: ubuntu-latest
     permissions:
