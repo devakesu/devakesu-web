@@ -25,9 +25,9 @@ export function proxy(request) {
   const cspDirectives = [
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}'`,
-    `style-src 'self' 'nonce-${nonce}' https://fonts.googleapis.com`,
+    `style-src 'self' 'nonce-${nonce}' 'unsafe-hashes' 'sha256-zlqnbDt84zf1iSefLU/ImC54isoprH/MRiVZGskwexk=' https://fonts.googleapis.com`,
     "font-src 'self' https://fonts.gstatic.com data:",
-    "img-src 'self' data: blob: https://grainy-gradients.vercel.app",
+    "img-src 'self' data: blob:",
     connectSrc,
     "frame-ancestors 'self'",
     "base-uri 'self'",

@@ -169,11 +169,8 @@ export const metadata = {
 
   // Icons & Manifest
   icons: {
-    icon: [
-      { url: '/favicon.svg', type: 'image/svg+xml' },
-      { url: '/profile.jpg', sizes: '180x180', type: 'image/jpeg' },
-    ],
-    apple: [{ url: '/profile.jpg', sizes: '180x180', type: 'image/jpeg' }],
+    icon: [{ url: '/favicon.svg', type: 'image/svg+xml' }],
+    apple: [{ url: '/favicon.svg', type: 'image/svg+xml' }],
   },
 
   // Verification (add when you set these up)
@@ -198,7 +195,11 @@ export default async function RootLayout({ children }) {
   const nonce = headersList.get('x-nonce') || undefined;
 
   return (
-    <html lang="en" className={`${jetbrainsMono.variable} ${spaceGrotesk.variable}`}>
+    <html
+      lang="en"
+      className={`${jetbrainsMono.variable} ${spaceGrotesk.variable}`}
+      data-scroll-behavior="smooth"
+    >
       <head></head>
       <body className="ambient-noise">
         <Analytics />
