@@ -94,6 +94,9 @@ jobs:
       actions: write # Required for cache and artifact operations
       id-token: write # Required for Sigstore signing
       packages: write # Required for GHCR push
+    env:
+      SIGSTORE_ROOT_FILE: ""
+      TUF_ROOT: https://tuf-repo-cdn.sigstore.dev
     outputs:
       digest: ${{ steps.build.outputs.digest }}
       image: ${{ steps.image.outputs.image }}
@@ -163,11 +166,27 @@ jobs:
           
           # Force clean all Sigstore caches
           rm -rf ~/.sigstore ~/.cache/sigstore
-
-          # Initialize with latest TUF root
-          cosign initialize
           
-          echo "✅ Sigstore TUF initialization successful"
+          # Set environment variables to force fresh TUF root download
+          export SIGSTORE_ROOT_FILE=""
+          export TUF_ROOT=https://tuf-repo-cdn.sigstore.dev
+          
+          # Initialize with latest TUF root (retry up to 3 times)
+          for i in {1..3}; do
+            echo "Attempt $i: Initializing Sigstore TUF root..."
+            if cosign initialize; then
+              echo "✅ Sigstore TUF initialization successful"
+              break
+            else
+              if [ "$i" -lt 3 ]; then
+                echo "⚠️ Attempt $i failed, retrying..."
+                sleep 5
+              else
+                echo "❌ Failed to initialize Sigstore after 3 attempts"
+                exit 1
+              fi
+            fi
+          done
 
       # 📦 GENERATE SBOM
       - name: Generate SBOM
