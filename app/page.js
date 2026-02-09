@@ -269,6 +269,14 @@ export default function Home() {
         return;
       }
 
+      // Ignore key events when focus is inside interactive/input elements
+      const target = event.target;
+      const isInteractive = target.matches('input, textarea, select, button, a, [contenteditable="true"]');
+      
+      if (isInteractive) {
+        return;
+      }
+
       if (['ArrowDown', 'PageDown', ' '].includes(event.key)) {
         event.preventDefault();
         if (!isAnimatingRef.current) scrollToSection(1);
@@ -433,14 +441,6 @@ export default function Home() {
     [trackEvent]
   );
 
-  // Track project link clicks
-  const handleProjectClick = useCallback(
-    (project, linkType) => {
-      trackEvent('project_link_click', { project, link_type: linkType });
-    },
-    [trackEvent]
-  );
-
   return (
     <main className="relative isolate">
       {/* HERO SECTION */}
@@ -452,7 +452,7 @@ export default function Home() {
         ></div>
 
         <div
-          className="absolute -bottom-24 -right-24 h-112 w-md rounded-full bg-cyan-400/20 blur-3xl parallax-layer"
+          className="absolute -bottom-24 -right-24 h-[28rem] w-[28rem] rounded-full bg-cyan-400/20 blur-3xl parallax-layer"
           data-depth="0.25"
         ></div>
 
@@ -464,7 +464,7 @@ export default function Home() {
 
         {/* Cyan glow blobs */}
         <div className="absolute -top-24 -left-24 h-72 w-72 rounded-full bg-cyan-400/20 blur-3xl"></div>
-        <div className="absolute -bottom-24 -right-24 h-112 w-md rounded-full bg-cyan-400/20 blur-3xl"></div>
+        <div className="absolute -bottom-24 -right-24 h-[28rem] w-[28rem] rounded-full bg-cyan-400/20 blur-3xl"></div>
 
         {/* Content */}
         <div className="relative scanlines">

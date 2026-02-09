@@ -184,8 +184,8 @@ devakesu-web/
 
 - ✅ **Server-side Google Analytics** (optional, CSP-compliant)
 - ✅ **No client-side tracking scripts**
-- ✅ **No cookies or local storage** (except GA client ID if enabled)
-- ✅ **Zero third-party requests** - All assets self-hosted
+- ✅ **No cookies or local storage** – no persistent client identifiers are stored; GA client IDs (if used) are generated per request and not saved in the browser
+- ✅ **Zero third-party requests from the browser** – all frontend assets are self-hosted; optional server-side analytics may contact Google
 - ✅ **GDPR compliant** by design
 - ✅ **Privacy-first architecture**
 - ✅ **Transparent data handling** - See `/legal` page for full privacy policy

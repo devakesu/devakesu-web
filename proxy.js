@@ -20,7 +20,7 @@ export function proxy(request) {
 
   // Build CSP with nonce - add WebSocket support for development
   const devWebSocketProtocols = process.env.NODE_ENV !== 'production' ? ' ws: wss:' : '';
-  const connectSrc = `connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://www.google-analytics.com${devWebSocketProtocols}`;
+  const connectSrc = `connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com${devWebSocketProtocols}`;
 
   const cspDirectives = [
     "default-src 'self'",

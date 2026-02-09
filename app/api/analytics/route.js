@@ -6,9 +6,26 @@ export async function POST(request) {
     const body = await request.json();
     const { eventName, pageLocation, pageTitle, referrer, customParams } = body;
 
-    // Get client ID from request
+    // Basic validation
+    if (!eventName || typeof eventName !== 'string' || eventName.length > 100) {
+      return NextResponse.json({ error: 'Invalid eventName' }, { status: 400 });
+    }
+
+    if (pageLocation && (typeof pageLocation !== 'string' || pageLocation.length > 500)) {
+      return NextResponse.json({ error: 'Invalid pageLocation' }, { status: 400 });
+    }
+
+    if (pageTitle && (typeof pageTitle !== 'string' || pageTitle.length > 500)) {
+      return NextResponse.json({ error: 'Invalid pageTitle' }, { status: 400 });
+    }
+
+    if (customParams && (typeof customParams !== 'object' || JSON.stringify(customParams).length > 1000)) {
+      return NextResponse.json({ error: 'Invalid customParams' }, { status: 400 });
+    }
+
+    // Get client ID and session ID from request
     const clientId = getClientId(request);
-    const sessionId = getSessionId();
+    const sessionId = getSessionId(request);
 
     // Send event to Google Analytics
     await sendAnalyticsEvent({
