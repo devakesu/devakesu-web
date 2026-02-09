@@ -159,11 +159,15 @@ jobs:
       # Initialize Sigstore TUF root with fallback strategy
       - name: Clear Sigstore TUF cache and reinitialize
         run: |
+          set -e  # Exit immediately if any command fails
+          
           # Force clean all Sigstore caches
           rm -rf ~/.sigstore ~/.cache/sigstore
 
           # Initialize with latest TUF root
           cosign initialize
+          
+          echo "✅ Sigstore TUF initialization successful"
 
       # 📦 GENERATE SBOM
       - name: Generate SBOM
