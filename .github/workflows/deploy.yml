@@ -156,14 +156,11 @@ jobs:
       - name: Install cosign
         uses: sigstore/cosign-installer@6e04d228eb30da1757ee4e1dd75a0ec73a653e06 # v3.7.0
 
-      # Initialize Sigstore TUF root (fix for key validation errors)
+      # Initialize Sigstore TUF root
       - name: Initialize Sigstore TUF root
-        env:
-          COSIGN_TUF_ROOT: ${{ runner.temp }}/sigstore-tuf-root
         run: |
-          # Remove any stale TUF metadata only from the isolated TUF root
-          rm -rf "$COSIGN_TUF_ROOT"
-          mkdir -p "$COSIGN_TUF_ROOT"
+          # Clean default Sigstore directory to ensure fresh metadata
+          rm -rf "$HOME/.sigstore"
           # Initialize with fresh root
           cosign initialize
 
@@ -185,7 +182,6 @@ jobs:
       - name: Attest SBOM
         env:
           COSIGN_EXPERIMENTAL: 'true'
-          COSIGN_TUF_ROOT: ${{ runner.temp }}/sigstore-tuf-root
         run: |
           cosign attest \
             --yes \
@@ -219,8 +215,6 @@ jobs:
 
       # 🔏 ATTEST PROVENANCE (SLSA)
       - name: Attest provenance (SLSA)
-        env:
-          COSIGN_TUF_ROOT: ${{ runner.temp }}/sigstore-tuf-root
         run: |
           cosign attest \
             --yes \
@@ -232,7 +226,6 @@ jobs:
       - name: Sign image (keyless)
         env:
           COSIGN_EXPERIMENTAL: 'true'
-          COSIGN_TUF_ROOT: ${{ runner.temp }}/sigstore-tuf-root
         run: |
           cosign sign --yes \
             ${{ steps.image.outputs.image }}
