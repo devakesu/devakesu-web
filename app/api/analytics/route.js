@@ -32,6 +32,17 @@ function checkRateLimit(ip) {
           }
         }
       }
+      
+      // Hard cap: if still over limit after cleanup, evict oldest entries
+      if (rateLimitMap.size > MAX_MAP_SIZE) {
+        const entriesToRemove = Array.from(rateLimitMap.entries())
+          .sort((a, b) => a[1].resetTime - b[1].resetTime)
+          .slice(0, CLEANUP_BATCH_SIZE);
+        
+        for (const [key] of entriesToRemove) {
+          rateLimitMap.delete(key);
+        }
+      }
     }
     
     return true;
@@ -48,13 +59,13 @@ function checkRateLimit(ip) {
 // Validate and normalize IP address
 function normalizeIP(rawIP) {
   if (!rawIP || typeof rawIP !== 'string') {
-    return 'unknown';
+    return null;
   }
   
   // Trim whitespace and limit length to prevent abuse
   const trimmed = rawIP.trim();
   if (trimmed.length > 45) { // Max IPv6 length is 45 chars
-    return 'invalid';
+    return null;
   }
   
   // Basic IPv4/IPv6 validation (simple check)
@@ -65,18 +76,21 @@ function normalizeIP(rawIP) {
     return trimmed;
   }
   
-  return 'invalid';
+  return null;
 }
 
 export async function POST(request) {
   try {
     // Rate limiting by IP - extract and normalize
-    const rawIP = request.headers.get('x-forwarded-for')?.split(',')[0] || 
-                  request.headers.get('x-real-ip') || 
-                  'unknown';
-    const ip = normalizeIP(rawIP);
+    const headerIP = request.headers.get('x-forwarded-for')?.split(',')[0] ||
+                     request.headers.get('x-real-ip') ||
+                     '';
+    const headerNormalized = normalizeIP(headerIP);
+    const fallbackNormalized = normalizeIP(request.ip);
+    const ip = headerNormalized || fallbackNormalized;
     
-    if (!checkRateLimit(ip)) {
+    // Skip rate limiting if IP cannot be determined
+    if (ip && !checkRateLimit(ip)) {
       return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
     }
 
