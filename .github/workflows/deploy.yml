@@ -179,9 +179,8 @@ jobs:
               echo "⚠️ Detected 'invalid key' error - this is a known Sigstore TUF issue"
               echo "📋 Will use embedded trust root as fallback"
               
-              # Create a marker file to indicate we're using embedded root
-              mkdir -p "$HOME/.sigstore"
-              touch "$HOME/.sigstore/using-embedded-root"
+              # Set environment variable for all subsequent steps
+              echo "SIGSTORE_ROOT_FILE=" >> $GITHUB_ENV
               
               echo "✅ Configured to use embedded trust root"
               exit 0
@@ -197,8 +196,7 @@ jobs:
           
           echo "⚠️ TUF initialization failed after $MAX_RETRIES attempts"
           echo "📋 Proceeding with embedded trust root (operations will still be secure)"
-          mkdir -p "$HOME/.sigstore"
-          touch "$HOME/.sigstore/using-embedded-root"
+          echo "SIGSTORE_ROOT_FILE=" >> $GITHUB_ENV
 
       # 📦 GENERATE SBOM
       - name: Generate SBOM
@@ -219,12 +217,6 @@ jobs:
         env:
           COSIGN_EXPERIMENTAL: 'true'
         run: |
-          # Check if we're using embedded root
-          if [ -f "$HOME/.sigstore/using-embedded-root" ]; then
-            echo "📋 Using embedded trust root for attestation"
-            export SIGSTORE_ROOT_FILE=""  # Use embedded root
-          fi
-          
           cosign attest \
             --yes \
             --predicate sbom.json \
@@ -258,12 +250,6 @@ jobs:
       # 🔏 ATTEST PROVENANCE (SLSA)
       - name: Attest provenance (SLSA)
         run: |
-          # Check if we're using embedded root
-          if [ -f "$HOME/.sigstore/using-embedded-root" ]; then
-            echo "📋 Using embedded trust root for attestation"
-            export SIGSTORE_ROOT_FILE=""  # Use embedded root
-          fi
-          
           cosign attest \
             --yes \
             --predicate provenance.json \
@@ -275,12 +261,6 @@ jobs:
         env:
           COSIGN_EXPERIMENTAL: 'true'
         run: |
-          # Check if we're using embedded root
-          if [ -f "$HOME/.sigstore/using-embedded-root" ]; then
-            echo "📋 Using embedded trust root for signing"
-            export SIGSTORE_ROOT_FILE=""  # Use embedded root
-          fi
-          
           cosign sign --yes \
             ${{ steps.image.outputs.image }}
 
