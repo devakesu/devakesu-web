@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import {
   PRIVACY_POLICY,
@@ -18,40 +18,99 @@ function MarkdownContent({ content }) {
 
     // Headers
     if (line.startsWith('### ')) {
-      return (
-        <h3 key={index} className="text-xl font-bold text-cyan-400 first:mt-0 mt-8 mb-3">
-          {line.slice(4)}
-        </h3>
-      );
+      return {
+        type: 'h3',
+        content: line.slice(4),
+        index,
+      };
     }
 
     if (line.startsWith('**') && line.endsWith('**') && !line.includes('[')) {
-      return (
-        <h4 key={index} className="text-base font-semibold text-neutral-200 first:mt-0 mt-5 mb-2">
-          {line.slice(2, -2)}
-        </h4>
-      );
+      return {
+        type: 'h4',
+        content: line.slice(2, -2),
+        index,
+      };
     }
 
     // Bullet points
     if (line.trim().startsWith('* ')) {
-      return (
-        <li key={index} className="ml-6 mb-2 text-neutral-300">
-          <InlineMarkdown text={line.slice(2)} />
-        </li>
-      );
+      return {
+        type: 'li',
+        content: line.slice(2),
+        index,
+      };
     }
 
     // Regular paragraph
-    return (
-      <p key={index} className="mb-3 text-neutral-300 leading-relaxed">
-        <InlineMarkdown text={line} />
-      </p>
-    );
+    return {
+      type: 'p',
+      content: line,
+      index,
+    };
   };
 
-  const lines = content.split('\n').map(processLine).filter(Boolean);
-  return <>{lines}</>;
+  const processed = content.split('\n').map(processLine).filter(Boolean);
+  
+  // Group consecutive list items into <ul> blocks
+  const elements = [];
+  let currentList = [];
+  
+  processed.forEach((item) => {
+    if (item.type === 'li') {
+      currentList.push(item);
+    } else {
+      // If we have accumulated list items, wrap them in <ul>
+      if (currentList.length > 0) {
+        elements.push(
+          <ul key={`ul-${currentList[0].index}`} className="mb-3">
+            {currentList.map((li) => (
+              <li key={li.index} className="ml-6 mb-2 text-neutral-300">
+                <InlineMarkdown text={li.content} />
+              </li>
+            ))}
+          </ul>
+        );
+        currentList = [];
+      }
+      
+      // Add the non-list element
+      if (item.type === 'h3') {
+        elements.push(
+          <h3 key={item.index} className="text-xl font-bold text-cyan-400 first:mt-0 mt-8 mb-3">
+            {item.content}
+          </h3>
+        );
+      } else if (item.type === 'h4') {
+        elements.push(
+          <h4 key={item.index} className="text-base font-semibold text-neutral-200 first:mt-0 mt-5 mb-2">
+            {item.content}
+          </h4>
+        );
+      } else if (item.type === 'p') {
+        elements.push(
+          <p key={item.index} className="mb-3 text-neutral-300 leading-relaxed">
+            <InlineMarkdown text={item.content} />
+          </p>
+        );
+      }
+    }
+  });
+  
+  // Handle any remaining list items at the end
+  if (currentList.length > 0) {
+    elements.push(
+      <ul key={`ul-${currentList[0].index}`} className="mb-3">
+        {currentList.map((li) => (
+          <li key={li.index} className="ml-6 mb-2 text-neutral-300">
+            <InlineMarkdown text={li.content} />
+          </li>
+        ))}
+      </ul>
+    );
+  }
+  
+  return <>{elements}</>;
 }
 
 // Process inline markdown (bold, links, emails)
