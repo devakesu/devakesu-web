@@ -156,7 +156,7 @@ jobs:
       - name: Install cosign
         uses: sigstore/cosign-installer@6e04d228eb30da1757ee4e1dd75a0ec73a653e06 # v3.7.0
 
-      # Initialize Sigstore TUF root with fallback strategy
+      # Force fresh Sigstore TUF root initialization (clear caches, then initialize)
       - name: Clear Sigstore TUF cache and reinitialize
         run: |
           set -e  # Exit immediately if any command fails
