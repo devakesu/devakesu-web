@@ -94,6 +94,9 @@ jobs:
       actions: write # Required for cache and artifact operations
       id-token: write # Required for Sigstore signing
       packages: write # Required for GHCR push
+    env:
+      SIGSTORE_ROOT_FILE: ""
+      TUF_ROOT: https://tuf-repo-cdn.sigstore.dev
     outputs:
       digest: ${{ steps.build.outputs.digest }}
       image: ${{ steps.image.outputs.image }}
@@ -175,13 +178,13 @@ jobs:
               echo "✅ Sigstore TUF initialization successful"
               break
             else
-              echo "⚠️ Attempt $i failed, retrying..."
-              sleep 5
-            fi
-            
-            if [ $i -eq 3 ]; then
-              echo "❌ Failed to initialize Sigstore after 3 attempts"
-              exit 1
+              if [ "$i" -lt 3 ]; then
+                echo "⚠️ Attempt $i failed, retrying..."
+                sleep 5
+              else
+                echo "❌ Failed to initialize Sigstore after 3 attempts"
+                exit 1
+              fi
             fi
           done
 
@@ -203,8 +206,6 @@ jobs:
       - name: Attest SBOM
         env:
           COSIGN_EXPERIMENTAL: 'true'
-          SIGSTORE_ROOT_FILE: ""
-          TUF_ROOT: https://tuf-repo-cdn.sigstore.dev
         run: |
           cosign attest \
             --yes \
@@ -238,9 +239,6 @@ jobs:
 
       # 🔏 ATTEST PROVENANCE (SLSA)
       - name: Attest provenance (SLSA)
-        env:
-          SIGSTORE_ROOT_FILE: ""
-          TUF_ROOT: https://tuf-repo-cdn.sigstore.dev
         run: |
           cosign attest \
             --yes \
@@ -252,8 +250,6 @@ jobs:
       - name: Sign image (keyless)
         env:
           COSIGN_EXPERIMENTAL: 'true'
-          SIGSTORE_ROOT_FILE: ""
-          TUF_ROOT: https://tuf-repo-cdn.sigstore.dev
         run: |
           cosign sign --yes \
             ${{ steps.image.outputs.image }}
