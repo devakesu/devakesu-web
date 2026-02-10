@@ -268,7 +268,7 @@ To enable privacy-friendly, server-side Google Analytics:
    GA_API_SECRET=your_api_secret_here
    ```
 
-   **Note**: `NEXT_PUBLIC_SITE_URL` is required for production analytics origin validation to ensure requests only come from your domain.
+   **Note**: When enabling server-side analytics in production (i.e., when GA env vars are set), `NEXT_PUBLIC_SITE_URL` is required for origin validation to ensure requests only come from your domain.
 
 The implementation uses Google Analytics Measurement Protocol, which:
 
