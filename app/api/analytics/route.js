@@ -76,23 +76,14 @@ function checkRateLimit(ip, isUnknown = false) {
             // Median-of-three pivot selection for better performance
             const mid = left + Math.floor((right - left) / 2);
             
-            // Find median of arr[left], arr[mid], arr[right] by resetTime
-            const leftTime = arr[left][1].resetTime;
-            const midTime = arr[mid][1].resetTime;
-            const rightTime = arr[right][1].resetTime;
-            
-            let pivotIndex;
-            if (leftTime <= midTime && midTime <= rightTime) {
-              pivotIndex = mid; // midTime is median
-            } else if (rightTime <= midTime && midTime <= leftTime) {
-              pivotIndex = mid; // midTime is median
-            } else if (midTime <= leftTime && leftTime <= rightTime) {
-              pivotIndex = left; // leftTime is median
-            } else if (rightTime <= leftTime && leftTime <= midTime) {
-              pivotIndex = left; // leftTime is median
-            } else {
-              pivotIndex = right; // rightTime is median
-            }
+            // Sort three candidates by resetTime to find median
+            const candidates = [
+              { idx: left, time: arr[left][1].resetTime },
+              { idx: mid, time: arr[mid][1].resetTime },
+              { idx: right, time: arr[right][1].resetTime }
+            ];
+            candidates.sort((a, b) => a.time - b.time);
+            const pivotIndex = candidates[1].idx; // Middle value is median
             
             const newPivot = partitionByResetTime(arr, left, right, pivotIndex);
             
@@ -108,7 +99,7 @@ function checkRateLimit(ip, isUnknown = false) {
         
         // Find the nth smallest resetTime where n = excess
         // This ensures we evict exactly 'excess' oldest entries
-        if (excess > 0 && excess < entriesArray.length) {
+        if (excess > 0 && excess <= entriesArray.length) {
           quickSelect(entriesArray, excess - 1);
           
           // All entries at indices 0..excess-1 now have resetTime <= threshold
