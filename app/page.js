@@ -32,7 +32,6 @@ export default function Home() {
     if (typeof window === 'undefined') return false;
     return window.matchMedia('(pointer: coarse)').matches;
   });
-  const sectionRefs = useRef([]);
   const activeSectionIndexRef = useRef(0);
   const isAnimatingRef = useRef(false);
   const unlockTimeoutRef = useRef(null);
