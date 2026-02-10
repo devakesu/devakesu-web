@@ -4,6 +4,29 @@ import { useEffect, useRef, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
 
 /**
+ * Check if analytics is enabled based on the NEXT_PUBLIC_ANALYTICS_ENABLED environment variable.
+ * Accepts common truthy values: 'true', '1', 'yes', 'y', 'on', 'enable', 'enabled' (case-insensitive).
+ * @returns {boolean} True if analytics is enabled, false otherwise
+ */
+export function isAnalyticsEnabled() {
+  const rawValue = process.env.NEXT_PUBLIC_ANALYTICS_ENABLED;
+
+  if (rawValue === undefined || rawValue === null) {
+    return false;
+  }
+
+  const normalized = String(rawValue).trim().toLowerCase();
+
+  if (normalized === '') {
+    return false;
+  }
+
+  const truthyValues = ['true', '1', 'yes', 'y', 'on', 'enable', 'enabled'];
+
+  return truthyValues.includes(normalized);
+}
+
+/**
  * Client-side Analytics component that sends events via server-side API
  * This avoids CSP issues by not loading external scripts
  */
@@ -13,6 +36,11 @@ export default function Analytics() {
 
   useEffect(() => {
     const trackPageView = async () => {
+      // Short-circuit if analytics is disabled to avoid unnecessary API requests
+      if (!isAnalyticsEnabled()) {
+        return;
+      }
+
       const pageLocation = window.location.href;
 
       // Prevent duplicate tracking in two ways:
@@ -84,29 +112,6 @@ export default function Analytics() {
   }, [pathname]);
 
   return null;
-}
-
-/**
- * Check if analytics is enabled based on the NEXT_PUBLIC_ANALYTICS_ENABLED environment variable.
- * Accepts common truthy values: 'true', '1', 'yes', 'y', 'on', 'enable', 'enabled' (case-insensitive).
- * @returns {boolean} True if analytics is enabled, false otherwise
- */
-function isAnalyticsEnabled() {
-  const rawValue = process.env.NEXT_PUBLIC_ANALYTICS_ENABLED;
-
-  if (rawValue === undefined || rawValue === null) {
-    return false;
-  }
-
-  const normalized = String(rawValue).trim().toLowerCase();
-
-  if (normalized === '') {
-    return false;
-  }
-
-  const truthyValues = ['true', '1', 'yes', 'y', 'on', 'enable', 'enabled'];
-
-  return truthyValues.includes(normalized);
 }
 
 /**
