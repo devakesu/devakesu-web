@@ -159,7 +159,7 @@ devakesu-web/
 - **SLSA Level 3 Provenance** - Verifiable build integrity
 - **Trivy Scanning** - Automated vulnerability detection in CI/CD
 - **Security Headers**:
-  - `X-Frame-Options: DENY` - Strict clickjacking protection
+  - `X-Frame-Options: SAMEORIGIN` - Same-origin-only framing to mitigate clickjacking
   - `X-Content-Type-Options: nosniff` - MIME sniffing prevention
   - `Referrer-Policy: strict-origin-when-cross-origin` - Enhanced privacy
   - `Strict-Transport-Security` - HSTS with preload (production only)
@@ -229,7 +229,7 @@ The terminal displays real build data from `/public/meta.json`, which is automat
 
 ### Favicon
 
-The favicon is located at `public/favicon.svg` and is referenced via `metadata.icons` as `/favicon.svg` (Next.js App Router–compatible setup). Browsers automatically request `/favicon.ico`, but Next.js serves the SVG favicon defined in the metadata configuration. No additional configuration needed.
+The primary favicon for the App Router is located at `app/favicon.svg` and is served by Next.js as `/favicon.svg`. Browsers may also request `/favicon.ico`; to support that explicitly, add a `favicon.ico` file under `public/` or configure a redirect/route to the SVG favicon as needed.
 
 ---
 
