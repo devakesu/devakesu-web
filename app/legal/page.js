@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import {
   PRIVACY_POLICY,
-  TERMS_OF_USE,
+  getTermsOfUse,
   COOKIE_NOTICE,
   EFFECTIVE_DATE,
   CONTACT_EMAIL,
@@ -192,7 +192,7 @@ export default function PrivacyPage() {
 
   const tabs = [
     { id: 'privacy', label: 'Privacy Policy', content: PRIVACY_POLICY },
-    { id: 'terms', label: 'Terms of Use', content: TERMS_OF_USE },
+    { id: 'terms', label: 'Terms of Use', content: getTermsOfUse() },
     { id: 'cookies', label: 'Cookie Notice', content: COOKIE_NOTICE },
   ];
 
