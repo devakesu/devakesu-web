@@ -74,10 +74,10 @@ function checkRateLimit(ip, isUnknown = false) {
         }
         
         /**
-         * QuickSelect: Partitions arr so elements at indices 0..k have older
-         * (smaller) resetTime values than elements at k+1..end.
-         * Note: Due to strict inequality in partition, elements with resetTime < pivot
-         * go left, and elements with resetTime >= pivot go right.
+         * QuickSelect: Partitions arr around index k so that elements at indices
+         * 0..k-1 have resetTime less than or equal to arr[k].resetTime, and elements
+         * at k+1..end have resetTime greater than or equal to arr[k].resetTime.
+         * Note: Elements with equal resetTime to the pivot may appear on either side.
          * @param {Array} arr - Array of [key, {count, resetTime}] entries
          * @param {number} k - Target index (0-based) to partition around
          */
