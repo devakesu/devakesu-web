@@ -98,6 +98,16 @@ function normalizeIP(rawIP) {
 
 export async function POST(request) {
   try {
+    // Short-circuit early when GA is not configured to keep optional analytics low-overhead
+    // This avoids unnecessary rate limiting, validation, and parsing work
+    const measurementId = process.env.GA_MEASUREMENT_ID;
+    const apiSecret = process.env.GA_API_SECRET;
+    
+    if (!measurementId || !apiSecret) {
+      // Analytics not configured - return success without processing
+      return new NextResponse(null, { status: 204 });
+    }
+
     // Rate limiting by IP - use request.ip as primary source to prevent spoofing
     // Only trust forwarded-IP headers when explicitly configured (e.g., behind a trusted proxy)
     const trustProxy = process.env.TRUST_PROXY === 'true';
