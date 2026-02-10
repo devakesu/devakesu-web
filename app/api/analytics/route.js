@@ -218,6 +218,7 @@ export async function POST(request) {
     
     // Additional validation: check Sec-Fetch-Site header (browser-controlled, harder to spoof)
     // Sec-Fetch-Site is sent by modern browsers and indicates the relationship between request origin and target
+    // Note: Older browsers may not send these headers; validation is opt-in when present for defense-in-depth
     const secFetchSite = request.headers.get('sec-fetch-site');
     const secFetchMode = request.headers.get('sec-fetch-mode');
     
@@ -233,9 +234,9 @@ export async function POST(request) {
     
     // If Sec-Fetch-Mode is present, validate it's an appropriate mode for analytics
     if (secFetchMode !== null) {
-      // Allow cors, navigate, same-origin, no-cors
-      // These are legitimate modes for client-side fetch requests
-      const allowedModes = ['cors', 'navigate', 'same-origin', 'no-cors'];
+      // Allow cors, navigate, same-origin
+      // Exclude no-cors to prevent opaque requests that could be triggered without proper CORS
+      const allowedModes = ['cors', 'navigate', 'same-origin'];
       if (!allowedModes.includes(secFetchMode)) {
         console.warn('Analytics request rejected: invalid Sec-Fetch-Mode:', secFetchMode);
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
