@@ -165,13 +165,23 @@ function normalizeIP(rawIP) {
 
 export async function POST(request) {
   try {
-    // Rate limiting by IP - extract and normalize
-    const headerIP = request.headers.get('x-forwarded-for')?.split(',')[0] ||
-                     request.headers.get('x-real-ip') ||
-                     '';
-    const headerNormalized = normalizeIP(headerIP);
-    const fallbackNormalized = normalizeIP(request.ip);
-    const ip = headerNormalized || fallbackNormalized;
+    // Rate limiting by IP - use request.ip as primary source to prevent spoofing
+    // Only trust forwarded-IP headers when explicitly configured (e.g., behind a trusted proxy)
+    const trustProxy = process.env.TRUST_PROXY === 'true';
+    let ip = null;
+    
+    if (trustProxy) {
+      // When behind a trusted proxy, use forwarded headers
+      const headerIP = request.headers.get('x-forwarded-for')?.split(',')[0] ||
+                       request.headers.get('x-real-ip') ||
+                       '';
+      ip = normalizeIP(headerIP);
+    }
+    
+    // Fallback to request.ip (the direct connection IP)
+    if (!ip) {
+      ip = normalizeIP(request.ip);
+    }
     
     // Use shared bucket with stricter limit if IP cannot be determined
     const rateLimitKey = ip || UNKNOWN_IP_KEY;
@@ -199,36 +209,40 @@ export async function POST(request) {
       }
     }
     
-    // Enforce same-origin policy when origin or referer is present
-    if (origin || referer) {
-      const source = origin || referer;
-      try {
-        const url = new URL(source);
-        
-        // In production, validate against NEXT_PUBLIC_SITE_URL
-        // In development, allow localhost and 127.0.0.1 with common dev ports
-        const isDevelopmentLocal = process.env.NODE_ENV !== 'production' && 
-          (url.hostname === 'localhost' || url.hostname === '127.0.0.1') &&
-          (url.port === '3000' || url.port === '3001' || url.port === '' || url.port === '80' || url.port === '443');
-        
-        const isAllowed = 
-          (allowedUrl && url.host === allowedUrl.host) ||
-          isDevelopmentLocal;
-        
-        if (!isAllowed) {
-          console.warn(
-            'Analytics request from unexpected origin:', 
-            source, 
-            'expected:', 
-            allowedOrigin || 'localhost:3000/3001'
-          );
-          return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-        }
-      } catch (e) {
-        // Malformed origin/referer from client: treat as suspicious and block
-        console.warn('Analytics request with invalid origin/referer:', source, 'error:', e.message);
+    // Reject requests when both Origin and Referer are absent (non-browser clients)
+    if (!origin && !referer) {
+      console.warn('Analytics request missing both Origin and Referer headers - rejecting non-browser request');
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    
+    // Enforce same-origin policy
+    const source = origin || referer;
+    try {
+      const url = new URL(source);
+      
+      // In production, validate against NEXT_PUBLIC_SITE_URL
+      // In development, allow localhost and 127.0.0.1 with common dev ports
+      const isDevelopmentLocal = process.env.NODE_ENV !== 'production' && 
+        (url.hostname === 'localhost' || url.hostname === '127.0.0.1') &&
+        (url.port === '3000' || url.port === '3001' || url.port === '' || url.port === '80' || url.port === '443');
+      
+      const isAllowed = 
+        (allowedUrl && url.host === allowedUrl.host) ||
+        isDevelopmentLocal;
+      
+      if (!isAllowed) {
+        console.warn(
+          'Analytics request from unexpected origin:', 
+          source, 
+          'expected:', 
+          allowedOrigin || 'localhost:3000/3001'
+        );
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
       }
+    } catch (e) {
+      // Malformed origin/referer from client: treat as suspicious and block
+      console.warn('Analytics request with invalid origin/referer:', source, 'error:', e.message);
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     // Check Content-Type header
