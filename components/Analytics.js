@@ -88,11 +88,10 @@ export default function Analytics() {
  * When NEXT_PUBLIC_ANALYTICS_ENABLED is not 'true', returns a no-op function to avoid unnecessary API requests
  */
 export function useAnalytics() {
-  const isEnabled = process.env.NEXT_PUBLIC_ANALYTICS_ENABLED === 'true';
-
   const trackEvent = useCallback(async (eventName, customParams = {}) => {
     // Short-circuit if analytics is disabled to avoid unnecessary API requests
-    if (!isEnabled) {
+    // Note: NEXT_PUBLIC_* env vars are replaced at build time, so this check is constant
+    if (process.env.NEXT_PUBLIC_ANALYTICS_ENABLED !== 'true') {
       return;
     }
 
@@ -114,7 +113,7 @@ export function useAnalytics() {
     } catch (error) {
       console.error('Failed to track event:', error);
     }
-  }, [isEnabled]);
+  }, []);
 
   return { trackEvent };
 }
