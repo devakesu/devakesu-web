@@ -15,11 +15,18 @@ export default function Analytics() {
     const trackPageView = async () => {
       const pageLocation = window.location.href;
 
-      // Prevent duplicate tracking caused by React StrictMode double-invoking effects
-      if (lastTrackedPathnameRef.current === pathname) {
+      // Prevent duplicate tracking in two ways:
+      // 1. Check ref for current effect run (prevents same-effect duplicates)
+      // 2. Check sessionStorage to prevent StrictMode remount duplicates
+      const sessionKey = `analytics_tracked_${pathname}`;
+      const alreadyTracked = sessionStorage.getItem(sessionKey);
+
+      if (lastTrackedPathnameRef.current === pathname || alreadyTracked) {
         return;
       }
+
       lastTrackedPathnameRef.current = pathname;
+      sessionStorage.setItem(sessionKey, 'true');
 
       try {
         await fetch('/api/analytics', {
@@ -63,6 +70,8 @@ export function useAnalytics() {
           pageTitle: document.title,
           customParams,
         }),
+        // Keep request alive even if page navigates away (e.g., opening links in new tabs)
+        keepalive: true,
       });
     } catch (error) {
       console.error('Failed to track event:', error);

@@ -182,17 +182,32 @@ export async function POST(request) {
     }
 
     // Origin/referer check to prevent cross-origin abuse
+    // Validate against server-side allowlist instead of client-controlled Host header
     const origin = request.headers.get('origin');
     const referer = request.headers.get('referer');
-    const host = request.headers.get('host');
+    const allowedOrigin = process.env.NEXT_PUBLIC_SITE_URL;
     
     // Enforce same-origin policy when origin or referer is present
-    if ((origin || referer) && host) {
+    if (origin || referer) {
       const source = origin || referer;
       try {
         const url = new URL(source);
-        if (url.host !== host) {
-          console.warn('Analytics request from unexpected origin:', source, 'expected host:', host);
+        const allowedUrl = allowedOrigin ? new URL(allowedOrigin) : null;
+        
+        // In production, validate against NEXT_PUBLIC_SITE_URL
+        // In development, allow localhost and 127.0.0.1
+        const isAllowed = 
+          (allowedUrl && url.host === allowedUrl.host) ||
+          (process.env.NODE_ENV !== 'production' && 
+           (url.hostname === 'localhost' || url.hostname === '127.0.0.1'));
+        
+        if (!isAllowed) {
+          console.warn(
+            'Analytics request from unexpected origin:', 
+            source, 
+            'expected:', 
+            allowedOrigin || 'localhost/127.0.0.1'
+          );
           return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
       } catch (e) {
@@ -265,6 +280,11 @@ export async function POST(request) {
     const clientId = getClientId(request);
     const sessionId = getSessionId(request);
 
+    // Extract client context for forwarding to Google Analytics
+    // This enables accurate device/browser/location attribution
+    const userAgent = request.headers.get('user-agent') || undefined;
+    const clientIp = ip || undefined; // Use the already-extracted IP from rate limiting
+
     // Send event to Google Analytics
     await sendAnalyticsEvent({
       eventName,
@@ -274,6 +294,8 @@ export async function POST(request) {
       clientId,
       sessionId,
       customParams,
+      userAgent,
+      clientIp,
     });
 
     return NextResponse.json({ success: true });

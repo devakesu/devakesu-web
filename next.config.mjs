@@ -55,14 +55,17 @@ const nextConfig = {
           },
         ],
       },
-      // Cache build metadata with short TTL to balance freshness and performance
-      // Revalidate after 5 minutes to ensure reasonably fresh info after deployments
+      // Cache build metadata: no-store in development for fresh updates on reload,
+      // short TTL in production to balance freshness and performance
       {
         source: '/meta.json',
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=300, must-revalidate',
+            value:
+              process.env.NODE_ENV === 'production'
+                ? 'public, max-age=300, must-revalidate'
+                : 'no-store',
           },
         ],
       },
