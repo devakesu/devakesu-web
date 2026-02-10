@@ -2,7 +2,8 @@ import './globals.css';
 import Script from 'next/script';
 import { JetBrains_Mono, Space_Grotesk } from 'next/font/google';
 import { headers } from 'next/headers';
-import Analytics, { isAnalyticsEnabled } from '@/components/Analytics';
+import { isAnalyticsEnabled } from '@/lib/analytics-config';
+import Analytics from '@/components/Analytics';
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],

@@ -2,29 +2,7 @@
 
 import { useEffect, useRef, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
-
-/**
- * Check if analytics is enabled based on the NEXT_PUBLIC_ANALYTICS_ENABLED environment variable.
- * Accepts common truthy values: 'true', '1', 'yes', 'y', 'on', 'enable', 'enabled' (case-insensitive).
- * @returns {boolean} True if analytics is enabled, false otherwise
- */
-export function isAnalyticsEnabled() {
-  const rawValue = process.env.NEXT_PUBLIC_ANALYTICS_ENABLED;
-
-  if (rawValue === undefined || rawValue === null) {
-    return false;
-  }
-
-  const normalized = String(rawValue).trim().toLowerCase();
-
-  if (normalized === '') {
-    return false;
-  }
-
-  const truthyValues = ['true', '1', 'yes', 'y', 'on', 'enable', 'enabled'];
-
-  return truthyValues.includes(normalized);
-}
+import { isAnalyticsEnabled } from '@/lib/analytics-config';
 
 /**
  * Client-side Analytics component that sends events via server-side API
@@ -50,16 +28,16 @@ export default function Analytics() {
       // Wrap sessionStorage access in try-catch for browsers with storage disabled
       const sessionKey = 'analytics_last_tracked';
       let lastTracked = null;
-      
+
       try {
         lastTracked = sessionStorage.getItem(sessionKey);
       } catch (e) {
         // sessionStorage unavailable (privacy mode, disabled storage, etc.)
         // Fall back to ref-only de-duplication
       }
-      
+
       const now = Date.now();
-      
+
       // Only track if pathname is different or enough time has passed (debounce)
       if (lastTracked) {
         try {
@@ -69,7 +47,7 @@ export default function Analytics() {
           // In dev, StrictMode intentionally mounts components twice in rapid succession (< 50ms apart).
           // This threshold prevents double-tracking in StrictMode while allowing legitimate rapid
           // navigation (e.g., back button). May need adjustment for slower devices if false positives occur.
-          if (lastPath === pathname && (now - timestamp) < 100) {
+          if (lastPath === pathname && now - timestamp < 100) {
             return;
           }
         } catch (e) {
@@ -82,7 +60,7 @@ export default function Analytics() {
       }
 
       lastTrackedPathnameRef.current = pathname;
-      
+
       try {
         sessionStorage.setItem(sessionKey, JSON.stringify({ pathname, timestamp: now }));
       } catch (e) {
