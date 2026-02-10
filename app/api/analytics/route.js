@@ -6,6 +6,8 @@ import { isIP } from 'node:net';
 let hasLoggedMissingUrl = false;
 // Module-level flag to prevent log flooding for dev IP warnings
 let hasLoggedDevIpWarning = false;
+// Module-level flag to prevent log flooding for production IP warnings
+let hasLoggedProdIpWarning = false;
 
 // Simple in-memory rate limiter
 // Maps IP -> { count, resetTime }
@@ -121,6 +123,8 @@ function getClientIp(headerList) {
   if (forwardedIp && isIP(forwardedIp)) return forwardedIp;
 
   // In development, allow testing with a specific IP via environment variable
+  // SECURITY NOTE: NODE_ENV should be set securely in deployment configuration
+  // to prevent accidental exposure of development-only behavior in production
   if (process.env.NODE_ENV === "development") {
     const testIp = process.env.TEST_CLIENT_IP;
     
@@ -147,11 +151,15 @@ function getClientIp(headerList) {
 
   // In production, return null to signal that IP extraction failed
   // Callers must handle this null case appropriately (e.g., by rejecting the request)
-  console.warn(
-    "[getClientIp] No IP forwarding headers found in production. " +
-    "Ensure reverse proxy is configured to set x-forwarded-for, x-real-ip, or cf-connecting-ip headers. " +
-    "Request will be rejected if IP is required for security checks."
-  );
+  // Log warning once per server start to avoid flooding logs under high traffic
+  if (!hasLoggedProdIpWarning) {
+    hasLoggedProdIpWarning = true;
+    console.warn(
+      "[getClientIp] No IP forwarding headers found in production. " +
+      "Ensure reverse proxy is configured to set x-forwarded-for, x-real-ip, or cf-connecting-ip headers. " +
+      "Request will be rejected if IP is required for security checks."
+    );
+  }
   return null;
 }
 
