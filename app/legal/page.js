@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import {
   PRIVACY_POLICY,
-  TERMS_OF_USE,
+  getTermsOfUse,
   COOKIE_NOTICE,
   EFFECTIVE_DATE,
   CONTACT_EMAIL,
@@ -190,9 +190,13 @@ function InlineMarkdown({ text }) {
 export default function PrivacyPage() {
   const [activeTab, setActiveTab] = useState('privacy');
 
+  // Memoize Terms of Use to avoid regenerating markdown on every re-render.
+  // Year is evaluated once on mount and stays cached for the component lifetime.
+  const termsOfUse = useMemo(() => getTermsOfUse(new Date().getFullYear()), []);
+
   const tabs = [
     { id: 'privacy', label: 'Privacy Policy', content: PRIVACY_POLICY },
-    { id: 'terms', label: 'Terms of Use', content: TERMS_OF_USE },
+    { id: 'terms', label: 'Terms of Use', content: termsOfUse },
     { id: 'cookies', label: 'Cookie Notice', content: COOKIE_NOTICE },
   ];
 
