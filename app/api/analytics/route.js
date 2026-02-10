@@ -286,8 +286,9 @@ export async function POST(request) {
       if (ip) {
         // Prefer the previously extracted client IP when available
         clientIp = ip;
-      } else if (request.ip) {
-        // Fallback to platform-provided IP when available (e.g., Vercel, Netlify)
+      } else if (request.ip && isIP(request.ip)) {
+        // Fallback to platform-provided IP when available (e.g., Vercel, Netlify),
+        // but only if it is a valid IP address.
         clientIp = request.ip;
       }
     }

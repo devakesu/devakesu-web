@@ -164,7 +164,6 @@ export default function Home() {
     }
 
     const sections = Array.from(document.querySelectorAll('.scroll-snap-section'));
-    sectionRefs.current = sections;
 
     if (sections.length <= 1) {
       return undefined;
