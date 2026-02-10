@@ -70,7 +70,9 @@ function checkRateLimit(ip, isUnknown = false) {
           let right = arr.length - 1;
           
           while (left < right) {
-            const pivotIndex = left + Math.floor(Math.random() * (right - left + 1));
+            // Use median-of-three for more predictable performance
+            const mid = left + Math.floor((right - left) / 2);
+            const pivotIndex = mid;
             const newPivot = partitionByResetTime(arr, left, right, pivotIndex);
             
             if (k === newPivot) {
@@ -83,8 +85,8 @@ function checkRateLimit(ip, isUnknown = false) {
           }
         }
         
-        // Find the excess-th smallest resetTime (0-indexed, so excess-1)
-        if (excess > 0 && excess <= entriesArray.length) {
+        // Find the nth smallest resetTime where n = excess
+        if (excess > 0 && excess < entriesArray.length) {
           quickSelect(entriesArray, excess - 1);
           
           // All entries at indices 0..excess-1 now have resetTime <= threshold
