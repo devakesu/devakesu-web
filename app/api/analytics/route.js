@@ -45,6 +45,15 @@ function checkRateLimit(ip, isUnknown = false) {
         
         // Partial sort to find the oldest N entries (QuickSelect algorithm)
         // Uses nth_element approach to partition around the Nth smallest resetTime
+        
+        /**
+         * Partitions array segment around a pivot element by resetTime
+         * @param {Array} arr - Array of [key, {count, resetTime}] entries
+         * @param {number} left - Left boundary index (inclusive)
+         * @param {number} right - Right boundary index (inclusive)
+         * @param {number} pivotIndex - Index of pivot element
+         * @returns {number} Final position of pivot after partitioning
+         */
         function partitionByResetTime(arr, left, right, pivotIndex) {
           const pivotValue = arr[pivotIndex][1].resetTime;
           
@@ -64,10 +73,13 @@ function checkRateLimit(ip, isUnknown = false) {
           return storeIndex;
         }
         
-        // QuickSelect: Partitions arr so elements at indices 0..k have resetTime
-        // less than or equal to elements at indices k+1..arr.length-1
-        // @param arr - Array of [key, {count, resetTime}] entries
-        // @param k - Target index (0-based) to partition around
+        /**
+         * QuickSelect: Partitions arr so elements at indices 0..k have resetTime
+         * values that are smaller than or equal to elements at k+1..end.
+         * Note: Elements with equal resetTime may appear on either side of k.
+         * @param {Array} arr - Array of [key, {count, resetTime}] entries
+         * @param {number} k - Target index (0-based) to partition around
+         */
         function quickSelect(arr, k) {
           let left = 0;
           let right = arr.length - 1;
@@ -99,13 +111,20 @@ function checkRateLimit(ip, isUnknown = false) {
         
         // Find the nth smallest resetTime where n = excess
         // This ensures we evict exactly 'excess' oldest entries
-        if (excess > 0 && excess <= entriesArray.length) {
-          quickSelect(entriesArray, excess - 1);
-          
-          // All entries at indices 0..excess-1 now have resetTime <= threshold
-          // Delete them from the map
-          for (let i = 0; i < excess; i++) {
-            rateLimitMap.delete(entriesArray[i][0]);
+        // Special case: if excess equals array length, clear everything
+        if (excess > 0) {
+          if (excess >= entriesArray.length) {
+            // Need to evict all entries - clear the map completely
+            rateLimitMap.clear();
+          } else {
+            // Use QuickSelect to find and evict the oldest 'excess' entries
+            quickSelect(entriesArray, excess - 1);
+            
+            // All entries at indices 0..excess-1 now have oldest resetTime values
+            // Delete them from the map
+            for (let i = 0; i < excess; i++) {
+              rateLimitMap.delete(entriesArray[i][0]);
+            }
           }
         }
       }
