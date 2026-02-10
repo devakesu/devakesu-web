@@ -234,8 +234,11 @@ export async function POST(request) {
     
     // If Sec-Fetch-Mode is present, validate it's an appropriate mode for analytics
     if (secFetchMode !== null) {
-      // Allow cors, navigate, same-origin
-      // Exclude no-cors to prevent opaque requests that could be triggered without proper CORS
+      // Only allow modes typically used for legitimate fetch/navigation requests:
+      // - 'cors': cross-origin resource sharing fetch
+      // - 'navigate': page navigation
+      // - 'same-origin': same-origin fetch
+      // Reject all other modes including 'no-cors', 'websocket', 'nested-navigate' etc.
       const allowedModes = ['cors', 'navigate', 'same-origin'];
       if (!allowedModes.includes(secFetchMode)) {
         console.warn('Analytics request rejected: invalid Sec-Fetch-Mode:', secFetchMode);
