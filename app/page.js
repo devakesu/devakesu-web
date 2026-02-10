@@ -74,7 +74,8 @@ export default function Home() {
     let isMounted = true;
     const controller = new AbortController();
 
-    const isDev = process.env.NODE_ENV !== 'production';
+    // In production, allow caching; in development, bust cache for hot reloading
+    const isDev = typeof window !== 'undefined' && window.location.hostname === 'localhost';
     const baseUrl = '/meta.json';
     const url = isDev ? `${baseUrl}?cb=${Date.now().toString(36)}` : baseUrl;
     const fetchOptions = isDev
