@@ -182,21 +182,50 @@ export async function POST(request) {
     }
 
     // Origin/referer check to prevent cross-origin abuse
+    // Validate against server-side allowlist instead of client-controlled Host header
     const origin = request.headers.get('origin');
     const referer = request.headers.get('referer');
-    const host = request.headers.get('host');
+    const allowedOrigin = process.env.NEXT_PUBLIC_SITE_URL;
+    
+    // Pre-validate and parse the allowed origin configuration
+    let allowedUrl = null;
+    if (allowedOrigin) {
+      try {
+        allowedUrl = new URL(allowedOrigin);
+      } catch (configError) {
+        // Misconfigured NEXT_PUBLIC_SITE_URL - log and reject
+        console.error('Invalid NEXT_PUBLIC_SITE_URL configuration:', allowedOrigin, configError.message);
+        return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+      }
+    }
     
     // Enforce same-origin policy when origin or referer is present
-    if ((origin || referer) && host) {
+    if (origin || referer) {
       const source = origin || referer;
       try {
         const url = new URL(source);
-        if (url.host !== host) {
-          console.warn('Analytics request from unexpected origin:', source, 'expected host:', host);
+        
+        // In production, validate against NEXT_PUBLIC_SITE_URL
+        // In development, allow localhost and 127.0.0.1 with common dev ports
+        const isDevelopmentLocal = process.env.NODE_ENV !== 'production' && 
+          (url.hostname === 'localhost' || url.hostname === '127.0.0.1') &&
+          (url.port === '3000' || url.port === '3001' || url.port === '' || url.port === '80' || url.port === '443');
+        
+        const isAllowed = 
+          (allowedUrl && url.host === allowedUrl.host) ||
+          isDevelopmentLocal;
+        
+        if (!isAllowed) {
+          console.warn(
+            'Analytics request from unexpected origin:', 
+            source, 
+            'expected:', 
+            allowedOrigin || 'localhost:3000/3001'
+          );
           return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
       } catch (e) {
-        // Malformed origin/referer: treat as suspicious and block
+        // Malformed origin/referer from client: treat as suspicious and block
         console.warn('Analytics request with invalid origin/referer:', source, 'error:', e.message);
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
       }
@@ -265,6 +294,28 @@ export async function POST(request) {
     const clientId = getClientId(request);
     const sessionId = getSessionId(request);
 
+    // Extract client context for forwarding to Google Analytics
+    // This enables accurate device/browser/location attribution
+    const userAgent = request.headers.get('user-agent') || undefined;
+    
+    // Only forward client IP if we're confident it's from a trusted proxy
+    // x-forwarded-for and x-real-ip can be client-spoofed unless deployment overwrites them
+    // Use request.ip (platform-provided) when available, or gate behind explicit trust config
+    let clientIp = undefined;
+    
+    // Trust IP forwarding only in production with NEXT_PUBLIC_SITE_URL configured
+    // This assumes production deployment has a reverse proxy that sanitizes headers
+    const isTrustedProxy = process.env.NODE_ENV === 'production' && allowedOrigin;
+    
+    if (isTrustedProxy && ip) {
+      // In trusted proxy environment, use the extracted IP
+      clientIp = ip;
+    } else if (request.ip) {
+      // Use platform-provided IP when available (e.g., Vercel, Netlify)
+      clientIp = request.ip;
+    }
+    // Otherwise, don't forward IP to avoid data pollution/privacy issues
+
     // Send event to Google Analytics
     await sendAnalyticsEvent({
       eventName,
@@ -274,6 +325,8 @@ export async function POST(request) {
       clientId,
       sessionId,
       customParams,
+      userAgent,
+      clientIp,
     });
 
     return NextResponse.json({ success: true });
