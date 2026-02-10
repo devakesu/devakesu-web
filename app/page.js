@@ -340,11 +340,12 @@ export default function Home() {
         return;
       }
 
-      event.preventDefault();
       const direction = deltaY > 0 ? -1 : 1;
       if (allowNativeScroll(currentTouch.target, direction)) {
         return;
       }
+
+      event.preventDefault();
 
       if (!isAnimatingRef.current) {
         scrollToSection(direction);
