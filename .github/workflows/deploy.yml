@@ -145,6 +145,7 @@ jobs:
             AUDIT_STATUS=PASSED (Trivy)
             SIGNATURE_STATUS=SLSA_PROVENANCE_GENERATED
             NEXT_PUBLIC_SITE_URL=https://devakesu.com
+            NEXT_PUBLIC_ANALYTICS_ENABLED=true
             BUILD_ID=${{ github.run_number }}
           labels: |
             org.opencontainers.image.revision=${{ github.sha }}

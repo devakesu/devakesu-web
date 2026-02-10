@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
 
 /**
@@ -84,9 +84,17 @@ export default function Analytics() {
 
 /**
  * Hook for tracking custom events
+ * Returns a stable trackEvent function reference via useCallback
+ * When NEXT_PUBLIC_ANALYTICS_ENABLED is not 'true', returns a no-op function to avoid unnecessary API requests
  */
 export function useAnalytics() {
-  const trackEvent = async (eventName, customParams = {}) => {
+  const trackEvent = useCallback(async (eventName, customParams = {}) => {
+    // Short-circuit if analytics is disabled to avoid unnecessary API requests
+    // Note: NEXT_PUBLIC_* env vars are replaced at build time, so this check is constant
+    if (process.env.NEXT_PUBLIC_ANALYTICS_ENABLED !== 'true') {
+      return;
+    }
+
     try {
       await fetch('/api/analytics', {
         method: 'POST',
@@ -105,7 +113,7 @@ export function useAnalytics() {
     } catch (error) {
       console.error('Failed to track event:', error);
     }
-  };
+  }, []);
 
   return { trackEvent };
 }
