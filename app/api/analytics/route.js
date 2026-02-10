@@ -210,9 +210,36 @@ export async function POST(request) {
     }
     
     // Reject requests when both Origin and Referer are absent (non-browser clients)
+    // Additionally validate Sec-Fetch-Site to make it harder for non-browser clients to bypass
     if (!origin && !referer) {
       console.warn('Analytics request missing both Origin and Referer headers - rejecting non-browser request');
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    
+    // Additional validation: check Sec-Fetch-Site header (browser-controlled, harder to spoof)
+    // Sec-Fetch-Site is sent by modern browsers and indicates the relationship between request origin and target
+    const secFetchSite = request.headers.get('sec-fetch-site');
+    const secFetchMode = request.headers.get('sec-fetch-mode');
+    
+    // If Sec-Fetch headers are present (modern browser), validate them
+    if (secFetchSite !== null) {
+      // Allow same-origin, same-site, and none (direct navigation)
+      // Reject cross-site requests
+      if (secFetchSite === 'cross-site') {
+        console.warn('Analytics request rejected: cross-site Sec-Fetch-Site header');
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+    }
+    
+    // If Sec-Fetch-Mode is present, validate it's an appropriate mode for analytics
+    if (secFetchMode !== null) {
+      // Allow cors, navigate, same-origin, no-cors
+      // These are legitimate modes for client-side fetch requests
+      const allowedModes = ['cors', 'navigate', 'same-origin', 'no-cors'];
+      if (!allowedModes.includes(secFetchMode)) {
+        console.warn('Analytics request rejected: invalid Sec-Fetch-Mode:', secFetchMode);
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
     }
     
     // Enforce same-origin policy
@@ -226,8 +253,9 @@ export async function POST(request) {
         (url.hostname === 'localhost' || url.hostname === '127.0.0.1') &&
         (url.port === '3000' || url.port === '3001' || url.port === '' || url.port === '80' || url.port === '443');
       
+      // Compare full origin (protocol + host) to prevent http/https scheme mismatches
       const isAllowed = 
-        (allowedUrl && url.host === allowedUrl.host) ||
+        (allowedUrl && url.origin === allowedUrl.origin) ||
         isDevelopmentLocal;
       
       if (!isAllowed) {
