@@ -14,7 +14,7 @@ const nextConfig = {
       },
       {
         key: 'X-Frame-Options',
-        value: 'DENY', // Upgraded from SAMEORIGIN for better security
+        value: 'SAMEORIGIN', // Aligned with CSP frame-ancestors 'self'
       },
       {
         key: 'X-Content-Type-Options',

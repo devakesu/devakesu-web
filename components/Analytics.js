@@ -19,8 +19,17 @@ export default function Analytics() {
       // 1. Check ref for current effect run (prevents same-effect duplicates)
       // 2. Check sessionStorage to prevent StrictMode remount duplicates
       // Use a single key with timestamp to avoid storage accumulation
+      // Wrap sessionStorage access in try-catch for browsers with storage disabled
       const sessionKey = 'analytics_last_tracked';
-      const lastTracked = sessionStorage.getItem(sessionKey);
+      let lastTracked = null;
+      
+      try {
+        lastTracked = sessionStorage.getItem(sessionKey);
+      } catch (e) {
+        // sessionStorage unavailable (privacy mode, disabled storage, etc.)
+        // Fall back to ref-only de-duplication
+      }
+      
       const now = Date.now();
       
       // Only track if pathname is different or enough time has passed (debounce)
@@ -41,7 +50,12 @@ export default function Analytics() {
       }
 
       lastTrackedPathnameRef.current = pathname;
-      sessionStorage.setItem(sessionKey, JSON.stringify({ pathname, timestamp: now }));
+      
+      try {
+        sessionStorage.setItem(sessionKey, JSON.stringify({ pathname, timestamp: now }));
+      } catch (e) {
+        // sessionStorage unavailable - continue without persisting
+      }
 
       try {
         await fetch('/api/analytics', {

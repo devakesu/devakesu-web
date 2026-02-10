@@ -155,6 +155,10 @@ export async function POST(request) {
         console.error('Invalid NEXT_PUBLIC_SITE_URL configuration:', allowedOrigin, configError.message);
         return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
       }
+    } else if (process.env.NODE_ENV === 'production') {
+      // Missing NEXT_PUBLIC_SITE_URL in production is a server misconfiguration
+      console.error('NEXT_PUBLIC_SITE_URL is not configured. Analytics origin validation cannot be performed.');
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
     }
 
     // Additional validation: check Sec-Fetch-Site header (browser-controlled, harder to spoof)
