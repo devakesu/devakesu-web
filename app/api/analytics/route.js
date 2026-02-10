@@ -115,11 +115,20 @@ export async function POST(request) {
     }
 
     // Fallback to request.ip (the direct connection IP)
+    // NOTE: On many self-hosted Next.js deployments, request.ip may be undefined.
+    // This is a known limitation when Next.js runs without a platform-provided IP.
+    // When TRUST_PROXY is false/unset and request.ip is undefined, `ip` will remain null.
     if (!ip) {
       ip = normalizeIP(request.ip);
     }
 
     // Use shared bucket with stricter limit if IP cannot be determined
+    // WARNING: When `ip` is null, all clients share the '__unknown__' rate-limit key.
+    // This means the stricter unknown limit (10 req/min) applies globally, potentially
+    // causing false-positive 429s for legitimate traffic. To avoid this in production:
+    // 1. Set TRUST_PROXY=true if behind a reverse proxy (nginx, Cloudflare, etc.)
+    // 2. Ensure your proxy sets X-Forwarded-For or X-Real-IP headers correctly
+    // 3. For platforms like Vercel/Netlify, request.ip is usually available automatically
     const rateLimitKey = ip || UNKNOWN_IP_KEY;
     const isUnknown = !ip;
 
