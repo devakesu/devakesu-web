@@ -40,8 +40,12 @@ function checkRateLimit(ip, isUnknown = false) {
       if (rateLimitMap.size > MAX_MAP_SIZE) {
         const excess = rateLimitMap.size - MAX_MAP_SIZE;
         
-        // Collect all entries and find the oldest `excess` entries to evict
-        const entriesArray = Array.from(rateLimitMap.entries());
+        // Special case: if excess >= map size, clear everything
+        if (excess >= rateLimitMap.size) {
+          rateLimitMap.clear();
+        } else {
+          // Collect all entries and find the oldest `excess` entries to evict
+          const entriesArray = Array.from(rateLimitMap.entries());
         
         // Partial sort to find the oldest N entries (QuickSelect algorithm)
         // Uses nth_element approach to partition around the Nth smallest resetTime
@@ -88,14 +92,21 @@ function checkRateLimit(ip, isUnknown = false) {
             // Median-of-three pivot selection for better performance
             const mid = left + Math.floor((right - left) / 2);
             
-            // Sort three candidates by resetTime to find median
-            const candidates = [
-              { idx: left, time: arr[left][1].resetTime },
-              { idx: mid, time: arr[mid][1].resetTime },
-              { idx: right, time: arr[right][1].resetTime }
-            ];
-            candidates.sort((a, b) => a.time - b.time);
-            const pivotIndex = candidates[1].idx; // Median of three candidates
+            // Find median of three values using direct comparisons
+            const leftTime = arr[left][1].resetTime;
+            const midTime = arr[mid][1].resetTime;
+            const rightTime = arr[right][1].resetTime;
+            
+            let pivotIndex;
+            if ((leftTime <= midTime && midTime <= rightTime) || 
+                (rightTime <= midTime && midTime <= leftTime)) {
+              pivotIndex = mid;
+            } else if ((midTime <= leftTime && leftTime <= rightTime) || 
+                       (rightTime <= leftTime && leftTime <= midTime)) {
+              pivotIndex = left;
+            } else {
+              pivotIndex = right;
+            }
             
             const newPivot = partitionByResetTime(arr, left, right, pivotIndex);
             
@@ -111,21 +122,16 @@ function checkRateLimit(ip, isUnknown = false) {
         
         // Partition array to find the element at index (excess - 1)
         // After partitioning, elements at indices 0..excess-1 are the oldest
-        // Special case: if excess equals or exceeds array length, clear everything
-        if (excess >= entriesArray.length) {
-          // Need to evict all entries - clear the map completely
-          rateLimitMap.clear();
-        } else {
-          // Use QuickSelect to find and evict the oldest 'excess' entries
-          quickSelect(entriesArray, excess - 1);
-          
-          // All entries at indices 0..excess-1 now have oldest resetTime values
-          // Delete them from the map
-          for (let i = 0; i < excess; i++) {
-            rateLimitMap.delete(entriesArray[i][0]);
-          }
+        // Use QuickSelect to find and evict the oldest 'excess' entries
+        quickSelect(entriesArray, excess - 1);
+        
+        // All entries at indices 0..excess-1 now have oldest resetTime values
+        // Delete them from the map
+        for (let i = 0; i < excess; i++) {
+          rateLimitMap.delete(entriesArray[i][0]);
         }
       }
+    }
     }
     
     return true;
