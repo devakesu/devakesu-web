@@ -6,12 +6,15 @@ import { sendAnalyticsEvent, getClientId, getSessionId } from '@/lib/analytics';
 const rateLimitMap = new Map();
 const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
 const RATE_LIMIT_MAX_REQUESTS = 60; // 60 requests per minute per IP
+const RATE_LIMIT_MAX_REQUESTS_UNKNOWN = 10; // Stricter limit for unknown IPs
 const MAX_MAP_SIZE = 5000; // Prevent memory bloat (reduced for better performance)
 const CLEANUP_BATCH_SIZE = 100; // Incremental cleanup to avoid latency spikes
+const UNKNOWN_IP_KEY = '__unknown__'; // Special key for requests without valid IP
 
-function checkRateLimit(ip) {
+function checkRateLimit(ip, isUnknown = false) {
   const now = Date.now();
   const record = rateLimitMap.get(ip);
+  const maxRequests = isUnknown ? RATE_LIMIT_MAX_REQUESTS_UNKNOWN : RATE_LIMIT_MAX_REQUESTS;
 
   if (!record || now > record.resetTime) {
     // New window
@@ -35,12 +38,60 @@ function checkRateLimit(ip) {
       
       // Hard cap: if still over limit after cleanup, evict oldest entries
       if (rateLimitMap.size > MAX_MAP_SIZE) {
-        const entriesToRemove = Array.from(rateLimitMap.entries())
-          .sort((a, b) => a[1].resetTime - b[1].resetTime)
-          .slice(0, CLEANUP_BATCH_SIZE);
+        const excess = rateLimitMap.size - MAX_MAP_SIZE;
         
-        for (const [key] of entriesToRemove) {
-          rateLimitMap.delete(key);
+        // Collect all entries and find the oldest `excess` entries to evict
+        const entriesArray = Array.from(rateLimitMap.entries());
+        
+        // Partial sort to find the oldest N entries (QuickSelect-style)
+        // We'll use nth_element approach: partition to find the Nth smallest
+        function partitionByResetTime(arr, left, right, pivotIndex) {
+          const pivotValue = arr[pivotIndex][1].resetTime;
+          const pivotEntry = arr[pivotIndex];
+          
+          // Move pivot to end
+          [arr[pivotIndex], arr[right]] = [arr[right], arr[pivotIndex]];
+          
+          let storeIndex = left;
+          for (let i = left; i < right; i++) {
+            if (arr[i][1].resetTime < pivotValue) {
+              [arr[storeIndex], arr[i]] = [arr[i], arr[storeIndex]];
+              storeIndex++;
+            }
+          }
+          
+          // Move pivot to final position
+          [arr[storeIndex], arr[right]] = [arr[right], arr[storeIndex]];
+          return storeIndex;
+        }
+        
+        function quickSelect(arr, k) {
+          let left = 0;
+          let right = arr.length - 1;
+          
+          while (left < right) {
+            const pivotIndex = left + Math.floor(Math.random() * (right - left + 1));
+            const newPivot = partitionByResetTime(arr, left, right, pivotIndex);
+            
+            if (k === newPivot) {
+              return;
+            } else if (k < newPivot) {
+              right = newPivot - 1;
+            } else {
+              left = newPivot + 1;
+            }
+          }
+        }
+        
+        // Find the excess-th smallest resetTime (0-indexed, so excess-1)
+        if (excess > 0 && excess <= entriesArray.length) {
+          quickSelect(entriesArray, excess - 1);
+          
+          // All entries at indices 0..excess-1 now have resetTime <= threshold
+          // Delete them from the map
+          for (let i = 0; i < excess; i++) {
+            rateLimitMap.delete(entriesArray[i][0]);
+          }
         }
       }
     }
@@ -48,7 +99,7 @@ function checkRateLimit(ip) {
     return true;
   }
 
-  if (record.count >= RATE_LIMIT_MAX_REQUESTS) {
+  if (record.count >= maxRequests) {
     return false;
   }
 
@@ -89,8 +140,11 @@ export async function POST(request) {
     const fallbackNormalized = normalizeIP(request.ip);
     const ip = headerNormalized || fallbackNormalized;
     
-    // Skip rate limiting if IP cannot be determined
-    if (ip && !checkRateLimit(ip)) {
+    // Use shared bucket with stricter limit if IP cannot be determined
+    const rateLimitKey = ip || UNKNOWN_IP_KEY;
+    const isUnknown = !ip;
+    
+    if (!checkRateLimit(rateLimitKey, isUnknown)) {
       return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
     }
 
