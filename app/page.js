@@ -32,7 +32,6 @@ export default function Home() {
     if (typeof window === 'undefined') return false;
     return window.matchMedia('(pointer: coarse)').matches;
   });
-  const sectionRefs = useRef([]);
   const activeSectionIndexRef = useRef(0);
   const isAnimatingRef = useRef(false);
   const unlockTimeoutRef = useRef(null);
@@ -165,7 +164,6 @@ export default function Home() {
     }
 
     const sections = Array.from(document.querySelectorAll('.scroll-snap-section'));
-    sectionRefs.current = sections;
 
     if (sections.length <= 1) {
       return undefined;

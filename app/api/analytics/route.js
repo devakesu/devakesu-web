@@ -12,6 +12,27 @@ const MAX_MAP_SIZE = 5000; // Prevent memory bloat (reduced for better performan
 const CLEANUP_BATCH_SIZE = 100; // Incremental cleanup to avoid latency spikes
 const UNKNOWN_IP_KEY = '__unknown__'; // Special key for requests without valid IP
 
+/**
+ * Evicts oldest entries from the rate limit map when it exceeds the maximum size.
+ * Uses a simple sort to find and delete the oldest entries.
+ * @param {Map} map - The rate limit map
+ * @param {number} targetSize - Target size to reduce the map to
+ */
+function evictOldestEntries(map, targetSize) {
+  const excess = map.size - targetSize;
+  if (excess <= 0) return;
+
+  // Collect all entries and sort by resetTime (oldest first)
+  const entriesArray = Array.from(map.entries());
+  entriesArray.sort((a, b) => a[1].resetTime - b[1].resetTime);
+
+  // Evict the oldest `excess` entries
+  for (let i = 0; i < excess; i++) {
+    const keyToDelete = entriesArray[i][0];
+    map.delete(keyToDelete);
+  }
+}
+
 function checkRateLimit(ip, isUnknown = false) {
   const now = Date.now();
   const record = rateLimitMap.get(ip);
@@ -39,95 +60,7 @@ function checkRateLimit(ip, isUnknown = false) {
       
       // Hard cap: if still over limit after cleanup, evict oldest entries
       if (rateLimitMap.size > MAX_MAP_SIZE) {
-        const excess = rateLimitMap.size - MAX_MAP_SIZE;
-        
-        // Collect all entries and find the oldest `excess` entries to evict
-        const entriesArray = Array.from(rateLimitMap.entries());
-        
-        // Partial sort to find the oldest N entries (QuickSelect algorithm)
-        // Uses nth_element approach to partition around the Nth smallest resetTime
-        
-        /**
-         * Partitions array segment around a pivot element by resetTime
-         * @param {Array} arr - Array of [key, {count, resetTime}] entries
-         * @param {number} left - Left boundary index (inclusive)
-         * @param {number} right - Right boundary index (inclusive)
-         * @param {number} pivotIndex - Index of pivot element
-         * @returns {number} Final position of pivot after partitioning
-         */
-        function partitionByResetTime(arr, left, right, pivotIndex) {
-          const pivotValue = arr[pivotIndex][1].resetTime;
-          
-          // Move pivot to end
-          [arr[pivotIndex], arr[right]] = [arr[right], arr[pivotIndex]];
-          
-          let storeIndex = left;
-          for (let i = left; i < right; i++) {
-            if (arr[i][1].resetTime < pivotValue) {
-              [arr[storeIndex], arr[i]] = [arr[i], arr[storeIndex]];
-              storeIndex++;
-            }
-          }
-          
-          // Move pivot to final position
-          [arr[storeIndex], arr[right]] = [arr[right], arr[storeIndex]];
-          return storeIndex;
-        }
-        
-        /**
-         * QuickSelect: Partitions arr around index k so that elements at indices
-         * 0..k-1 have resetTime less than or equal to arr[k].resetTime, and elements
-         * at k+1..end have resetTime greater than or equal to arr[k].resetTime.
-         * Note: Elements with equal resetTime to the pivot may appear on either side.
-         * @param {Array} arr - Array of [key, {count, resetTime}] entries
-         * @param {number} k - Target index (0-based) to partition around
-         */
-        function quickSelect(arr, k) {
-          let left = 0;
-          let right = arr.length - 1;
-          
-          while (left < right) {
-            // Median-of-three pivot selection for better performance
-            const mid = left + Math.floor((right - left) / 2);
-            
-            // Find median of three values using direct comparisons
-            const leftTime = arr[left][1].resetTime;
-            const midTime = arr[mid][1].resetTime;
-            const rightTime = arr[right][1].resetTime;
-            
-            let pivotIndex;
-            if ((leftTime <= midTime && midTime <= rightTime) || 
-                (rightTime <= midTime && midTime <= leftTime)) {
-              pivotIndex = mid;
-            } else if ((midTime <= leftTime && leftTime <= rightTime) || 
-                       (rightTime <= leftTime && leftTime <= midTime)) {
-              pivotIndex = left;
-            } else {
-              pivotIndex = right;
-            }
-            
-            const newPivot = partitionByResetTime(arr, left, right, pivotIndex);
-            
-            if (k === newPivot) {
-              return;
-            } else if (k < newPivot) {
-              right = newPivot - 1;
-            } else {
-              left = newPivot + 1;
-            }
-          }
-        }
-        
-        // Partition array to find the element at index (excess - 1)
-        // After partitioning, elements at indices 0..excess-1 are the oldest
-        // Use QuickSelect to find and evict the oldest 'excess' entries
-        quickSelect(entriesArray, excess - 1);
-        
-        // All entries at indices 0..excess-1 now have oldest resetTime values
-        // Delete them from the map
-        for (let i = 0; i < excess; i++) {
-          rateLimitMap.delete(entriesArray[i][0]);
-        }
+        evictOldestEntries(rateLimitMap, MAX_MAP_SIZE);
       }
     }
     
@@ -344,21 +277,20 @@ export async function POST(request) {
     // This enables accurate device/browser/location attribution
     const userAgent = request.headers.get('user-agent') || undefined;
     
-    // Only forward client IP if we're confident it's from a trusted proxy
-    // x-forwarded-for and x-real-ip can be client-spoofed unless deployment overwrites them
-    // Use request.ip (platform-provided) when available, or gate behind explicit trust config
+    // Only forward client IP if explicitly allowed via TRUST_PROXY.
+    // This reuses the same trust decision used when extracting `ip` from headers
+    // to avoid inconsistent behavior between rate limiting and analytics.
     let clientIp = undefined;
     
-    // Trust IP forwarding only in production with NEXT_PUBLIC_SITE_URL configured
-    // This assumes production deployment has a reverse proxy that sanitizes headers
-    const isTrustedProxy = process.env.NODE_ENV === 'production' && allowedOrigin;
-    
-    if (isTrustedProxy && ip) {
-      // In trusted proxy environment, use the extracted IP
-      clientIp = ip;
-    } else if (request.ip) {
-      // Use platform-provided IP when available (e.g., Vercel, Netlify)
-      clientIp = request.ip;
+    if (trustProxy) {
+      if (ip) {
+        // Prefer the previously extracted client IP when available
+        clientIp = ip;
+      } else if (request.ip && isIP(request.ip)) {
+        // Fallback to platform-provided IP when available (e.g., Vercel, Netlify),
+        // but only if it is a valid IP address.
+        clientIp = request.ip;
+      }
     }
     // Otherwise, don't forward IP to avoid data pollution/privacy issues
 
