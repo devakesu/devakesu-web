@@ -4,6 +4,8 @@ import { isIP } from 'node:net';
 
 // Module-level flag to prevent log flooding during misconfiguration
 let hasLoggedMissingUrl = false;
+// Module-level flag to prevent log flooding for dev IP warnings
+let hasLoggedDevIpWarning = false;
 
 // Simple in-memory rate limiter
 // Maps IP -> { count, resetTime }
@@ -78,57 +80,96 @@ function checkRateLimit(ip, isUnknown = false) {
   return true;
 }
 
-// Validate and normalize IP address using Node.js built-in isIP
-function normalizeIP(rawIP) {
-  if (!rawIP || typeof rawIP !== 'string') {
-    return null;
+/**
+ * Extracts the client IP address from request headers.
+ * 
+ * DEPLOYMENT ARCHITECTURE ASSUMPTIONS:
+ * This function prioritizes headers in the following order, which assumes a specific deployment setup:
+ * 1. cf-connecting-ip (Cloudflare CDN) - Most trusted when behind Cloudflare
+ * 2. x-real-ip (nginx/Apache reverse proxy) - Common for traditional reverse proxies
+ * 3. x-forwarded-for (various proxies/load balancers) - Takes first IP in chain
+ * 
+ * CONFIGURATION NOTES:
+ * - If NOT behind Cloudflare: Consider prioritizing x-real-ip or x-forwarded-for
+ * - Behind AWS ALB/ELB: x-forwarded-for is the standard header
+ * - Behind Google Cloud Load Balancer: x-forwarded-for is used
+ * - Behind Azure Front Door: x-azure-clientip or x-forwarded-for
+ * 
+ * The current order assumes Cloudflare as the primary CDN. If your deployment differs,
+ * adjust the priority order or make it configurable via environment variables.
+ * 
+ * SECURITY WARNING:
+ * These headers can be spoofed if not properly configured at the reverse proxy level.
+ * Ensure your reverse proxy strips/overwrites these headers from client requests.
+ * 
+ * DEVELOPMENT TESTING:
+ * In development mode, set TEST_CLIENT_IP environment variable to test IP-based logic
+ * with a specific IP address (e.g., TEST_CLIENT_IP=203.0.113.45).
+ * 
+ * @param {Headers} headerList - The Headers object from the request
+ * @returns {string|null} The client IP address or null if it cannot be determined
+ */
+function getClientIp(headerList) {
+  const cf = headerList.get("cf-connecting-ip")?.trim();
+  if (cf && isIP(cf)) return cf;
+
+  const realIp = headerList.get("x-real-ip")?.trim();
+  if (realIp && isIP(realIp)) return realIp;
+
+  const forwarded = headerList.get("x-forwarded-for");
+  const forwardedIp = forwarded?.split(",")[0]?.trim();
+  if (forwardedIp && isIP(forwardedIp)) return forwardedIp;
+
+  // In development, allow testing with a specific IP via environment variable
+  if (process.env.NODE_ENV === "development") {
+    const testIp = process.env.TEST_CLIENT_IP;
+    
+    // Log warning once per server start to make it prominent but avoid spam
+    if (!hasLoggedDevIpWarning) {
+      hasLoggedDevIpWarning = true;
+      console.warn(
+        "\n" +
+        "═══════════════════════════════════════════════════════════════════════\n" +
+        "⚠️  DEVELOPMENT MODE: Client IP Detection\n" +
+        "═══════════════════════════════════════════════════════════════════════\n" +
+        "No IP forwarding headers found. This affects IP-based security features\n" +
+        "such as rate limiting, geolocation, and audit logging.\n\n" +
+        "To test real IP logic in development:\n" +
+        "  1. Set TEST_CLIENT_IP environment variable (e.g., TEST_CLIENT_IP=203.0.113.45)\n" +
+        "  2. Or send x-real-ip or cf-connecting-ip headers in your requests\n" +
+        `\nCurrent fallback: ${testIp || "127.0.0.1"}\n` +
+        "═══════════════════════════════════════════════════════════════════════\n"
+      );
+    }
+    
+    return testIp || "127.0.0.1";
   }
-  
-  // Trim whitespace and limit length to prevent abuse
-  const trimmed = rawIP.trim();
-  if (trimmed.length > 45) { // Max IPv6 length is 45 chars
-    return null;
-  }
-  
-  // Use Node.js built-in isIP for accurate IPv4/IPv6 validation
-  // Returns 4 for IPv4, 6 for IPv6, 0 for invalid
-  if (isIP(trimmed)) {
-    return trimmed;
-  }
-  
+
+  // In production, return null to signal that IP extraction failed
+  // Callers must handle this null case appropriately (e.g., by rejecting the request)
+  console.warn(
+    "[getClientIp] No IP forwarding headers found in production. " +
+    "Ensure reverse proxy is configured to set x-forwarded-for, x-real-ip, or cf-connecting-ip headers. " +
+    "Request will be rejected if IP is required for security checks."
+  );
   return null;
 }
 
 export async function POST(request) {
   try {
-    // Rate limiting by IP - use request.ip as primary source to prevent spoofing
-    // Only trust forwarded-IP headers when explicitly configured (e.g., behind a trusted proxy)
-    const trustProxy = process.env.TRUST_PROXY === 'true';
-    let ip = null;
-
-    if (trustProxy) {
-      // When behind a trusted proxy, use forwarded headers
-      const headerIP = request.headers.get('x-forwarded-for')?.split(',')[0] ||
-                       request.headers.get('x-real-ip') ||
-                       '';
-      ip = normalizeIP(headerIP);
-    }
-
-    // Fallback to request.ip (the direct connection IP)
-    // NOTE: On many self-hosted Next.js deployments, request.ip may be undefined.
-    // This is a known limitation when Next.js runs without a platform-provided IP.
-    // When TRUST_PROXY is false/unset and request.ip is undefined, `ip` will remain null.
-    if (!ip) {
-      ip = normalizeIP(request.ip);
-    }
+    // Extract client IP using the priority-ordered header check
+    // This replaces the old TRUST_PROXY-based logic with a more robust approach
+    // that handles multiple CDN/proxy scenarios (Cloudflare, nginx, AWS, etc.)
+    const ip = getClientIp(request.headers);
 
     // Use shared bucket with stricter limit if IP cannot be determined
     // WARNING: When `ip` is null, all clients share the '__unknown__' rate-limit key.
     // This means the stricter unknown limit (10 req/min) applies globally, potentially
     // causing false-positive 429s for legitimate traffic. To avoid this in production:
-    // 1. Set TRUST_PROXY=true if behind a reverse proxy (nginx, Cloudflare, etc.)
-    // 2. Ensure your proxy sets X-Forwarded-For or X-Real-IP headers correctly
-    // 3. For platforms like Vercel/Netlify, request.ip is usually available automatically
+    // 1. Ensure your reverse proxy/CDN sets proper headers (cf-connecting-ip, x-real-ip, or x-forwarded-for)
+    // 2. Verify the proxy strips/overwrites these headers from client requests
+    // 3. For platforms like Vercel/Netlify, headers are usually configured automatically
+    // 4. In development, use TEST_CLIENT_IP environment variable to test IP-based logic
     const rateLimitKey = ip || UNKNOWN_IP_KEY;
     const isUnknown = !ip;
 
@@ -305,22 +346,10 @@ export async function POST(request) {
     // This enables accurate device/browser/location attribution
     const userAgent = request.headers.get('user-agent') || undefined;
     
-    // Only forward client IP if explicitly allowed via TRUST_PROXY.
-    // This reuses the same trust decision used when extracting `ip` from headers
-    // to avoid inconsistent behavior between rate limiting and analytics.
-    let clientIp = undefined;
-    
-    if (trustProxy) {
-      if (ip) {
-        // Prefer the previously extracted client IP when available
-        clientIp = ip;
-      } else if (request.ip && isIP(request.ip)) {
-        // Fallback to platform-provided IP when available (e.g., Vercel, Netlify),
-        // but only if it is a valid IP address.
-        clientIp = request.ip;
-      }
-    }
-    // Otherwise, don't forward IP to avoid data pollution/privacy issues
+    // Forward client IP to Google Analytics if it was successfully extracted
+    // The IP was already extracted using getClientIp() which validates headers
+    // and ensures we only forward IPs from trusted proxy headers
+    const clientIp = ip || undefined;
 
     // Send event to Google Analytics
     await sendAnalyticsEvent({
