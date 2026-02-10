@@ -190,8 +190,9 @@ function InlineMarkdown({ text }) {
 export default function PrivacyPage() {
   const [activeTab, setActiveTab] = useState('privacy');
 
-  // Memoize Terms of Use to avoid regenerating markdown on every re-render
-  const termsOfUse = useMemo(() => getTermsOfUse(), []);
+  // Memoize Terms of Use to avoid regenerating markdown on every re-render.
+  // Year is evaluated once on mount and stays cached for the component lifetime.
+  const termsOfUse = useMemo(() => getTermsOfUse(new Date().getFullYear()), []);
 
   const tabs = [
     { id: 'privacy', label: 'Privacy Policy', content: PRIVACY_POLICY },
