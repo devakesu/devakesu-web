@@ -15,11 +15,11 @@ import {
 } from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
 
-export default function Home() {
-  const SCROLL_LOCK_DURATION = 1500;
-  const TOUCH_THRESHOLD_PX = 40;
-  const MIN_WHEEL_DELTA = 2;
+const SCROLL_LOCK_DURATION = 1500;
+const TOUCH_THRESHOLD_PX = 40;
+const MIN_WHEEL_DELTA = 2;
 
+export default function Home() {
   const { trackEvent } = useAnalytics();
   const [activeNode, setActiveNode] = useState(null);
   const [meta, setMeta] = useState(null);
@@ -249,7 +249,9 @@ export default function Home() {
 
       // Reset scroll position of all scrollable elements in the target section
       const targetSection = sections[nextIndex];
-      const scrollableElements = targetSection.querySelectorAll('*');
+      const scrollableElements = targetSection.querySelectorAll(
+        '[data-scrollable], .overflow-y-auto, .overflow-y-scroll'
+      );
       scrollableElements.forEach((el) => {
         if (el.scrollHeight > el.clientHeight) {
           el.scrollTop = 0;
@@ -405,21 +407,17 @@ export default function Home() {
 
     const handleScroll = () => {
       // Block natural scroll during animation to prevent section skipping
-      if (isAnimatingRef.current) {
-        return;
-      }
       if (!isAnimatingRef.current) {
         syncSectionIndex();
       }
     };
 
-    const handleScrollCapture = (event) => {
-      // Aggressively block scroll events during animation
+    const handleScrollCapture = () => {
+      // Note: Native scroll events are not cancelable; locking is handled via wheel/touchmove.
       const now = Date.now();
       if (isAnimatingRef.current || now - lastScrollTimeRef.current < SCROLL_LOCK_DURATION) {
-        event.preventDefault();
-        event.stopPropagation();
-        return false;
+        // During animation/lock, we simply ignore this scroll capture handler.
+        return;
       }
     };
 
@@ -514,7 +512,7 @@ export default function Home() {
         ></div>
 
         <div
-          className="absolute -bottom-24 -right-24 h-112 w-md rounded-full bg-cyan-400/20 blur-3xl parallax-layer"
+          className="absolute -bottom-24 -right-24 h-[28rem] w-[28rem] rounded-full bg-cyan-400/20 blur-3xl parallax-layer"
           data-depth="0.25"
         ></div>
 
@@ -526,7 +524,7 @@ export default function Home() {
 
         {/* Cyan glow blobs */}
         <div className="absolute -top-24 -left-24 h-72 w-72 rounded-full bg-cyan-400/20 blur-3xl"></div>
-        <div className="absolute -bottom-24 -right-24 h-112 w-md rounded-full bg-cyan-400/20 blur-3xl"></div>
+        <div className="absolute -bottom-24 -right-24 h-[28rem] w-[28rem] rounded-full bg-cyan-400/20 blur-3xl"></div>
 
         {/* Content */}
         <div className="relative scanlines">
@@ -1407,7 +1405,7 @@ export default function Home() {
           </p>
 
           <p className="mt-4 sm:mt-8 mb-2 text-xs text-neutral-500">
-            © {new Date().getFullYear()} Devanarayanan . All rights reserved.
+            © {new Date().getFullYear()} Devanarayanan. All rights reserved.
             <br />
             <a href="/legal" className="text-cyan-400 hover:underline">
               Legal & Privacy
