@@ -5,6 +5,7 @@
 | Version | Supported          |
 | ------- | ------------------ |
 | 1.0.x   | :white_check_mark: |
+| 1.1.x   | :white_check_mark: |
 
 ## Security Features
 
@@ -145,4 +146,4 @@ We appreciate security researchers who responsibly disclose vulnerabilities.
 ---
 
 **Last Updated**: February 10, 2026  
-**Version**: 1.0.5
+**Version**: 1.1.0

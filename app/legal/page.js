@@ -37,7 +37,7 @@ function MarkdownContent({ content }) {
     if (line.trim().startsWith('* ')) {
       return {
         type: 'li',
-        content: line.slice(2),
+        content: line.trim().slice(2),
         index,
       };
     }
