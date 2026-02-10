@@ -85,9 +85,17 @@ export default function Analytics() {
 /**
  * Hook for tracking custom events
  * Returns a stable trackEvent function reference via useCallback
+ * When NEXT_PUBLIC_ANALYTICS_ENABLED is not 'true', returns a no-op function to avoid unnecessary API requests
  */
 export function useAnalytics() {
+  const isEnabled = process.env.NEXT_PUBLIC_ANALYTICS_ENABLED === 'true';
+
   const trackEvent = useCallback(async (eventName, customParams = {}) => {
+    // Short-circuit if analytics is disabled to avoid unnecessary API requests
+    if (!isEnabled) {
+      return;
+    }
+
     try {
       await fetch('/api/analytics', {
         method: 'POST',
@@ -106,7 +114,7 @@ export function useAnalytics() {
     } catch (error) {
       console.error('Failed to track event:', error);
     }
-  }, []);
+  }, [isEnabled]);
 
   return { trackEvent };
 }
