@@ -75,7 +75,14 @@ export default function Home() {
     const controller = new AbortController();
 
     // In production, allow caching; in development, bust cache for hot reloading
-    const isDev = typeof window !== 'undefined' && window.location.hostname === 'localhost';
+    // Check for common dev hostnames (localhost, 127.0.0.1, local network IPs)
+    const isDev = typeof window !== 'undefined' && (
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1' ||
+      window.location.hostname.startsWith('192.168.') ||
+      window.location.hostname.startsWith('10.') ||
+      window.location.hostname.endsWith('.local')
+    );
     const baseUrl = '/meta.json';
     const url = isDev ? `${baseUrl}?cb=${Date.now().toString(36)}` : baseUrl;
     const fetchOptions = isDev
