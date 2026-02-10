@@ -264,11 +264,14 @@ To enable privacy-friendly, server-side Google Analytics:
 4. Add environment variables to your deployment:
    ```bash
    NEXT_PUBLIC_SITE_URL=https://your-production-domain.com
+   NEXT_PUBLIC_ANALYTICS_ENABLED=true
    GA_MEASUREMENT_ID=G-XXXXXXXXXX
    GA_API_SECRET=your_api_secret_here
    ```
 
-   **Note**: When enabling server-side analytics in production (i.e., when GA env vars are set), `NEXT_PUBLIC_SITE_URL` is required for origin validation to ensure requests only come from your domain.
+   **Note**: 
+   - `NEXT_PUBLIC_ANALYTICS_ENABLED=true` must be set to enable the client-side Analytics component and automatic page view tracking. Without this flag, the Analytics component is not rendered, avoiding unnecessary API requests.
+   - When enabling server-side analytics in production (i.e., when GA env vars are set), `NEXT_PUBLIC_SITE_URL` is required for origin validation to ensure requests only come from your domain.
 
 The implementation uses Google Analytics Measurement Protocol, which:
 

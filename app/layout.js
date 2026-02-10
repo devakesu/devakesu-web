@@ -203,7 +203,7 @@ export default async function RootLayout({ children }) {
     >
       <head></head>
       <body className="ambient-noise">
-        <Analytics />
+        {process.env.NEXT_PUBLIC_ANALYTICS_ENABLED === 'true' && <Analytics />}
         {children}
         <Script src="/js/cursor.js" strategy="lazyOnload" nonce={nonce} />
         <Script src="/js/parallax.js" strategy="lazyOnload" nonce={nonce} />

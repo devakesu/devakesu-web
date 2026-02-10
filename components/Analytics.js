@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
 
 /**
@@ -84,9 +84,10 @@ export default function Analytics() {
 
 /**
  * Hook for tracking custom events
+ * Returns a stable trackEvent function reference via useCallback
  */
 export function useAnalytics() {
-  const trackEvent = async (eventName, customParams = {}) => {
+  const trackEvent = useCallback(async (eventName, customParams = {}) => {
     try {
       await fetch('/api/analytics', {
         method: 'POST',
@@ -105,7 +106,7 @@ export function useAnalytics() {
     } catch (error) {
       console.error('Failed to track event:', error);
     }
-  };
+  }, []);
 
   return { trackEvent };
 }
