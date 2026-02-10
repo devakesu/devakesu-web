@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import {
   PRIVACY_POLICY,
@@ -190,9 +190,12 @@ function InlineMarkdown({ text }) {
 export default function PrivacyPage() {
   const [activeTab, setActiveTab] = useState('privacy');
 
+  // Memoize Terms of Use to avoid regenerating markdown on every re-render
+  const termsOfUse = useMemo(() => getTermsOfUse(), []);
+
   const tabs = [
     { id: 'privacy', label: 'Privacy Policy', content: PRIVACY_POLICY },
-    { id: 'terms', label: 'Terms of Use', content: getTermsOfUse() },
+    { id: 'terms', label: 'Terms of Use', content: termsOfUse },
     { id: 'cookies', label: 'Cookie Notice', content: COOKIE_NOTICE },
   ];
 
