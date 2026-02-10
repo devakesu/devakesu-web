@@ -16,8 +16,8 @@ import {
 import { FaXTwitter } from 'react-icons/fa6';
 
 const SCROLL_LOCK_DURATION = 1100;
-const TOUCH_THRESHOLD_PX = 60;
-const MIN_WHEEL_DELTA = 5;
+const TOUCH_THRESHOLD_PX = 40;
+const MIN_WHEEL_DELTA = 2;
 
 export default function Home() {
   const { trackEvent } = useAnalytics();
@@ -190,6 +190,10 @@ export default function Home() {
       while (current && current !== document.body) {
         const computed = window.getComputedStyle(current);
         const overflowY = computed.overflowY;
+        // Use 1-pixel tolerance to determine if element is scrollable
+        // Note: This tolerance is intentionally small to match the scrollTop boundary
+        // checks (> 0 and < maxScrollTop), which use exact comparisons. An element
+        // with scrollHeight - clientHeight == 1 is considered scrollable.
         const canScroll = current.scrollHeight - current.clientHeight > 1;
         if ((overflowY === 'auto' || overflowY === 'scroll') && canScroll) {
           const maxScrollTop = current.scrollHeight - current.clientHeight;

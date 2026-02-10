@@ -113,7 +113,9 @@ function checkRateLimit(ip, isUnknown = false) {
  * - Behind Azure Front Door: x-azure-clientip or x-forwarded-for
  * 
  * The current order assumes Cloudflare as the primary CDN. If your deployment differs,
- * adjust the priority order or make it configurable via environment variables.
+ * you can modify the priority order in this function, or consider making it configurable
+ * via an environment variable (e.g., PRIMARY_IP_HEADER=x-real-ip) for better flexibility
+ * across different deployment architectures without code changes.
  * 
  * SECURITY WARNING:
  * These headers can be spoofed if not properly configured at the reverse proxy level.
