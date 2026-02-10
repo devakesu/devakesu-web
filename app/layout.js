@@ -2,6 +2,7 @@ import './globals.css';
 import Script from 'next/script';
 import { JetBrains_Mono, Space_Grotesk } from 'next/font/google';
 import { headers } from 'next/headers';
+import Analytics, { isAnalyticsEnabled } from '@/components/Analytics';
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
@@ -168,7 +169,9 @@ export const metadata = {
 
   // Icons & Manifest
   icons: {
-    apple: [{ url: '/profile.jpg', sizes: '180x180', type: 'image/jpeg' }],
+    icon: [{ url: '/favicon.svg', type: 'image/svg+xml' }],
+    // TODO: Create apple-touch-icon.png (180x180) - iOS requires PNG for home screen icons
+    // apple: [{ url: '/apple-touch-icon.png', type: 'image/png', sizes: '180x180' }],
   },
 
   // Verification (add when you set these up)
@@ -191,12 +194,16 @@ export default async function RootLayout({ children }) {
   // XSS protection. The nonce is required for inline scripts loaded via Next.js Script component.
   const headersList = await headers();
   const nonce = headersList.get('x-nonce') || undefined;
-  
+
   return (
-    <html lang="en" className={`${jetbrainsMono.variable} ${spaceGrotesk.variable}`}>
-      <head>
-      </head>
+    <html
+      lang="en"
+      className={`${jetbrainsMono.variable} ${spaceGrotesk.variable}`}
+      data-scroll-behavior="smooth"
+    >
+      <head></head>
       <body className="ambient-noise">
+        {isAnalyticsEnabled() && <Analytics />}
         {children}
         <Script src="/js/cursor.js" strategy="lazyOnload" nonce={nonce} />
         <Script src="/js/parallax.js" strategy="lazyOnload" nonce={nonce} />

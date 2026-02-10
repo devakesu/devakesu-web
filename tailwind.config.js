@@ -1,11 +1,4 @@
-/** @type {import('tailwindcss').Config} */
-module.exports = {
-  content: [
-    "./app/**/*.{js,jsx,ts,tsx}",
-    "./components/**/*.{js,jsx,ts,tsx}",
-  ],
-  theme: {
-    extend: {},
-  },
-  plugins: [],
-};
+// Tailwind CSS v4 uses CSS-based configuration in app/globals.css
+// This file is kept for compatibility but not used
+const config = {};
+export default config;

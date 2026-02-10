@@ -45,6 +45,7 @@ ARG BUILD_ID
 ARG AUDIT_STATUS
 ARG SIGNATURE_STATUS
 ARG NEXT_PUBLIC_SITE_URL
+ARG NEXT_PUBLIC_ANALYTICS_ENABLED
 
 ENV SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH}
 ENV APP_COMMIT_SHA=${APP_COMMIT_SHA}
@@ -54,6 +55,7 @@ ENV GITHUB_RUN_NUMBER=${BUILD_ID}
 ENV AUDIT_STATUS=${AUDIT_STATUS}
 ENV SIGNATURE_STATUS=${SIGNATURE_STATUS}
 ENV NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
+ENV NEXT_PUBLIC_ANALYTICS_ENABLED=${NEXT_PUBLIC_ANALYTICS_ENABLED}
 ENV TZ=UTC
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -91,6 +93,15 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
+
+# Note: GA_API_SECRET and GA_MEASUREMENT_ID are required at runtime for analytics.
+# Do NOT bake secrets or environment-specific configuration into the image at build time.
+# Instead, provide GA_API_SECRET and GA_MEASUREMENT_ID as runtime environment variables via:
+#   - docker run -e GA_API_SECRET=your_secret_here -e GA_MEASUREMENT_ID=your_measurement_id_here
+#   - Orchestration platform secrets/config management (Kubernetes, Docker Swarm, etc.)
+#   - Cloud provider environment variable configuration (AWS ECS, Azure Container Apps, etc.)
+# While GA_MEASUREMENT_ID is less sensitive than GA_API_SECRET, providing both at runtime
+# offers flexibility to change configuration without rebuilding the image.
 
 WORKDIR /app
 

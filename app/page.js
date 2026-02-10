@@ -1,10 +1,8 @@
 'use client';
 
-// Note: This is a large client component. Consider refactoring to split static content
-// into server components in the future to reduce client-side JS bundle size.
-
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import Image from 'next/image';
+import { useAnalytics } from '@/components/Analytics';
 import {
   FaLinkedin,
   FaGithub,
@@ -17,22 +15,45 @@ import {
 } from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
 
+const SCROLL_LOCK_DURATION = 1100;
+const TOUCH_THRESHOLD_PX = 40;
+const MIN_WHEEL_DELTA = 2;
+
 export default function Home() {
+  const { trackEvent } = useAnalytics();
   const [activeNode, setActiveNode] = useState(null);
   const [meta, setMeta] = useState(null);
   const [booting, setBooting] = useState(true);
+  const [isSectionScrollEnabled, setIsSectionScrollEnabled] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  });
+  const [isCoarsePointer, setIsCoarsePointer] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.matchMedia('(pointer: coarse)').matches;
+  });
+  const activeSectionIndexRef = useRef(0);
+  const isAnimatingRef = useRef(false);
+  const unlockTimeoutRef = useRef(null);
+  const touchStartYRef = useRef(null);
+  const touchStartXRef = useRef(null);
+  const touchIsVerticalRef = useRef(null);
+  const touchStartedWithinScrollableRef = useRef(false);
 
   // Approximate uptime in years based on birth year
   const birthYear = 2006;
   const uptime = new Date().getFullYear() - birthYear;
 
-  const taglines = useMemo(() => [
-    'Human. Machine. Something in between.',
-    'Signal found. Noise reduced.',
-    'Unlearning defaults, engineering futures.',
-    'System awake // latency minimal.',
-    'Building kinder tech in a chaotic world.',
-  ], []);
+  const taglines = useMemo(
+    () => [
+      'Human. Machine. Something in between.',
+      'Signal found. Noise reduced.',
+      'Unlearning defaults, engineering futures.',
+      'System awake // latency minimal.',
+      'Building kinder tech in a chaotic world.',
+    ],
+    []
+  );
 
   const [currentTagline, setCurrentTagline] = useState(0);
   const [currentTime, setCurrentTime] = useState('');
@@ -51,7 +72,7 @@ export default function Home() {
     let timeoutId;
     let isMounted = true;
     const controller = new AbortController();
-    
+
     fetch('/meta.json', { signal: controller.signal })
       .then((res) => {
         if (!res.ok) {
@@ -70,7 +91,7 @@ export default function Home() {
       .catch((error) => {
         // Ignore abort errors (happens when component unmounts)
         if (error.name === 'AbortError' || !isMounted) return;
-        
+
         // Fallback if fetch fails (local dev mode)
         setMeta({
           build_id: 'DEV_MODE',
@@ -82,7 +103,7 @@ export default function Home() {
         });
         setBooting(false);
       });
-    
+
     return () => {
       controller.abort();
       isMounted = false;
@@ -111,6 +132,281 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
+  // Respect reduced-motion preference before enabling section scroll snapping
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const handlePreferenceChange = (event) => {
+      setIsSectionScrollEnabled(!event.matches);
+    };
+
+    mediaQuery.addEventListener('change', handlePreferenceChange);
+
+    return () => mediaQuery.removeEventListener('change', handlePreferenceChange);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+
+    const coarsePointerQuery = window.matchMedia('(pointer: coarse)');
+    const handleChange = (event) => setIsCoarsePointer(event.matches);
+
+    coarsePointerQuery.addEventListener('change', handleChange);
+
+    return () => coarsePointerQuery.removeEventListener('change', handleChange);
+  }, []);
+
+  // Force section-by-section scroll with smooth snapping across input methods
+  useEffect(() => {
+    if (!isSectionScrollEnabled || isCoarsePointer || typeof window === 'undefined') {
+      return undefined;
+    }
+
+    const sections = Array.from(document.querySelectorAll('.scroll-snap-section'));
+
+    if (sections.length <= 1) {
+      return undefined;
+    }
+
+    const resolveElement = (target) => {
+      if (target instanceof Element) return target;
+      return target?.parentElement ?? null;
+    };
+
+    const allowNativeScroll = (target, direction = 0) => {
+      const element = resolveElement(target);
+      if (!element) return false;
+
+      if (
+        element.closest(
+          'input, textarea, select, [contenteditable="true"], [data-free-scroll="true"]'
+        )
+      ) {
+        return true;
+      }
+
+      let current = element;
+      while (current && current !== document.body) {
+        const computed = window.getComputedStyle(current);
+        const overflowY = computed.overflowY;
+        // Use 1-pixel tolerance to determine if element is scrollable
+        // Note: This tolerance is intentionally small to match the scrollTop boundary
+        // checks (> 0 and < maxScrollTop), which use exact comparisons. An element
+        // with scrollHeight - clientHeight == 1 is considered scrollable.
+        const canScroll = current.scrollHeight - current.clientHeight > 1;
+        if ((overflowY === 'auto' || overflowY === 'scroll') && canScroll) {
+          const maxScrollTop = current.scrollHeight - current.clientHeight;
+          if (direction < 0 && current.scrollTop > 0) {
+            return true;
+          }
+          if (direction > 0 && current.scrollTop < maxScrollTop) {
+            return true;
+          }
+          if (direction === 0) {
+            return true;
+          }
+        }
+        current = current.parentElement;
+      }
+
+      return false;
+    };
+
+    const syncSectionIndex = () => {
+      let closestIndex = 0;
+      let minOffset = Number.POSITIVE_INFINITY;
+
+      sections.forEach((section, index) => {
+        const offset = Math.abs(section.getBoundingClientRect().top);
+        if (offset < minOffset) {
+          closestIndex = index;
+          minOffset = offset;
+        }
+      });
+
+      activeSectionIndexRef.current = closestIndex;
+    };
+
+    const scrollToSection = (direction) => {
+      const nextIndex = Math.min(
+        sections.length - 1,
+        Math.max(0, activeSectionIndexRef.current + direction)
+      );
+
+      if (nextIndex === activeSectionIndexRef.current) {
+        return;
+      }
+
+      isAnimatingRef.current = true;
+      sections[nextIndex].scrollIntoView({ behavior: 'smooth', block: 'start' });
+      activeSectionIndexRef.current = nextIndex;
+
+      if (unlockTimeoutRef.current) {
+        clearTimeout(unlockTimeoutRef.current);
+      }
+
+      unlockTimeoutRef.current = window.setTimeout(() => {
+        isAnimatingRef.current = false;
+      }, SCROLL_LOCK_DURATION);
+    };
+
+    const handleWheel = (event) => {
+      if (event.ctrlKey || allowNativeScroll(event.target, event.deltaY > 0 ? 1 : -1)) {
+        return;
+      }
+
+      event.preventDefault();
+
+      if (isAnimatingRef.current || Math.abs(event.deltaY) < MIN_WHEEL_DELTA) {
+        return;
+      }
+
+      scrollToSection(event.deltaY > 0 ? 1 : -1);
+    };
+
+    const handleKeyDown = (event) => {
+      if (event.defaultPrevented) {
+        return;
+      }
+
+      // Ignore key events when focus is inside interactive/input elements
+      const target = event.target;
+      
+      // Guard against non-Element targets (e.g., document/window)
+      if (!(target instanceof Element)) {
+        return;
+      }
+      
+      // Use closest to check for interactive elements in the ancestor chain
+      const interactiveAncestor = target.closest('input, textarea, select, button, a, [contenteditable="true"]');
+      
+      if (interactiveAncestor) {
+        return;
+      }
+
+      if (['ArrowDown', 'PageDown', ' '].includes(event.key)) {
+        event.preventDefault();
+        if (!isAnimatingRef.current) scrollToSection(1);
+      } else if (['ArrowUp', 'PageUp'].includes(event.key)) {
+        event.preventDefault();
+        if (!isAnimatingRef.current) scrollToSection(-1);
+      }
+    };
+
+    const resetTouchTracking = () => {
+      touchStartYRef.current = null;
+      touchStartXRef.current = null;
+      touchIsVerticalRef.current = null;
+    };
+
+    const handleTouchStart = (event) => {
+      if (event.touches.length !== 1 || allowNativeScroll(event.touches[0].target)) {
+        touchStartedWithinScrollableRef.current = true;
+        resetTouchTracking();
+        return;
+      }
+
+      touchStartedWithinScrollableRef.current = false;
+      touchStartYRef.current = event.touches[0].clientY;
+      touchStartXRef.current = event.touches[0].clientX;
+      touchIsVerticalRef.current = null;
+    };
+
+    const handleTouchMove = (event) => {
+      if (touchStartYRef.current === null || event.touches.length !== 1) {
+        return;
+      }
+
+      if (touchStartedWithinScrollableRef.current) {
+        return;
+      }
+
+      const currentTouch = event.touches[0];
+      const deltaY = currentTouch.clientY - touchStartYRef.current;
+      const deltaX = currentTouch.clientX - (touchStartXRef.current ?? currentTouch.clientX);
+
+      if (touchIsVerticalRef.current === null) {
+        const totalDelta = Math.hypot(deltaX, deltaY);
+        if (totalDelta < 6) {
+          return;
+        }
+        touchIsVerticalRef.current = Math.abs(deltaY) >= Math.abs(deltaX);
+      }
+
+      if (!touchIsVerticalRef.current) {
+        return;
+      }
+
+      if (Math.abs(deltaY) < TOUCH_THRESHOLD_PX) {
+        return;
+      }
+
+      const direction = deltaY > 0 ? -1 : 1;
+      if (allowNativeScroll(currentTouch.target, direction)) {
+        return;
+      }
+
+      event.preventDefault();
+
+      if (!isAnimatingRef.current) {
+        scrollToSection(direction);
+      }
+
+      resetTouchTracking();
+    };
+
+    const handleTouchEnd = () => {
+      touchStartedWithinScrollableRef.current = false;
+      resetTouchTracking();
+    };
+
+    const handleTouchCancel = () => {
+      touchStartedWithinScrollableRef.current = false;
+      resetTouchTracking();
+    };
+
+    const handleScroll = () => {
+      if (!isAnimatingRef.current) {
+        syncSectionIndex();
+      }
+    };
+
+    const handleResize = () => {
+      syncSectionIndex();
+    };
+
+    syncSectionIndex();
+
+    window.addEventListener('wheel', handleWheel, { passive: false });
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('touchstart', handleTouchStart, { passive: false });
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
+    window.addEventListener('touchend', handleTouchEnd);
+    window.addEventListener('touchcancel', handleTouchCancel);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('wheel', handleWheel);
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
+      window.removeEventListener('touchcancel', handleTouchCancel);
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleResize);
+      resetTouchTracking();
+
+      if (unlockTimeoutRef.current) {
+        clearTimeout(unlockTimeoutRef.current);
+        unlockTimeoutRef.current = null;
+      }
+
+      isAnimatingRef.current = false;
+    };
+  }, [isSectionScrollEnabled, isCoarsePointer]);
+
   const mindMapContent = {
     tech: {
       title: 'TECH_STACK',
@@ -138,13 +434,21 @@ export default function Home() {
     },
   };
 
-  const handlePanelKeyDown = (event, nodeId) => {
+  const handlePanelKeyDown = useCallback((event, nodeId) => {
     // Only handle keyboard events on the panel container itself, not on interactive children
     if ((event.key === 'Enter' || event.key === ' ') && event.currentTarget === event.target) {
       event.preventDefault();
       setActiveNode((prevActiveNode) => (prevActiveNode === nodeId ? null : nodeId));
     }
-  };
+  }, []);
+
+  // Track social media link clicks
+  const handleSocialClick = useCallback(
+    (platform) => {
+      trackEvent('social_link_click', { platform });
+    },
+    [trackEvent]
+  );
 
   return (
     <main className="relative isolate">
@@ -173,9 +477,9 @@ export default function Home() {
 
         {/* Content */}
         <div className="relative scanlines">
-          <div className="mx-auto max-w-6xl px-6 py-8 sm:py-12 lg:py-16">
+          <div className="mx-auto max-w-6xl px-6 pt-8 sm:pt-12 lg:pt-16 pb-2 sm:pb-4 lg:pb-6">
             {/* Profile Image - Mobile First */}
-            <div className="flex justify-center mb-4 lg:hidden">
+            <div className="flex justify-center mb-8 lg:hidden">
               <div className="profile-image-container">
                 <Image
                   src="/profile.jpg"
@@ -198,27 +502,29 @@ export default function Home() {
 
                 {/* Glitch-enhanced titles */}
                 <div className="space-y-2">
-                  <h1
-                    className="glitch text-3xl sm:text-5xl lg:text-7xl font-bold leading-[1.05] uppercase flex flex-wrap items-baseline gap-x-2 sm:gap-x-3 lg:gap-x-4 gap-y-1"
-                    data-text="DEVANARAYANAN"
-                  >
-                    DEVANARAYANAN
-                    <span className="text-xs sm:text-2xl lg:text-3xl text-neutral-400 font-normal ml-2 sm:ml-3 lg:ml-4 whitespace-nowrap">
+                  <div className="space-y-1">
+                    <h1
+                      className="glitch text-3xl sm:text-5xl lg:text-7xl font-bold leading-tight uppercase"
+                      data-text="DEVANARAYANAN"
+                    >
+                      DEVANARAYANAN
+                    </h1>
+                    <p className="text-xl sm:text-3xl lg:text-4xl text-neutral-400 font-normal">
                       (KESU)
-                    </span>
-                  </h1>
-                  <p className="text-base sm:text-xl text-cyan-400 uppercase tracking-wide">
+                    </p>
+                  </div>
+                  <p className="text-base sm:text-xl text-cyan-400 uppercase tracking-wide mt-3 sm:mt-4">
                     @devakesu
                   </p>
                 </div>
                 <h3
-                  className="glitch text-xl sm:text-4xl lg:text-5xl text-cyan-400 uppercase mt-2 sm:mt-4 lg:!mt-20"
+                  className="glitch text-xl sm:text-4xl lg:text-5xl text-cyan-400 uppercase mt-2 sm:mt-4 lg:mt-8"
                   data-text="Where code meets conscience"
                 >
                   Where code meets conscience
                 </h3>
 
-                <p className="max-w-2xl text-neutral-300/90 text-sm sm:text-lg leading-relaxed lg:mt-8 min-h-[3rem]">
+                <p className="max-w-2xl text-neutral-300/90 text-sm sm:text-lg leading-relaxed lg:mt-4 min-h-12">
                   {taglines[currentTagline]}
                 </p>
 
@@ -232,7 +538,7 @@ export default function Home() {
               {/* RIGHT: Card / Info */}
               <div className="lg:col-span-5 mt-4 lg:mt-0">
                 {/* Profile Image - Desktop */}
-                <div className="hidden lg:flex justify-center mb-6">
+                <div className="hidden lg:flex justify-center mb-16">
                   <div className="profile-image-container">
                     <Image
                       src="/profile.jpg"
@@ -244,7 +550,7 @@ export default function Home() {
                   </div>
                 </div>
 
-                <div className="relative p-6 sm:p-8 border border-neutral-700 shadow-[0_8px_0_0_rgba(255,255,255,0.1)] hover-glow transition-all duration-300">
+                <div className="relative p-6 sm:p-8 border border-neutral-700 shadow-[0_8px_0_0_rgba(255,255,255,0.1)] hover-glow transition-all duration-300 mt-8">
                   <div className="absolute -top-2 -left-2 h-2 w-2 bg-cyan-400"></div>
                   <div className="absolute -bottom-2 -right-2 h-2 w-2 bg-cyan-400"></div>
 
@@ -431,7 +737,9 @@ export default function Home() {
               <span className="text-xs uppercase tracking-wider">STATUS</span>
             </div>
             <div className="panel-body">
-              <div className="text-4xl mb-2" aria-hidden="true">🗃️</div>
+              <div className="text-4xl mb-2" aria-hidden="true">
+                🗃️
+              </div>
               <p className="text-sm font-bold text-cyan-400 uppercase tracking-wide">
                 Select a module
               </p>
@@ -457,7 +765,9 @@ export default function Home() {
               <span className="text-xs uppercase tracking-wider">CORE_VALUES</span>
             </div>
             <div className="panel-body">
-              <div className="text-4xl mb-2" aria-hidden="true">🧠</div>
+              <div className="text-4xl mb-2" aria-hidden="true">
+                🧠
+              </div>
               <p className="text-sm text-neutral-400">Philosophy & Ethics</p>
             </div>
             <div
@@ -489,7 +799,9 @@ export default function Home() {
               <span className="text-xs uppercase tracking-wider">TECH_STACK</span>
             </div>
             <div className="panel-body">
-              <div className="text-4xl mb-2" aria-hidden="true">⚡</div>
+              <div className="text-4xl mb-2" aria-hidden="true">
+                ⚡
+              </div>
               <p className="text-sm text-neutral-400">Systems & Code</p>
             </div>
             <div
@@ -521,7 +833,9 @@ export default function Home() {
               <span className="text-xs uppercase tracking-wider">THE_ARSENAL</span>
             </div>
             <div className="panel-body">
-              <div className="text-4xl mb-2" aria-hidden="true">⚙️</div>
+              <div className="text-4xl mb-2" aria-hidden="true">
+                ⚙️
+              </div>
               <p className="text-sm text-neutral-400">Tools & Environment</p>
             </div>
             <div
@@ -530,8 +844,8 @@ export default function Home() {
             >
               <div className="space-y-3 text-sm text-neutral-300 leading-relaxed">
                 <p>
-                  <strong className="text-cyan-400">Legion 7i:</strong> Intel Core i9-14900HX @
-                  2.20 GHz, 32GB RAM, RTX 4070, 3200x2000 165Hz.
+                  <strong className="text-cyan-400">Legion 7i:</strong> Intel Core i9-14900HX @ 2.20
+                  GHz, 32GB RAM, RTX 4070, 3200x2000 165Hz.
                 </p>
                 <p>
                   <strong className="text-cyan-400">Samsung Galaxy S24U:</strong> Snapdragon 8 Gen
@@ -561,7 +875,9 @@ export default function Home() {
               <span className="text-xs uppercase tracking-wider">FUTURE_STATE</span>
             </div>
             <div className="panel-body">
-              <div className="text-4xl mb-2" aria-hidden="true">🚀</div>
+              <div className="text-4xl mb-2" aria-hidden="true">
+                🚀
+              </div>
               <p className="text-sm text-neutral-400">Vision & Dreams</p>
             </div>
             <div
@@ -593,7 +909,9 @@ export default function Home() {
               <span className="text-xs uppercase tracking-wider">CONNECT</span>
             </div>
             <div className="panel-body">
-              <div className="text-4xl mb-2" aria-hidden="true">📡</div>
+              <div className="text-4xl mb-2" aria-hidden="true">
+                📡
+              </div>
               <p className="text-sm text-neutral-400">Communication Channels</p>
             </div>
             <div
@@ -602,8 +920,8 @@ export default function Home() {
             >
               <div className="space-y-2">
                 <p className="text-sm">
-                  <a 
-                    href="mailto:fusion@devakesu.com" 
+                  <a
+                    href="mailto:fusion@devakesu.com"
                     className="text-cyan-400 hover:underline"
                     onClick={(e) => e.stopPropagation()}
                   >
@@ -618,7 +936,10 @@ export default function Home() {
                     className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
                     title="LinkedIn"
                     aria-label="LinkedIn"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSocialClick('linkedin');
+                    }}
                   >
                     <FaLinkedin />
                   </a>
@@ -629,7 +950,10 @@ export default function Home() {
                     className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
                     title="GitHub"
                     aria-label="GitHub"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSocialClick('github');
+                    }}
                   >
                     <FaGithub />
                   </a>
@@ -640,7 +964,10 @@ export default function Home() {
                     className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
                     title="Instagram"
                     aria-label="Instagram"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSocialClick('instagram');
+                    }}
                   >
                     <FaInstagram />
                   </a>
@@ -651,7 +978,10 @@ export default function Home() {
                     className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
                     title="Google Developer"
                     aria-label="Google Developer"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSocialClick('google-dev');
+                    }}
                   >
                     <FaGoogle />
                   </a>
@@ -662,7 +992,10 @@ export default function Home() {
                     className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
                     title="X (Twitter)"
                     aria-label="X (Twitter)"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSocialClick('x');
+                    }}
                   >
                     <FaXTwitter />
                   </a>
@@ -673,7 +1006,10 @@ export default function Home() {
                     className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
                     title="Facebook"
                     aria-label="Facebook"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSocialClick('facebook');
+                    }}
                   >
                     <FaFacebook />
                   </a>
@@ -684,7 +1020,10 @@ export default function Home() {
                     className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
                     title="Reddit"
                     aria-label="Reddit"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSocialClick('reddit');
+                    }}
                   >
                     <FaReddit />
                   </a>
@@ -695,7 +1034,10 @@ export default function Home() {
                     className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
                     title="Pinterest"
                     aria-label="Pinterest"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSocialClick('pinterest');
+                    }}
                   >
                     <FaPinterest />
                   </a>
@@ -706,7 +1048,10 @@ export default function Home() {
                     className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
                     title="Telegram"
                     aria-label="Telegram"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSocialClick('telegram');
+                    }}
                   >
                     <FaTelegram />
                   </a>
@@ -865,7 +1210,7 @@ export default function Home() {
       {/* CONTACT FOOTER */}
       <footer
         id="contact"
-        className="mx-auto max-w-6xl px-6 py-12 border-t border-neutral-800 mt-12 scroll-snap-section"
+        className="mx-auto max-w-6xl px-6 py-12 pb-0 sm:pb-12 border-t border-neutral-800 mt-12 scroll-snap-section"
       >
         <div className="text-center">
           <p className="text-xl sm:text-2xl text-cyan-400 italic mb-4 font-light">
@@ -899,14 +1244,12 @@ export default function Home() {
                   </div>
                   <div>
                     <span className="text-cyan-400">&gt; INTERESTS:</span>{' '}
-                    <span aria-hidden="true">
-                      👨‍💻🌳⚛️🔬🎨🧪✨️👷🏽‍♀️🔭🎵🏏🍽🌷💅❤️☮️⚖️♻️🏳️‍🌈
-                    </span>
+                    <span aria-hidden="true">👨‍💻🌳⚛️🔬🎨🧪✨️👷🏽‍♀️🔭🎵🏏🍽🌷💅❤️☮️⚖️♻️🏳️‍🌈</span>
                     <span className="sr-only">
-                      Technology: coding, React, and science.
-                      Creative pursuits: art, experimentation, and innovation.
-                      Hobbies: astronomy, music, cricket, food, gardening, and self-care.
-                      Values: love, peace, justice, sustainability, and LGBTQ+ equality.
+                      Technology: coding, React, and science. Creative pursuits: art,
+                      experimentation, and innovation. Hobbies: astronomy, music, cricket, food,
+                      gardening, and self-care. Values: love, peace, justice, sustainability, and
+                      LGBTQ+ equality.
                     </span>
                   </div>
                   <div>
@@ -985,7 +1328,7 @@ export default function Home() {
             )}
           </div>
 
-          <div className="flex items-center justify-center gap-3 text-sm mb-4">
+          <div className="flex items-center justify-center gap-3 text-sm mb-6">
             <a href="mailto:fusion@devakesu.com" className="text-cyan-400 hover:underline">
               fusion@devakesu.com
             </a>
@@ -998,8 +1341,12 @@ export default function Home() {
             #UnitedNations #SustainableFutures
           </p>
 
-          <p className="mt-6 text-xs text-neutral-500">
+          <p className="mt-8 mb-2 text-xs text-neutral-500">
             © {new Date().getFullYear()} Devanarayanan. All rights reserved.
+            <br />
+            <a href="/legal" className="text-cyan-400 hover:underline">
+              Privacy & Legal
+            </a>
           </p>
         </div>
       </footer>

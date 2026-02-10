@@ -6,32 +6,43 @@ const nextConfig = {
   output: 'standalone',
 
   async headers() {
+    // Define security headers common to all environments
+    const securityHeaders = [
+      {
+        key: 'X-DNS-Prefetch-Control',
+        value: 'on',
+      },
+      {
+        key: 'X-Frame-Options',
+        value: 'SAMEORIGIN', // Aligned with CSP frame-ancestors 'self'
+      },
+      {
+        key: 'X-Content-Type-Options',
+        value: 'nosniff',
+      },
+      {
+        key: 'Referrer-Policy',
+        value: 'strict-origin-when-cross-origin', // Changed from origin-when-cross-origin to strict-origin-when-cross-origin
+      },
+      {
+        key: 'Permissions-Policy',
+        value: 'camera=(), microphone=(), geolocation=()',
+      },
+      // CSP is now handled by middleware.js for proper nonce support
+    ];
+
+    // Only add HSTS in production to prevent local SSL errors
+    if (process.env.NODE_ENV === 'production') {
+      securityHeaders.push({
+        key: 'Strict-Transport-Security',
+        value: 'max-age=31536000; includeSubDomains; preload',
+      });
+    }
+
     return [
       {
         source: '/:path*',
-        headers: [
-          {
-            key: 'X-DNS-Prefetch-Control',
-            value: 'on',
-          },
-          {
-            key: 'X-Frame-Options',
-            value: 'SAMEORIGIN',
-          },
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-          {
-            key: 'Referrer-Policy',
-            value: 'origin-when-cross-origin',
-          },
-          {
-            key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=()',
-          },
-          // CSP is now handled by proxy.js for proper nonce support
-        ],
+        headers: securityHeaders,
       },
       {
         source: '/js/:path*',
@@ -44,13 +55,27 @@ const nextConfig = {
           },
         ],
       },
-      // Prevent caching of build metadata to ensure fresh info after deployments
+      // Cache build metadata: no-store in development for fresh updates on reload,
+      // short TTL in production to balance freshness and performance
       {
         source: '/meta.json',
         headers: [
           {
             key: 'Cache-Control',
-            value: 'no-store',
+            value:
+              process.env.NODE_ENV === 'production'
+                ? 'public, max-age=300, must-revalidate'
+                : 'no-store',
+          },
+        ],
+      },
+      // Cache fonts for 30 days (font files are not versioned/hashed, shorter cache prevents stale fonts)
+      {
+        source: '/fonts/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=2592000',
           },
         ],
       },
@@ -85,12 +110,7 @@ const nextConfig = {
     minimumCacheTTL: 31536000,
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'grainy-gradients.vercel.app',
-      },
-    ],
+    remotePatterns: [],
   },
 };
 

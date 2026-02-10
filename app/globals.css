@@ -1,17 +1,28 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
 
 html {
-  scroll-snap-type: y mandatory;
   scroll-behavior: smooth;
+  scroll-padding-top: 0px;
+  /* Improve mouse wheel scrolling smoothness */
+  overscroll-behavior-y: contain;
+  scroll-snap-type: y proximity;
+}
+
+body {
+  /* Enable smooth momentum scrolling on all platforms */
+  -webkit-overflow-scrolling: touch;
+}
+
+* {
+  scroll-margin-top: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {
   html {
-    /* Disable smooth scrolling and relax mandatory snapping for reduced-motion users */
+    /* Disable smooth scrolling for reduced-motion users */
     scroll-behavior: auto;
-    scroll-snap-type: y proximity;
+    /* Disable scroll snapping for reduced-motion users */
+    scroll-snap-type: none;
   }
 
   /* Turn off glitch animations for reduced-motion users */
@@ -169,14 +180,29 @@ body {
 }
 
 /* ========================= */
-/* SCROLL SNAP SECTIONS */
+/* ========================= */
+/* SCROLL SECTIONS */
 /* ========================= */
 .scroll-snap-section {
+  scroll-margin-top: 0;
+  min-height: 90vh;
+  padding-bottom: 2rem;
   scroll-snap-align: start;
   scroll-snap-stop: always;
-  scroll-margin-top: 0;
-  min-height: 100vh;
-  padding-bottom: 4rem;
+}
+
+.scroll-snap-section:first-of-type {
+  min-height: 85vh;
+}
+
+.scroll-snap-section:last-of-type {
+  padding-bottom: 0;
+}
+
+@media (min-width: 640px) {
+  .scroll-snap-section:last-of-type {
+    padding-bottom: 2rem;
+  }
 }
 
 /* ========================= */
@@ -189,7 +215,7 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background: url('https://grainy-gradients.vercel.app/noise.svg');
+  background: url('/noise.svg');
   opacity: 0.08;
   pointer-events: none;
   animation: noise-flicker 5s infinite alternate;
