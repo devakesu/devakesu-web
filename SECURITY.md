@@ -17,7 +17,7 @@ This project implements multiple layers of security:
 - **Trivy Vulnerability Scanning** - Automated CVE detection in dependencies
 - **Content Security Policy (CSP)** - Strict CSP with per-request nonces
 - **Security Headers**:
-  - `X-Frame-Options: DENY` - Prevents clickjacking
+  - `X-Frame-Options: SAMEORIGIN` - Mitigates clickjacking by allowing framing only from the same origin
   - `X-Content-Type-Options: nosniff` - Prevents MIME sniffing
   - `Referrer-Policy: strict-origin-when-cross-origin` - Privacy protection
   - `Strict-Transport-Security` - HSTS with preload (production)
