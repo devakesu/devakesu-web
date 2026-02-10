@@ -187,12 +187,23 @@ export async function POST(request) {
     const referer = request.headers.get('referer');
     const allowedOrigin = process.env.NEXT_PUBLIC_SITE_URL;
     
+    // Pre-validate and parse the allowed origin configuration
+    let allowedUrl = null;
+    if (allowedOrigin) {
+      try {
+        allowedUrl = new URL(allowedOrigin);
+      } catch (configError) {
+        // Misconfigured NEXT_PUBLIC_SITE_URL - log and reject
+        console.error('Invalid NEXT_PUBLIC_SITE_URL configuration:', allowedOrigin, configError.message);
+        return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+      }
+    }
+    
     // Enforce same-origin policy when origin or referer is present
     if (origin || referer) {
       const source = origin || referer;
       try {
         const url = new URL(source);
-        const allowedUrl = allowedOrigin ? new URL(allowedOrigin) : null;
         
         // In production, validate against NEXT_PUBLIC_SITE_URL
         // In development, allow localhost and 127.0.0.1 with common dev ports
@@ -214,7 +225,7 @@ export async function POST(request) {
           return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
       } catch (e) {
-        // Malformed origin/referer: treat as suspicious and block
+        // Malformed origin/referer from client: treat as suspicious and block
         console.warn('Analytics request with invalid origin/referer:', source, 'error:', e.message);
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
       }
@@ -286,7 +297,24 @@ export async function POST(request) {
     // Extract client context for forwarding to Google Analytics
     // This enables accurate device/browser/location attribution
     const userAgent = request.headers.get('user-agent') || undefined;
-    const clientIp = ip || undefined; // Use the already-extracted IP from rate limiting
+    
+    // Only forward client IP if we're confident it's from a trusted proxy
+    // x-forwarded-for and x-real-ip can be client-spoofed unless deployment overwrites them
+    // Use request.ip (platform-provided) when available, or gate behind explicit trust config
+    let clientIp = undefined;
+    
+    // Trust IP forwarding only in production with NEXT_PUBLIC_SITE_URL configured
+    // This assumes production deployment has a reverse proxy that sanitizes headers
+    const isTrustedProxy = process.env.NODE_ENV === 'production' && allowedOrigin;
+    
+    if (isTrustedProxy && ip) {
+      // In trusted proxy environment, use the extracted IP
+      clientIp = ip;
+    } else if (request.ip) {
+      // Use platform-provided IP when available (e.g., Vercel, Netlify)
+      clientIp = request.ip;
+    }
+    // Otherwise, don't forward IP to avoid data pollution/privacy issues
 
     // Send event to Google Analytics
     await sendAnalyticsEvent({

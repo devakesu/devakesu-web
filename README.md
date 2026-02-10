@@ -142,7 +142,7 @@ devakesu-web/
 │       └── deploy.yml            # CI/CD pipeline with SLSA provenance
 ├── .vscode/                      # VSCode workspace settings
 ├── next.config.mjs               # Next.js configuration
-├── proxy.js                      # CSP middleware (Next.js 16)
+├── middleware.js                 # CSP middleware with nonce support
 ├── tailwind.config.js            # Tailwind CSS configuration
 ├── package.json                  # Dependencies & scripts
 ├── SECURITY.md                   # Security policy & reporting
@@ -164,7 +164,7 @@ devakesu-web/
   - `Referrer-Policy: strict-origin-when-cross-origin` - Enhanced privacy
   - `Strict-Transport-Security` - HSTS with preload (production only)
   - `Permissions-Policy` - Feature restrictions
-  - Content Security Policy with nonces (via proxy.js)
+  - Content Security Policy with nonces (via middleware.js)
 - **React Strict Mode** - Development safety checks
 - **No Powered-By Header** - Reduced information disclosure
 
@@ -180,7 +180,7 @@ devakesu-web/
 
 - ✅ **Server-side Google Analytics** (optional, CSP-compliant)
 - ✅ **No client-side tracking scripts**
-- ✅ **No new cookies or local storage written by this app** – the app does not create persistent client identifiers; for optional server-side GA a per-request client ID is generated and existing GA cookies (such as `ga_client_id` or `_ga`), if present, may be read and reused but are never set or modified by browser code
+- ✅ **No new cookies or persistent storage written by this app** – the app does not create persistent client identifiers; for optional server-side GA a per-request client ID is generated and existing GA cookies (such as `ga_client_id` or `_ga`), if present, may be read and reused but are never set or modified by browser code. SessionStorage is used temporarily for analytics de-duplication during the session only.
 - ✅ **Zero third-party requests from the browser** – all frontend assets are self-hosted; any contact with Google for optional analytics happens server-side only
 - ✅ **GDPR compliant** by design
 - ✅ **Privacy-first architecture**
@@ -270,7 +270,7 @@ To enable privacy-friendly, server-side Google Analytics:
 The implementation uses Google Analytics Measurement Protocol, which:
 
 - ✅ No client-side scripts (CSP-compliant)
-- ✅ No cookies or localStorage
+- ✅ No cookies or persistent storage (sessionStorage used only for de-duplication)
 - ✅ Server-side tracking only
 - ✅ Privacy-first design
 

@@ -28,7 +28,7 @@ const nextConfig = {
         key: 'Permissions-Policy',
         value: 'camera=(), microphone=(), geolocation=()',
       },
-      // CSP is now handled by proxy.js for proper nonce support
+      // CSP is now handled by middleware.js for proper nonce support
     ];
 
     // Only add HSTS in production to prevent local SSL errors
