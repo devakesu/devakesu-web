@@ -11,6 +11,21 @@ let hasLoggedProdIpWarning = false;
 
 // Simple in-memory rate limiter
 // Maps IP -> { count, resetTime }
+//
+// LIMITATION: This in-memory implementation will not work correctly in serverless
+// or multi-instance deployments where each request may be handled by a different
+// process or container. Each instance will have its own independent rate limit map,
+// effectively multiplying the allowed request rate by the number of instances.
+//
+// For production deployments using Vercel, AWS Lambda, or similar platforms with
+// multiple instances, consider using a distributed rate limiting solution like:
+//   - Redis with sliding window rate limiting
+//   - Upstash Rate Limiting (@upstash/ratelimit)
+//   - Vercel KV with rate limiting helpers
+//   - AWS DynamoDB with conditional writes
+//
+// For single-instance deployments (e.g., traditional VPS, single Docker container),
+// this in-memory approach is sufficient and performant.
 const rateLimitMap = new Map();
 const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
 const RATE_LIMIT_MAX_REQUESTS = 60; // 60 requests per minute per IP

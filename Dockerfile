@@ -96,6 +96,13 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
+# Note: GA_API_SECRET is required at runtime for server-side analytics.
+# Do NOT bake secrets into the image at build time. Instead, provide GA_API_SECRET
+# as a runtime environment variable via:
+#   - docker run -e GA_API_SECRET=your_secret_here
+#   - Orchestration platform secrets management (Kubernetes, Docker Swarm, etc.)
+#   - Cloud provider environment variable configuration (AWS ECS, Azure Container Apps, etc.)
+
 WORKDIR /app
 
 RUN addgroup --system --gid 1001 nodejs && \

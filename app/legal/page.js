@@ -118,9 +118,10 @@ function InlineMarkdown({ text }) {
   const parts = [];
   let lastIndex = 0;
 
-  // Combined regex to match bold, links, and emails
+  // Combined regex to match bold, links, and emails.
+  // Note: Email matching is intentionally simplified and not a full RFC-compliant validator.
   const regex =
-    /(\*\*(.+?)\*\*)|(\[(.+?)\]\((.+?)\))|([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})|(✅)|(❌)/g;
+    /(\*\*(.+?)\*\*)|(\[(.+?)\]\((.+?)\))|([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,63})|(✅)|(❌)/g;
   let match;
 
   while ((match = regex.exec(text)) !== null) {
