@@ -43,11 +43,10 @@ function checkRateLimit(ip, isUnknown = false) {
         // Collect all entries and find the oldest `excess` entries to evict
         const entriesArray = Array.from(rateLimitMap.entries());
         
-        // Partial sort to find the oldest N entries (QuickSelect-style)
-        // We'll use nth_element approach: partition to find the Nth smallest
+        // Partial sort to find the oldest N entries (QuickSelect algorithm)
+        // Uses nth_element approach to partition around the Nth smallest resetTime
         function partitionByResetTime(arr, left, right, pivotIndex) {
           const pivotValue = arr[pivotIndex][1].resetTime;
-          const pivotEntry = arr[pivotIndex];
           
           // Move pivot to end
           [arr[pivotIndex], arr[right]] = [arr[right], arr[pivotIndex]];
@@ -65,14 +64,36 @@ function checkRateLimit(ip, isUnknown = false) {
           return storeIndex;
         }
         
+        // QuickSelect: Partitions arr so elements at indices 0..k have resetTime
+        // less than or equal to elements at indices k+1..arr.length-1
+        // @param arr - Array of [key, {count, resetTime}] entries
+        // @param k - Target index (0-based) to partition around
         function quickSelect(arr, k) {
           let left = 0;
           let right = arr.length - 1;
           
           while (left < right) {
-            // Use median-of-three for more predictable performance
+            // Median-of-three pivot selection for better performance
             const mid = left + Math.floor((right - left) / 2);
-            const pivotIndex = mid;
+            
+            // Find median of arr[left], arr[mid], arr[right] by resetTime
+            const leftTime = arr[left][1].resetTime;
+            const midTime = arr[mid][1].resetTime;
+            const rightTime = arr[right][1].resetTime;
+            
+            let pivotIndex;
+            if (leftTime <= midTime && midTime <= rightTime) {
+              pivotIndex = mid; // midTime is median
+            } else if (rightTime <= midTime && midTime <= leftTime) {
+              pivotIndex = mid; // midTime is median
+            } else if (midTime <= leftTime && leftTime <= rightTime) {
+              pivotIndex = left; // leftTime is median
+            } else if (rightTime <= leftTime && leftTime <= midTime) {
+              pivotIndex = left; // leftTime is median
+            } else {
+              pivotIndex = right; // rightTime is median
+            }
+            
             const newPivot = partitionByResetTime(arr, left, right, pivotIndex);
             
             if (k === newPivot) {
@@ -86,6 +107,7 @@ function checkRateLimit(ip, isUnknown = false) {
         }
         
         // Find the nth smallest resetTime where n = excess
+        // This ensures we evict exactly 'excess' oldest entries
         if (excess > 0 && excess < entriesArray.length) {
           quickSelect(entriesArray, excess - 1);
           
