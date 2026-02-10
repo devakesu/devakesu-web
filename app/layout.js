@@ -2,7 +2,7 @@ import './globals.css';
 import Script from 'next/script';
 import { JetBrains_Mono, Space_Grotesk } from 'next/font/google';
 import { headers } from 'next/headers';
-import Analytics from '@/components/Analytics';
+import Analytics, { isAnalyticsEnabled } from '@/components/Analytics';
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
@@ -203,7 +203,7 @@ export default async function RootLayout({ children }) {
     >
       <head></head>
       <body className="ambient-noise">
-        {process.env.NEXT_PUBLIC_ANALYTICS_ENABLED === 'true' && <Analytics />}
+        {isAnalyticsEnabled() && <Analytics />}
         {children}
         <Script src="/js/cursor.js" strategy="lazyOnload" nonce={nonce} />
         <Script src="/js/parallax.js" strategy="lazyOnload" nonce={nonce} />

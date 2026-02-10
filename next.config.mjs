@@ -22,7 +22,7 @@ const nextConfig = {
       },
       {
         key: 'Referrer-Policy',
-        value: 'strict-origin-when-cross-origin', // Upgraded from origin-when-cross-origin
+        value: 'strict-origin-when-cross-origin', // Changed from origin-when-cross-origin to strict-origin-when-cross-origin
       },
       {
         key: 'Permissions-Policy',
