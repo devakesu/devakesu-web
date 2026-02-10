@@ -27,7 +27,7 @@ function evictOldestEntries(map, targetSize) {
   entriesArray.sort((a, b) => a[1].resetTime - b[1].resetTime);
 
   // Evict the oldest `excess` entries
-  for (let i = 0; i < excess && i < entriesArray.length; i++) {
+  for (let i = 0; i < excess; i++) {
     const keyToDelete = entriesArray[i][0];
     map.delete(keyToDelete);
   }
