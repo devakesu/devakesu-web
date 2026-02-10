@@ -74,8 +74,8 @@ function checkRateLimit(ip, isUnknown = false) {
         }
         
         /**
-         * QuickSelect: Partitions arr so elements at indices 0..k have resetTime
-         * values that are smaller than or equal to elements at k+1..end.
+         * QuickSelect: Partitions arr so elements at indices 0..k have older
+         * (smaller) resetTime values than elements at k+1..end.
          * Note: Elements with equal resetTime may appear on either side of k.
          * @param {Array} arr - Array of [key, {count, resetTime}] entries
          * @param {number} k - Target index (0-based) to partition around
@@ -109,8 +109,8 @@ function checkRateLimit(ip, isUnknown = false) {
           }
         }
         
-        // Find the nth smallest resetTime where n = excess
-        // This ensures we evict exactly 'excess' oldest entries
+        // Partition array to find the element at index (excess - 1)
+        // After partitioning, elements at indices 0..excess-1 are the oldest
         // Special case: if excess equals array length, clear everything
         if (excess > 0) {
           if (excess >= entriesArray.length) {
