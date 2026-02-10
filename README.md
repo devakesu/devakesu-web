@@ -263,9 +263,12 @@ To enable privacy-friendly, server-side Google Analytics:
 3. Create an API secret
 4. Add environment variables to your deployment:
    ```bash
+   NEXT_PUBLIC_SITE_URL=https://your-production-domain.com
    GA_MEASUREMENT_ID=G-XXXXXXXXXX
    GA_API_SECRET=your_api_secret_here
    ```
+
+   **Note**: When enabling server-side analytics in production (i.e., when GA env vars are set), `NEXT_PUBLIC_SITE_URL` is required for origin validation to ensure requests only come from your domain.
 
 The implementation uses Google Analytics Measurement Protocol, which:
 
