@@ -40,12 +40,8 @@ function checkRateLimit(ip, isUnknown = false) {
       if (rateLimitMap.size > MAX_MAP_SIZE) {
         const excess = rateLimitMap.size - MAX_MAP_SIZE;
         
-        // Special case: if excess >= map size, clear everything
-        if (excess >= rateLimitMap.size) {
-          rateLimitMap.clear();
-        } else {
-          // Collect all entries and find the oldest `excess` entries to evict
-          const entriesArray = Array.from(rateLimitMap.entries());
+        // Collect all entries and find the oldest `excess` entries to evict
+        const entriesArray = Array.from(rateLimitMap.entries());
         
         // Partial sort to find the oldest N entries (QuickSelect algorithm)
         // Uses nth_element approach to partition around the Nth smallest resetTime
@@ -80,7 +76,8 @@ function checkRateLimit(ip, isUnknown = false) {
         /**
          * QuickSelect: Partitions arr so elements at indices 0..k have older
          * (smaller) resetTime values than elements at k+1..end.
-         * Note: Elements with equal resetTime may appear on either side of k.
+         * Note: Due to strict inequality in partition, elements with resetTime < pivot
+         * go left, and elements with resetTime >= pivot go right.
          * @param {Array} arr - Array of [key, {count, resetTime}] entries
          * @param {number} k - Target index (0-based) to partition around
          */
@@ -131,7 +128,6 @@ function checkRateLimit(ip, isUnknown = false) {
           rateLimitMap.delete(entriesArray[i][0]);
         }
       }
-    }
     }
     
     return true;
