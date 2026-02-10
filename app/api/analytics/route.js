@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sendAnalyticsEvent, getClientId, getSessionId } from '@/lib/analytics';
+import { isIP } from 'node:net';
 
 // Simple in-memory rate limiter
 // Maps IP -> { count, resetTime }
@@ -141,7 +142,7 @@ function checkRateLimit(ip, isUnknown = false) {
   return true;
 }
 
-// Validate and normalize IP address
+// Validate and normalize IP address using Node.js built-in isIP
 function normalizeIP(rawIP) {
   if (!rawIP || typeof rawIP !== 'string') {
     return null;
@@ -153,11 +154,9 @@ function normalizeIP(rawIP) {
     return null;
   }
   
-  // Basic IPv4/IPv6 validation (simple check)
-  const ipv4Pattern = /^(\d{1,3}\.){3}\d{1,3}$/;
-  const ipv6Pattern = /^([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}$/;
-  
-  if (ipv4Pattern.test(trimmed) || ipv6Pattern.test(trimmed)) {
+  // Use Node.js built-in isIP for accurate IPv4/IPv6 validation
+  // Returns 4 for IPv4, 6 for IPv6, 0 for invalid
+  if (isIP(trimmed)) {
     return trimmed;
   }
   

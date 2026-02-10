@@ -170,8 +170,8 @@ export const metadata = {
   // Icons & Manifest
   icons: {
     icon: [{ url: '/favicon.svg', type: 'image/svg+xml' }],
-    // TODO: Create apple-touch-icon.png (180x180) - iOS prefers PNG over SVG for home screen icons
-    apple: [{ url: '/favicon.svg', type: 'image/svg+xml' }],
+    // TODO: Create apple-touch-icon.png (180x180) - iOS requires PNG for home screen icons
+    // apple: [{ url: '/apple-touch-icon.png', type: 'image/png', sizes: '180x180' }],
   },
 
   // Verification (add when you set these up)

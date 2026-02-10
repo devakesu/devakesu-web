@@ -9,16 +9,17 @@ import { usePathname } from 'next/navigation';
  */
 export default function Analytics() {
   const pathname = usePathname();
-  const sentEvents = useRef(new Set());
+  const lastTrackedPathnameRef = useRef(null);
 
   useEffect(() => {
     const trackPageView = async () => {
       const pageLocation = window.location.href;
-      const eventKey = `pageview:${pageLocation}`;
 
-      // Prevent duplicate tracking
-      if (sentEvents.current.has(eventKey)) return;
-      sentEvents.current.add(eventKey);
+      // Prevent duplicate tracking caused by React StrictMode double-invoking effects
+      if (lastTrackedPathnameRef.current === pathname) {
+        return;
+      }
+      lastTrackedPathnameRef.current = pathname;
 
       try {
         await fetch('/api/analytics', {
