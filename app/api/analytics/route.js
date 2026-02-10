@@ -195,18 +195,21 @@ export async function POST(request) {
         const allowedUrl = allowedOrigin ? new URL(allowedOrigin) : null;
         
         // In production, validate against NEXT_PUBLIC_SITE_URL
-        // In development, allow localhost and 127.0.0.1
+        // In development, allow localhost and 127.0.0.1 with common dev ports
+        const isDevelopmentLocal = process.env.NODE_ENV !== 'production' && 
+          (url.hostname === 'localhost' || url.hostname === '127.0.0.1') &&
+          (url.port === '3000' || url.port === '3001' || url.port === '' || url.port === '80' || url.port === '443');
+        
         const isAllowed = 
           (allowedUrl && url.host === allowedUrl.host) ||
-          (process.env.NODE_ENV !== 'production' && 
-           (url.hostname === 'localhost' || url.hostname === '127.0.0.1'));
+          isDevelopmentLocal;
         
         if (!isAllowed) {
           console.warn(
             'Analytics request from unexpected origin:', 
             source, 
             'expected:', 
-            allowedOrigin || 'localhost/127.0.0.1'
+            allowedOrigin || 'localhost:3000/3001'
           );
           return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
