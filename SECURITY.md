@@ -30,7 +30,7 @@ This project implements multiple layers of security:
 - **No Inline Scripts** - All scripts use Next.js Script component with nonces
 - **Safe External Links** - All external links use `rel="noopener noreferrer"`
 - **Input Validation** - All user inputs validated and sanitized
-- **Error Boundaries** - Graceful error handling prevents information disclosure
+- **Error Handling** - Framework-level error pages and logging help avoid sensitive information disclosure
 
 ### Privacy
 

@@ -21,6 +21,8 @@ body {
   html {
     /* Disable smooth scrolling for reduced-motion users */
     scroll-behavior: auto;
+    /* Disable scroll snapping for reduced-motion users */
+    scroll-snap-type: none;
   }
 
   /* Turn off glitch animations for reduced-motion users */

@@ -55,13 +55,14 @@ const nextConfig = {
           },
         ],
       },
-      // Prevent caching of build metadata to ensure fresh info after deployments
+      // Cache build metadata with short TTL to balance freshness and performance
+      // Revalidate after 5 minutes to ensure reasonably fresh info after deployments
       {
         source: '/meta.json',
         headers: [
           {
             key: 'Cache-Control',
-            value: 'no-store',
+            value: 'public, max-age=300, must-revalidate',
           },
         ],
       },

@@ -74,8 +74,7 @@ export default function Home() {
     let isMounted = true;
     const controller = new AbortController();
 
-    const cacheBuster = Date.now().toString(36);
-    fetch(`/meta.json?cb=${cacheBuster}`, { signal: controller.signal, cache: 'no-store' })
+    fetch('/meta.json', { signal: controller.signal })
       .then((res) => {
         if (!res.ok) {
           throw new Error(`Failed to load /meta.json: ${res.status} ${res.statusText}`);
