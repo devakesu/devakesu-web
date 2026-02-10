@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { sendAnalyticsEvent, getClientId, getSessionId, isAnalyticsConfigured } from '@/lib/analytics';
 import { isIP } from 'node:net';
 
+// Module-level flag to prevent log flooding during misconfiguration
+let hasLoggedMissingUrl = false;
+
 // Simple in-memory rate limiter
 // Maps IP -> { count, resetTime }
 const rateLimitMap = new Map();
@@ -155,6 +158,14 @@ export async function POST(request) {
         console.error('Invalid NEXT_PUBLIC_SITE_URL configuration:', allowedOrigin, configError.message);
         return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
       }
+    } else if (process.env.NODE_ENV === 'production') {
+      // Missing NEXT_PUBLIC_SITE_URL in production is a server misconfiguration
+      // Guard log to emit only once per process to prevent log flooding
+      if (!hasLoggedMissingUrl) {
+        console.error('NEXT_PUBLIC_SITE_URL is not configured. Analytics origin validation cannot be performed.');
+        hasLoggedMissingUrl = true;
+      }
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
     }
 
     // Additional validation: check Sec-Fetch-Site header (browser-controlled, harder to spoof)
