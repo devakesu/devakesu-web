@@ -947,7 +947,10 @@ export default function Home() {
                     className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
                     title="GitHub"
                     aria-label="GitHub"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSocialClick('github');
+                    }}
                   >
                     <FaGithub />
                   </a>
@@ -958,7 +961,10 @@ export default function Home() {
                     className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
                     title="Instagram"
                     aria-label="Instagram"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSocialClick('instagram');
+                    }}
                   >
                     <FaInstagram />
                   </a>
@@ -969,7 +975,10 @@ export default function Home() {
                     className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
                     title="Google Developer"
                     aria-label="Google Developer"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSocialClick('google-dev');
+                    }}
                   >
                     <FaGoogle />
                   </a>
@@ -980,7 +989,10 @@ export default function Home() {
                     className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
                     title="X (Twitter)"
                     aria-label="X (Twitter)"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSocialClick('x');
+                    }}
                   >
                     <FaXTwitter />
                   </a>
@@ -991,7 +1003,10 @@ export default function Home() {
                     className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
                     title="Facebook"
                     aria-label="Facebook"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSocialClick('facebook');
+                    }}
                   >
                     <FaFacebook />
                   </a>
@@ -1002,7 +1017,10 @@ export default function Home() {
                     className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
                     title="Reddit"
                     aria-label="Reddit"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSocialClick('reddit');
+                    }}
                   >
                     <FaReddit />
                   </a>
@@ -1013,7 +1031,10 @@ export default function Home() {
                     className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
                     title="Pinterest"
                     aria-label="Pinterest"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSocialClick('pinterest');
+                    }}
                   >
                     <FaPinterest />
                   </a>
@@ -1024,7 +1045,10 @@ export default function Home() {
                     className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
                     title="Telegram"
                     aria-label="Telegram"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSocialClick('telegram');
+                    }}
                   >
                     <FaTelegram />
                   </a>
