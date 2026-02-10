@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { sendAnalyticsEvent, getClientId, getSessionId } from '@/lib/analytics';
+import { sendAnalyticsEvent, getClientId, getSessionId, isAnalyticsConfigured } from '@/lib/analytics';
 import { isIP } from 'node:net';
 
 // Simple in-memory rate limiter
@@ -98,21 +98,11 @@ function normalizeIP(rawIP) {
 
 export async function POST(request) {
   try {
-    // Short-circuit early when GA is not configured to keep optional analytics low-overhead
-    // This avoids unnecessary rate limiting, validation, and parsing work
-    const measurementId = process.env.GA_MEASUREMENT_ID;
-    const apiSecret = process.env.GA_API_SECRET;
-    
-    if (!measurementId || !apiSecret) {
-      // Analytics not configured - return success without processing
-      return new NextResponse(null, { status: 204 });
-    }
-
     // Rate limiting by IP - use request.ip as primary source to prevent spoofing
     // Only trust forwarded-IP headers when explicitly configured (e.g., behind a trusted proxy)
     const trustProxy = process.env.TRUST_PROXY === 'true';
     let ip = null;
-    
+
     if (trustProxy) {
       // When behind a trusted proxy, use forwarded headers
       const headerIP = request.headers.get('x-forwarded-for')?.split(',')[0] ||
@@ -120,24 +110,39 @@ export async function POST(request) {
                        '';
       ip = normalizeIP(headerIP);
     }
-    
+
     // Fallback to request.ip (the direct connection IP)
     if (!ip) {
       ip = normalizeIP(request.ip);
     }
-    
+
     // Use shared bucket with stricter limit if IP cannot be determined
     const rateLimitKey = ip || UNKNOWN_IP_KEY;
     const isUnknown = !ip;
-    
+
     if (!checkRateLimit(rateLimitKey, isUnknown)) {
       return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
     }
 
-    // Origin/referer check to prevent cross-origin abuse
-    // Validate against server-side allowlist instead of client-controlled Host header
+    // Reject requests when both Origin and Referer are absent (non-browser clients)
+    // This cheap header check provides defense-in-depth even when GA is disabled
     const origin = request.headers.get('origin');
     const referer = request.headers.get('referer');
+
+    if (!origin && !referer) {
+      console.warn('Analytics request missing both Origin and Referer headers - rejecting non-browser request');
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    // Short-circuit early when GA is not configured to keep optional analytics low-overhead
+    // Rate limiting and basic header checks above provide minimal defense against abuse
+    if (!isAnalyticsConfigured()) {
+      // Analytics not configured - return success without further processing
+      return new NextResponse(null, { status: 204 });
+    }
+
+    // Origin/referer check to prevent cross-origin abuse
+    // Validate against server-side allowlist instead of client-controlled Host header
     const allowedOrigin = process.env.NEXT_PUBLIC_SITE_URL;
     
     // Pre-validate and parse the allowed origin configuration
@@ -151,14 +156,7 @@ export async function POST(request) {
         return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
       }
     }
-    
-    // Reject requests when both Origin and Referer are absent (non-browser clients)
-    // Additionally validate Sec-Fetch-Site to make it harder for non-browser clients to bypass
-    if (!origin && !referer) {
-      console.warn('Analytics request missing both Origin and Referer headers - rejecting non-browser request');
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-    
+
     // Additional validation: check Sec-Fetch-Site header (browser-controlled, harder to spoof)
     // Sec-Fetch-Site is sent by modern browsers and indicates the relationship between request origin and target
     // Note: Older browsers may not send these headers; validation is opt-in when present for defense-in-depth
