@@ -15,11 +15,11 @@ import {
 } from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
 
-const SCROLL_LOCK_DURATION = 1100;
-const TOUCH_THRESHOLD_PX = 40;
-const MIN_WHEEL_DELTA = 2;
-
 export default function Home() {
+  const SCROLL_LOCK_DURATION = 1500;
+  const TOUCH_THRESHOLD_PX = 40;
+  const MIN_WHEEL_DELTA = 2;
+
   const { trackEvent } = useAnalytics();
   const [activeNode, setActiveNode] = useState(null);
   const [meta, setMeta] = useState(null);
@@ -39,6 +39,7 @@ export default function Home() {
   const touchStartXRef = useRef(null);
   const touchIsVerticalRef = useRef(null);
   const touchStartedWithinScrollableRef = useRef(false);
+  const lastScrollTimeRef = useRef(0);
 
   // Approximate uptime in years based on birth year
   const birthYear = 2006;
@@ -229,6 +230,12 @@ export default function Home() {
     };
 
     const scrollToSection = (direction) => {
+      // Prevent any scroll if we're already animating or scrolled too recently
+      const now = Date.now();
+      if (isAnimatingRef.current || now - lastScrollTimeRef.current < SCROLL_LOCK_DURATION) {
+        return;
+      }
+
       const nextIndex = Math.min(
         sections.length - 1,
         Math.max(0, activeSectionIndexRef.current + direction)
@@ -237,6 +244,17 @@ export default function Home() {
       if (nextIndex === activeSectionIndexRef.current) {
         return;
       }
+
+      lastScrollTimeRef.current = now;
+
+      // Reset scroll position of all scrollable elements in the target section
+      const targetSection = sections[nextIndex];
+      const scrollableElements = targetSection.querySelectorAll('*');
+      scrollableElements.forEach((el) => {
+        if (el.scrollHeight > el.clientHeight) {
+          el.scrollTop = 0;
+        }
+      });
 
       isAnimatingRef.current = true;
       sections[nextIndex].scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -252,13 +270,22 @@ export default function Home() {
     };
 
     const handleWheel = (event) => {
+      // Check if we're in a scrollable area first
       if (event.ctrlKey || allowNativeScroll(event.target, event.deltaY > 0 ? 1 : -1)) {
         return;
       }
 
+      // Always prevent default for section scrolling, even when animating
       event.preventDefault();
+      event.stopPropagation();
 
-      if (isAnimatingRef.current || Math.abs(event.deltaY) < MIN_WHEEL_DELTA) {
+      // Block all scroll attempts while animating or within the lock duration
+      const now = Date.now();
+      if (isAnimatingRef.current || now - lastScrollTimeRef.current < SCROLL_LOCK_DURATION) {
+        return;
+      }
+
+      if (Math.abs(event.deltaY) < MIN_WHEEL_DELTA) {
         return;
       }
 
@@ -272,15 +299,17 @@ export default function Home() {
 
       // Ignore key events when focus is inside interactive/input elements
       const target = event.target;
-      
+
       // Guard against non-Element targets (e.g., document/window)
       if (!(target instanceof Element)) {
         return;
       }
-      
+
       // Use closest to check for interactive elements in the ancestor chain
-      const interactiveAncestor = target.closest('input, textarea, select, button, a, [contenteditable="true"]');
-      
+      const interactiveAncestor = target.closest(
+        'input, textarea, select, button, a, [contenteditable="true"]'
+      );
+
       if (interactiveAncestor) {
         return;
       }
@@ -319,6 +348,14 @@ export default function Home() {
       }
 
       if (touchStartedWithinScrollableRef.current) {
+        return;
+      }
+
+      // Block touch scrolling while animating - ensures only 1 section per gesture
+      const now = Date.now();
+      if (isAnimatingRef.current || now - lastScrollTimeRef.current < SCROLL_LOCK_DURATION) {
+        event.preventDefault();
+        resetTouchTracking();
         return;
       }
 
@@ -367,8 +404,22 @@ export default function Home() {
     };
 
     const handleScroll = () => {
+      // Block natural scroll during animation to prevent section skipping
+      if (isAnimatingRef.current) {
+        return;
+      }
       if (!isAnimatingRef.current) {
         syncSectionIndex();
+      }
+    };
+
+    const handleScrollCapture = (event) => {
+      // Aggressively block scroll events during animation
+      const now = Date.now();
+      if (isAnimatingRef.current || now - lastScrollTimeRef.current < SCROLL_LOCK_DURATION) {
+        event.preventDefault();
+        event.stopPropagation();
+        return false;
       }
     };
 
@@ -384,6 +435,7 @@ export default function Home() {
     window.addEventListener('touchmove', handleTouchMove, { passive: false });
     window.addEventListener('touchend', handleTouchEnd);
     window.addEventListener('touchcancel', handleTouchCancel);
+    window.addEventListener('scroll', handleScrollCapture, { passive: false, capture: true });
     window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('resize', handleResize);
 
@@ -394,6 +446,7 @@ export default function Home() {
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleTouchEnd);
       window.removeEventListener('touchcancel', handleTouchCancel);
+      window.removeEventListener('scroll', handleScrollCapture, { capture: true });
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleResize);
       resetTouchTracking();
@@ -461,7 +514,7 @@ export default function Home() {
         ></div>
 
         <div
-          className="absolute -bottom-24 -right-24 h-[28rem] w-[28rem] rounded-full bg-cyan-400/20 blur-3xl parallax-layer"
+          className="absolute -bottom-24 -right-24 h-112 w-md rounded-full bg-cyan-400/20 blur-3xl parallax-layer"
           data-depth="0.25"
         ></div>
 
@@ -473,7 +526,7 @@ export default function Home() {
 
         {/* Cyan glow blobs */}
         <div className="absolute -top-24 -left-24 h-72 w-72 rounded-full bg-cyan-400/20 blur-3xl"></div>
-        <div className="absolute -bottom-24 -right-24 h-[28rem] w-[28rem] rounded-full bg-cyan-400/20 blur-3xl"></div>
+        <div className="absolute -bottom-24 -right-24 h-112 w-md rounded-full bg-cyan-400/20 blur-3xl"></div>
 
         {/* Content */}
         <div className="relative scanlines">
@@ -599,7 +652,10 @@ export default function Home() {
       </section>
 
       {/* MANIFESTO SECTION */}
-      <section id="manifesto" className="mx-auto max-w-6xl px-6 py-24 mt-24 scroll-snap-section">
+      <section
+        id="manifesto"
+        className="mx-auto max-w-6xl px-6 py-12 sm:py-24 mt-12 sm:mt-24 scroll-snap-section"
+      >
         <div className="border-l-2 border-cyan-400 pl-6">
           <h2 className="text-xs uppercase tracking-widest text-cyan-400 mb-8">
             {'//'} MANIFESTO.txt
@@ -630,7 +686,10 @@ export default function Home() {
       </section>
 
       {/* WORLDVIEW SECTION */}
-      <section id="worldview" className="mx-auto max-w-6xl px-6 py-24 mt-12 scroll-snap-section">
+      <section
+        id="worldview"
+        className="mx-auto max-w-6xl px-6 py-12 sm:py-24 mt-6 sm:mt-12 scroll-snap-section"
+      >
         <div className="border-l-2 border-cyan-400/50 pl-6">
           <h2 className="text-xs uppercase tracking-widest text-cyan-400 mb-8">
             {'//'} WORLDVIEW.sys
@@ -720,7 +779,10 @@ export default function Home() {
       </section>
 
       {/* SYSTEM EXPLORER SECTION */}
-      <section id="explore" className="mx-auto max-w-6xl px-6 py-24 mt-12 scroll-snap-section">
+      <section
+        id="explore"
+        className="mx-auto max-w-6xl px-6 py-12 sm:py-24 mt-6 sm:mt-12 scroll-snap-section"
+      >
         <h2 className="text-xs uppercase tracking-widest text-cyan-400 mb-12">
           {'//'} SYSTEM_EXPLORER.exe
         </h2>
@@ -1064,7 +1126,10 @@ export default function Home() {
       </section>
 
       {/* PROJECTS & FOOTER SECTIONS */}
-      <section id="projects" className="mx-auto max-w-6xl px-6 py-24 mt-12 scroll-snap-section">
+      <section
+        id="projects"
+        className="mx-auto max-w-6xl px-6 py-12 sm:py-24 mt-6 sm:mt-12 scroll-snap-section"
+      >
         <h2 className="text-xs uppercase tracking-widest text-cyan-400 mb-12">
           {'//'} BUILD_LOG.db
         </h2>
@@ -1210,17 +1275,17 @@ export default function Home() {
       {/* CONTACT FOOTER */}
       <footer
         id="contact"
-        className="mx-auto max-w-6xl px-6 py-12 pb-0 sm:pb-12 border-t border-neutral-800 mt-12 scroll-snap-section"
+        className="mx-auto max-w-6xl px-4 sm:px-6 py-8 sm:py-12 pb-0 sm:pb-12 border-t border-neutral-800 mt-12 scroll-snap-section"
       >
         <div className="text-center">
-          <p className="text-xl sm:text-2xl text-cyan-400 italic mb-4 font-light">
+          <p className="text-lg sm:text-xl md:text-2xl text-cyan-400 italic mb-3 sm:mb-4 font-light">
             &ldquo;Love is the only way to rescue humanity from all evils.&rdquo;
           </p>
 
           {/* Terminal Output Section */}
-          <div className="max-w-3xl mx-auto mt-8 mb-6 bg-black/40 border border-neutral-700 rounded p-4 text-left font-mono text-sm">
+          <div className="max-w-3xl mx-auto mt-8 sm:mt-10 mb-6 sm:mb-8 bg-black/40 border border-neutral-700 rounded p-3 sm:p-4 text-left font-mono text-sm">
             {booting ? (
-              <div className="text-green-400 space-y-1">
+              <div className="text-green-400 space-y-0.5 sm:space-y-1">
                 <div>&gt; SYSTEM_BOOT_SEQUENCE_INITIATED...</div>
                 <div>
                   &gt; MOUNTING_FILESYSTEM... <span className="text-green-400">[OK]</span>
@@ -1231,11 +1296,11 @@ export default function Home() {
               </div>
             ) : (
               <>
-                <div className="text-green-400 mb-3">
+                <div className="text-green-400 mb-2 sm:mb-3">
                   <span className="text-cyan-400">root@devakesu</span>:
                   <span className="text-blue-400">~</span>$ list_skills --verbose
                 </div>
-                <div className="space-y-1.5 text-neutral-300">
+                <div className="space-y-1 sm:space-y-1.5 text-neutral-300">
                   <div>
                     <span className="text-cyan-400">&gt; LANGUAGES:</span> Python{' '}
                     <span className="text-green-400">[90%]</span>, TypeScript, Java/Kotlin{' '}
@@ -1262,7 +1327,7 @@ export default function Home() {
                     <span className="text-green-400 font-bold">{uptime} years</span>{' '}
                   </div>
 
-                  <div className="border-t border-neutral-800 my-1.5 opacity-50"></div>
+                  <div className="border-t border-neutral-800 my-1 sm:my-1.5 opacity-50"></div>
 
                   <div>
                     <span className="text-cyan-400">&gt; BUILD_ID:</span>{' '}
@@ -1328,24 +1393,24 @@ export default function Home() {
             )}
           </div>
 
-          <div className="flex items-center justify-center gap-3 text-sm mb-6">
-            <a href="mailto:fusion@devakesu.com" className="text-cyan-400 hover:underline">
+          <div className="flex items-center justify-center gap-2 sm:gap-3 text-sm mb-4 sm:mb-6">
+            <a href="mailto:fusion@devakesu.com" className="text-cyan-400 hover:underline truncate">
               fusion@devakesu.com
             </a>
             <span className="text-neutral-600">·</span>
             <span className="text-neutral-400">@devakesu</span>
           </div>
-          <p className="text-sm sm:text-base text-neutral-300 uppercase tracking-wider leading-relaxed mt-8 font-mono">
+          <p className="text-sm md:text-base text-neutral-300 uppercase tracking-wider leading-relaxed mt-4 sm:mt-8 font-mono">
             #LovePeaceJustice #ScienceForGood #HumanCenteredTech
             <br />
             #UnitedNations #SustainableFutures
           </p>
 
-          <p className="mt-8 mb-2 text-xs text-neutral-500">
-            © {new Date().getFullYear()} Devanarayanan. All rights reserved.
+          <p className="mt-4 sm:mt-8 mb-2 text-xs text-neutral-500">
+            © {new Date().getFullYear()} Devanarayanan . All rights reserved.
             <br />
             <a href="/legal" className="text-cyan-400 hover:underline">
-              Privacy & Legal
+              Legal & Privacy
             </a>
           </p>
         </div>
