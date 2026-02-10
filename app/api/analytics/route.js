@@ -95,7 +95,7 @@ function checkRateLimit(ip, isUnknown = false) {
               { idx: right, time: arr[right][1].resetTime }
             ];
             candidates.sort((a, b) => a.time - b.time);
-            const pivotIndex = candidates[1].idx; // Middle value is median
+            const pivotIndex = candidates[1].idx; // Median of three candidates
             
             const newPivot = partitionByResetTime(arr, left, right, pivotIndex);
             
@@ -111,20 +111,18 @@ function checkRateLimit(ip, isUnknown = false) {
         
         // Partition array to find the element at index (excess - 1)
         // After partitioning, elements at indices 0..excess-1 are the oldest
-        // Special case: if excess equals array length, clear everything
-        if (excess > 0) {
-          if (excess >= entriesArray.length) {
-            // Need to evict all entries - clear the map completely
-            rateLimitMap.clear();
-          } else {
-            // Use QuickSelect to find and evict the oldest 'excess' entries
-            quickSelect(entriesArray, excess - 1);
-            
-            // All entries at indices 0..excess-1 now have oldest resetTime values
-            // Delete them from the map
-            for (let i = 0; i < excess; i++) {
-              rateLimitMap.delete(entriesArray[i][0]);
-            }
+        // Special case: if excess equals or exceeds array length, clear everything
+        if (excess >= entriesArray.length) {
+          // Need to evict all entries - clear the map completely
+          rateLimitMap.clear();
+        } else {
+          // Use QuickSelect to find and evict the oldest 'excess' entries
+          quickSelect(entriesArray, excess - 1);
+          
+          // All entries at indices 0..excess-1 now have oldest resetTime values
+          // Delete them from the map
+          for (let i = 0; i < excess; i++) {
+            rateLimitMap.delete(entriesArray[i][0]);
           }
         }
       }
