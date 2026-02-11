@@ -249,13 +249,9 @@ export default function Home() {
 
       // Reset scroll position of all scrollable elements in the target section
       const targetSection = sections[nextIndex];
-      let scrollableElements = targetSection.querySelectorAll(
+      const scrollableElements = targetSection.querySelectorAll(
         '[data-scrollable], .overflow-y-auto, .overflow-y-scroll'
       );
-      // Fallback to previous behavior if no annotated scrollable elements are found
-      if (!scrollableElements.length) {
-        scrollableElements = targetSection.querySelectorAll('*');
-      }
       scrollableElements.forEach((el) => {
         if (el.scrollHeight > el.clientHeight) {
           el.scrollTop = 0;
@@ -410,7 +406,7 @@ export default function Home() {
     };
 
     const handleScroll = () => {
-      // Block natural scroll during animation to prevent section skipping
+      // Only sync section index when not animating to avoid section skipping
       if (!isAnimatingRef.current) {
         syncSectionIndex();
       }
