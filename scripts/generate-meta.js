@@ -55,7 +55,7 @@ const githubRepo =
     // Parse GitHub remote URL to extract owner/repo
     // Handles both SSH (git@github.com:owner/repo.git) and HTTPS (https://github.com/owner/repo.git)
     const match = remoteUrl.match(/github\.com[:/]([^/]+\/[^/]+?)(\.git)?$/);
-    return match ? match[1] : remoteUrl.replace(/^.*[:/]/, '').replace(/\.git$/, '');
+    return match ? match[1] : '';
   })();
 
 const githubRunId = process.env.GITHUB_RUN_ID || null;
