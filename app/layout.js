@@ -209,9 +209,9 @@ export default async function RootLayout({ children }) {
       <body className="ambient-noise">
         {isAnalyticsEnabled() && <Analytics />}
         {children}
-        <Script src="/js/cursor.js" strategy="afterInteractive" defer nonce={nonce} />
-        <Script src="/js/parallax.js" strategy="afterInteractive" defer nonce={nonce} />
-        <Script src="/js/reactive-glow.js" strategy="afterInteractive" defer nonce={nonce} />
+        <Script src="/js/cursor.js" strategy="afterInteractive" nonce={nonce} />
+        <Script src="/js/parallax.js" strategy="afterInteractive" nonce={nonce} />
+        <Script src="/js/reactive-glow.js" strategy="afterInteractive" nonce={nonce} />
       </body>
     </html>
   );
