@@ -1,19 +1,10 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef, useCallback, lazy, Suspense, memo } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback, memo } from 'react';
 import Image from 'next/image';
 import { useAnalytics } from '@/components/Analytics';
-import { FaLinkedin, FaGithub, FaInstagram, FaFacebook, FaGoogle } from 'react-icons/fa';
+import { FaLinkedin, FaGithub, FaInstagram, FaFacebook, FaGoogle, FaReddit, FaPinterest, FaTelegram } from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
-
-// Lazy load less critical icons
-const FaReddit = lazy(() => import('react-icons/fa').then((mod) => ({ default: mod.FaReddit })));
-const FaPinterest = lazy(() =>
-  import('react-icons/fa').then((mod) => ({ default: mod.FaPinterest }))
-);
-const FaTelegram = lazy(() =>
-  import('react-icons/fa').then((mod) => ({ default: mod.FaTelegram }))
-);
 
 const SCROLL_LOCK_DURATION = 1100;
 const TOUCH_THRESHOLD_PX = 40;
@@ -32,6 +23,22 @@ const SCROLLABLE_SELECTORS = [
   '[style*="overflow: auto"]',
   '[style*="overflow: scroll"]',
 ].join(', ');
+
+// Helper function to scroll element into view on mobile after a delay
+const scrollIntoViewOnMobile = (elementId, delay = 300) => {
+  if (window.matchMedia('(max-width: 768px)').matches) {
+    setTimeout(() => {
+      const element = document.getElementById(elementId);
+      if (element) {
+        element.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+          inline: 'nearest',
+        });
+      }
+    }, delay);
+  }
+};
 
 // Memoized social icon component to prevent unnecessary re-renders
 const SocialIcon = memo(({ href, Icon, title, platform, onClick }) => (
@@ -845,17 +852,8 @@ export default function Home() {
             onClick={() => {
               const newState = activeNode === 'ideas' ? null : 'ideas';
               setActiveNode(newState);
-              if (newState && window.matchMedia('(max-width: 768px)').matches) {
-                setTimeout(() => {
-                  const element = document.getElementById('ideas-content');
-                  if (element) {
-                    element.scrollIntoView({
-                      behavior: 'smooth',
-                      block: 'center',
-                      inline: 'nearest',
-                    });
-                  }
-                }, 300);
+              if (newState) {
+                scrollIntoViewOnMobile('ideas-content');
               }
             }}
             onKeyDown={(e) => handlePanelKeyDown(e, 'ideas')}
@@ -898,17 +896,8 @@ export default function Home() {
             onClick={() => {
               const newState = activeNode === 'tech' ? null : 'tech';
               setActiveNode(newState);
-              if (newState && window.matchMedia('(max-width: 768px)').matches) {
-                setTimeout(() => {
-                  const element = document.getElementById('tech-content');
-                  if (element) {
-                    element.scrollIntoView({
-                      behavior: 'smooth',
-                      block: 'center',
-                      inline: 'nearest',
-                    });
-                  }
-                }, 300);
+              if (newState) {
+                scrollIntoViewOnMobile('tech-content');
               }
             }}
             onKeyDown={(e) => handlePanelKeyDown(e, 'tech')}
@@ -951,17 +940,8 @@ export default function Home() {
             onClick={() => {
               const newState = activeNode === 'projects' ? null : 'projects';
               setActiveNode(newState);
-              if (newState && window.matchMedia('(max-width: 768px)').matches) {
-                setTimeout(() => {
-                  const element = document.getElementById('projects-content');
-                  if (element) {
-                    element.scrollIntoView({
-                      behavior: 'smooth',
-                      block: 'center',
-                      inline: 'nearest',
-                    });
-                  }
-                }, 300);
+              if (newState) {
+                scrollIntoViewOnMobile('projects-content');
               }
             }}
             onKeyDown={(e) => handlePanelKeyDown(e, 'projects')}
@@ -1012,17 +992,8 @@ export default function Home() {
             onClick={() => {
               const newState = activeNode === 'dreams' ? null : 'dreams';
               setActiveNode(newState);
-              if (newState && window.matchMedia('(max-width: 768px)').matches) {
-                setTimeout(() => {
-                  const element = document.getElementById('dreams-content');
-                  if (element) {
-                    element.scrollIntoView({
-                      behavior: 'smooth',
-                      block: 'center',
-                      inline: 'nearest',
-                    });
-                  }
-                }, 300);
+              if (newState) {
+                scrollIntoViewOnMobile('dreams-content');
               }
             }}
             onKeyDown={(e) => handlePanelKeyDown(e, 'dreams')}
@@ -1065,17 +1036,8 @@ export default function Home() {
             onClick={() => {
               const newState = activeNode === 'contact' ? null : 'contact';
               setActiveNode(newState);
-              if (newState && window.matchMedia('(max-width: 768px)').matches) {
-                setTimeout(() => {
-                  const element = document.getElementById('contact-content');
-                  if (element) {
-                    element.scrollIntoView({
-                      behavior: 'smooth',
-                      block: 'center',
-                      inline: 'nearest',
-                    });
-                  }
-                }, 300);
+              if (newState) {
+                scrollIntoViewOnMobile('contact-content');
               }
             }}
             onKeyDown={(e) => handlePanelKeyDown(e, 'contact')}
@@ -1157,33 +1119,27 @@ export default function Home() {
                     platform="facebook"
                     onClick={handleSocialClick}
                   />
-                  <Suspense fallback={<span className="text-cyan-400 text-xl">...</span>}>
-                    <SocialIcon
-                      href="https://www.reddit.com/user/devakesu/"
-                      Icon={FaReddit}
-                      title="Reddit"
-                      platform="reddit"
-                      onClick={handleSocialClick}
-                    />
-                  </Suspense>
-                  <Suspense fallback={<span className="text-cyan-400 text-xl">...</span>}>
-                    <SocialIcon
-                      href="https://pin.it/A7QjJQvTE"
-                      Icon={FaPinterest}
-                      title="Pinterest"
-                      platform="pinterest"
-                      onClick={handleSocialClick}
-                    />
-                  </Suspense>
-                  <Suspense fallback={<span className="text-cyan-400 text-xl">...</span>}>
-                    <SocialIcon
-                      href="https://t.me/devakesu"
-                      Icon={FaTelegram}
-                      title="Telegram"
-                      platform="telegram"
-                      onClick={handleSocialClick}
-                    />
-                  </Suspense>
+                  <SocialIcon
+                    href="https://www.reddit.com/user/devakesu/"
+                    Icon={FaReddit}
+                    title="Reddit"
+                    platform="reddit"
+                    onClick={handleSocialClick}
+                  />
+                  <SocialIcon
+                    href="https://pin.it/A7QjJQvTE"
+                    Icon={FaPinterest}
+                    title="Pinterest"
+                    platform="pinterest"
+                    onClick={handleSocialClick}
+                  />
+                  <SocialIcon
+                    href="https://t.me/devakesu"
+                    Icon={FaTelegram}
+                    title="Telegram"
+                    platform="telegram"
+                    onClick={handleSocialClick}
+                  />
                 </div>
                 <p className="text-sm text-neutral-400 mt-3">@devakesu</p>
               </div>

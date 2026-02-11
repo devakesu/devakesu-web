@@ -29,7 +29,7 @@ const nextConfig = {
         value:
           'camera=(), microphone=(), geolocation=(), interest-cohort=(), browsing-topics=(), attribution-reporting=(), run-ad-auction=(), join-ad-interest-group=(), shared-storage=()',
       },
-      // CSP is now handled by proxy.js for proper nonce support
+      // CSP headers are configured outside of this Next.js headers() configuration (e.g., via middleware/proxy) to support nonces
     ];
 
     // Only add HSTS in production to prevent local SSL errors
