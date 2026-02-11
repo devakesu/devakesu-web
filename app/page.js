@@ -18,6 +18,11 @@ import { FaXTwitter } from 'react-icons/fa6';
 const SCROLL_LOCK_DURATION = 1500;
 const TOUCH_THRESHOLD_PX = 40;
 const MIN_WHEEL_DELTA = 2;
+// NOTE: Inline style attribute selectors (e.g., [style*="overflow-y: auto"]) are
+// whitespace- and order-sensitive and may miss valid inline style syntax variations
+// (e.g., "overflow-y:auto" without space, or multiple spaces). Scrollable elements
+// should preferably use data attributes or classes for reliable detection. The
+// fallback logic in scrollToSection only runs when no elements match SCROLLABLE_SELECTORS.
 const SCROLLABLE_SELECTORS = [
   '[data-scrollable]',
   '.overflow-y-auto',
@@ -184,6 +189,19 @@ export default function Home() {
       return target?.parentElement ?? null;
     };
 
+    // Helper to determine if an element is scrollable, using consistent criteria
+    const isScrollableElement = (el) => {
+      if (!el) return false;
+      // Require more than 1px difference (at least 2px) to be considered scrollable.
+      // This tolerance accounts for sub-pixel rendering and layout quirks.
+      if (el.scrollHeight - el.clientHeight <= 1) {
+        return false;
+      }
+      const computed = window.getComputedStyle(el);
+      const overflowY = computed.overflowY;
+      return overflowY === 'auto' || overflowY === 'scroll';
+    };
+
     const allowNativeScroll = (target, direction = 0) => {
       const element = resolveElement(target);
       if (!element) return false;
@@ -198,14 +216,7 @@ export default function Home() {
 
       let current = element;
       while (current && current !== document.body) {
-        const computed = window.getComputedStyle(current);
-        const overflowY = computed.overflowY;
-        // Use 1-pixel tolerance to determine if element is scrollable
-        // Note: This tolerance is intentionally small to match the scrollTop boundary
-        // checks (> 0 and < maxScrollTop), which use exact comparisons. An element
-        // with scrollHeight - clientHeight == 1 is considered scrollable.
-        const canScroll = current.scrollHeight - current.clientHeight > 1;
-        if ((overflowY === 'auto' || overflowY === 'scroll') && canScroll) {
+        if (isScrollableElement(current)) {
           const maxScrollTop = current.scrollHeight - current.clientHeight;
           if (direction < 0 && current.scrollTop > 0) {
             return true;
@@ -262,24 +273,12 @@ export default function Home() {
         targetSection.querySelectorAll(SCROLLABLE_SELECTORS)
       );
       // Fallback: if no matching descendants, include the section itself if it is scrollable
-      if (scrollableElements.length === 0) {
-        const canScroll = targetSection.scrollHeight > targetSection.clientHeight;
-        if (canScroll) {
-          const computed = window.getComputedStyle(targetSection);
-          const overflow = computed.overflow;
-          const overflowY = computed.overflowY;
-          if (
-            overflowY === 'auto' ||
-            overflowY === 'scroll' ||
-            overflow === 'auto' ||
-            overflow === 'scroll'
-          ) {
-            scrollableElements.push(targetSection);
-          }
-        }
+      if (scrollableElements.length === 0 && isScrollableElement(targetSection)) {
+        scrollableElements.push(targetSection);
       }
       scrollableElements.forEach((el) => {
-        if (el.scrollHeight > el.clientHeight) {
+        // Only reset if element has scrollable content (using same tolerance as isScrollableElement)
+        if (el.scrollHeight - el.clientHeight > 1) {
           el.scrollTop = 0;
         }
       });
@@ -307,9 +306,8 @@ export default function Home() {
       event.preventDefault();
       event.stopPropagation();
 
-      // Block all scroll attempts while animating or within the lock duration
-      const now = Date.now();
-      if (isAnimatingRef.current || now - lastScrollTimeRef.current < SCROLL_LOCK_DURATION) {
+      // Block scroll attempts while an animation is currently running
+      if (isAnimatingRef.current) {
         return;
       }
 
@@ -380,8 +378,7 @@ export default function Home() {
       }
 
       // Block touch scrolling while animating - ensures only 1 section per gesture
-      const now = Date.now();
-      if (isAnimatingRef.current || now - lastScrollTimeRef.current < SCROLL_LOCK_DURATION) {
+      if (isAnimatingRef.current) {
         event.preventDefault();
         resetTouchTracking();
         return;
@@ -414,9 +411,7 @@ export default function Home() {
 
       event.preventDefault();
 
-      if (!isAnimatingRef.current) {
-        scrollToSection(direction);
-      }
+      scrollToSection(direction);
 
       resetTouchTracking();
     };
@@ -1407,7 +1402,7 @@ export default function Home() {
           </div>
 
           <div className="flex items-center justify-center gap-2 sm:gap-3 text-sm mb-4 sm:mb-6">
-            <a href="mailto:fusion@devakesu.com" className="text-cyan-400 hover:underline truncate">
+            <a href="mailto:fusion@devakesu.com" className="text-cyan-400 hover:underline break-all">
               fusion@devakesu.com
             </a>
             <span className="text-neutral-600">·</span>
