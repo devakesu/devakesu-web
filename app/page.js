@@ -22,7 +22,7 @@ const MIN_WHEEL_DELTA = 2;
 // whitespace- and order-sensitive and may miss valid inline style syntax variations
 // (e.g., "overflow-y:auto" without space, or multiple spaces). Scrollable elements
 // should preferably use data attributes or classes for reliable detection. The
-// fallback logic in scrollToSection handles elements missed by these selectors.
+// fallback logic in scrollToSection only runs when no elements match SCROLLABLE_SELECTORS.
 const SCROLLABLE_SELECTORS = [
   '[data-scrollable]',
   '.overflow-y-auto',
@@ -378,8 +378,7 @@ export default function Home() {
       }
 
       // Block touch scrolling while animating - ensures only 1 section per gesture
-      const now = Date.now();
-      if (isAnimatingRef.current || now - lastScrollTimeRef.current < SCROLL_LOCK_DURATION) {
+      if (isAnimatingRef.current) {
         event.preventDefault();
         resetTouchTracking();
         return;
