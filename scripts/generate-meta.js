@@ -50,10 +50,13 @@ const signatureStatus = process.env.SIGNATURE_STATUS || (isCI ? 'NOT_VERIFIED' :
 // Get GitHub repository information
 const githubRepo =
   process.env.GITHUB_REPOSITORY ||
-  gitCommand('git remote get-url origin', '')
-    .replace(/^.*[:/]/, '')
-    .replace(/\.git$/, '')
-    .trim();
+  (() => {
+    const remoteUrl = gitCommand('git remote get-url origin', '').trim();
+    // Parse GitHub remote URL to extract owner/repo
+    // Handles both SSH (git@github.com:owner/repo.git) and HTTPS (https://github.com/owner/repo.git)
+    const match = remoteUrl.match(/github\.com[:/]([^/]+\/[^/]+?)(\.git)?$/);
+    return match ? match[1] : remoteUrl.replace(/^.*[:/]/, '').replace(/\.git$/, '');
+  })();
 
 const githubRunId = process.env.GITHUB_RUN_ID || null;
 
