@@ -10,6 +10,8 @@ const jetbrainsMono = JetBrains_Mono({
   weight: ['400', '500', '600'],
   variable: '--font-jetbrains-mono',
   display: 'swap',
+  preload: true,
+  fallback: ['monospace'],
 });
 
 const spaceGrotesk = Space_Grotesk({
@@ -17,6 +19,8 @@ const spaceGrotesk = Space_Grotesk({
   weight: ['300', '400', '500', '600', '700'],
   variable: '--font-space-grotesk',
   display: 'swap',
+  preload: true,
+  fallback: ['system-ui', 'sans-serif'],
 });
 
 export const viewport = {
@@ -202,13 +206,12 @@ export default async function RootLayout({ children }) {
       className={`${jetbrainsMono.variable} ${spaceGrotesk.variable}`}
       data-scroll-behavior="smooth"
     >
-      <head></head>
       <body className="ambient-noise">
         {isAnalyticsEnabled() && <Analytics />}
         {children}
-        <Script src="/js/cursor.js" strategy="lazyOnload" nonce={nonce} />
-        <Script src="/js/parallax.js" strategy="lazyOnload" nonce={nonce} />
-        <Script src="/js/reactive-glow.js" strategy="lazyOnload" nonce={nonce} />
+        <Script src="/js/cursor.js" strategy="afterInteractive" nonce={nonce} />
+        <Script src="/js/parallax.js" strategy="afterInteractive" nonce={nonce} />
+        <Script src="/js/reactive-glow.js" strategy="afterInteractive" nonce={nonce} />
       </body>
     </html>
   );
