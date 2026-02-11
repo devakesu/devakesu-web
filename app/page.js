@@ -192,7 +192,7 @@ export default function Home() {
     // Helper to determine if an element is scrollable, using consistent criteria
     const isScrollableElement = (el) => {
       if (!el) return false;
-      // Require more than 1px difference (at least 2px) to be considered scrollable.
+      // Require a difference greater than 1px to be considered scrollable.
       // This tolerance accounts for sub-pixel rendering and layout quirks.
       if (el.scrollHeight - el.clientHeight <= 1) {
         return false;
