@@ -45,7 +45,7 @@ export const metadata = {
 
   // Basic Metadata
   title: {
-    default: '@devakesu - System Online',
+    default: '@devakesu - Devanarayanan',
     template: '%s | @devakesu',
   },
   description: 'Disciplined chaos. Brutalist × cyberpunk portfolio. Where code meets conscience.',
@@ -141,7 +141,7 @@ export const metadata = {
     locale: 'en_US',
     url: 'https://devakesu.com',
     siteName: 'devakesu',
-    title: 'devakesu - System Online',
+    title: 'devakesu - Devanarayanan',
     description: 'Where code meets conscience. Disciplined chaos meets brutalist design.',
     images: [
       {
@@ -156,7 +156,7 @@ export const metadata = {
   // Twitter Card
   twitter: {
     card: 'summary_large_image',
-    title: 'devakesu - System Online',
+    title: 'devakesu - Devanarayanan',
     description: 'Where code meets conscience. Disciplined chaos meets brutalist design.',
     creator: '@devakesu',
     images: ['/profile.jpg'],

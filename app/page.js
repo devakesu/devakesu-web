@@ -15,9 +15,23 @@ import {
 } from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
 
-const SCROLL_LOCK_DURATION = 1100;
+const SCROLL_LOCK_DURATION = 1500;
 const TOUCH_THRESHOLD_PX = 40;
 const MIN_WHEEL_DELTA = 2;
+// NOTE: Inline style attribute selectors (e.g., [style*="overflow-y: auto"]) are
+// whitespace- and order-sensitive and may miss valid inline style syntax variations
+// (e.g., "overflow-y:auto" without space, or multiple spaces). Scrollable elements
+// should preferably use data attributes or classes for reliable detection. The
+// fallback logic in scrollToSection only runs when no elements match SCROLLABLE_SELECTORS.
+const SCROLLABLE_SELECTORS = [
+  '[data-scrollable]',
+  '.overflow-y-auto',
+  '.overflow-y-scroll',
+  '[style*="overflow-y: auto"]',
+  '[style*="overflow-y: scroll"]',
+  '[style*="overflow: auto"]',
+  '[style*="overflow: scroll"]',
+].join(', ');
 
 export default function Home() {
   const { trackEvent } = useAnalytics();
@@ -39,6 +53,7 @@ export default function Home() {
   const touchStartXRef = useRef(null);
   const touchIsVerticalRef = useRef(null);
   const touchStartedWithinScrollableRef = useRef(false);
+  const lastScrollTimeRef = useRef(0);
 
   // Approximate uptime in years based on birth year
   const birthYear = 2006;
@@ -174,6 +189,19 @@ export default function Home() {
       return target?.parentElement ?? null;
     };
 
+    // Helper to determine if an element is scrollable, using consistent criteria
+    const isScrollableElement = (el) => {
+      if (!el) return false;
+      // Require a difference greater than 1px to be considered scrollable.
+      // This tolerance accounts for sub-pixel rendering and layout quirks.
+      if (el.scrollHeight - el.clientHeight <= 1) {
+        return false;
+      }
+      const computed = window.getComputedStyle(el);
+      const overflowY = computed.overflowY;
+      return overflowY === 'auto' || overflowY === 'scroll';
+    };
+
     const allowNativeScroll = (target, direction = 0) => {
       const element = resolveElement(target);
       if (!element) return false;
@@ -188,14 +216,7 @@ export default function Home() {
 
       let current = element;
       while (current && current !== document.body) {
-        const computed = window.getComputedStyle(current);
-        const overflowY = computed.overflowY;
-        // Use 1-pixel tolerance to determine if element is scrollable
-        // Note: This tolerance is intentionally small to match the scrollTop boundary
-        // checks (> 0 and < maxScrollTop), which use exact comparisons. An element
-        // with scrollHeight - clientHeight == 1 is considered scrollable.
-        const canScroll = current.scrollHeight - current.clientHeight > 1;
-        if ((overflowY === 'auto' || overflowY === 'scroll') && canScroll) {
+        if (isScrollableElement(current)) {
           const maxScrollTop = current.scrollHeight - current.clientHeight;
           if (direction < 0 && current.scrollTop > 0) {
             return true;
@@ -229,6 +250,12 @@ export default function Home() {
     };
 
     const scrollToSection = (direction) => {
+      // Prevent any scroll if we're already animating or scrolled too recently
+      const now = Date.now();
+      if (isAnimatingRef.current || now - lastScrollTimeRef.current < SCROLL_LOCK_DURATION) {
+        return;
+      }
+
       const nextIndex = Math.min(
         sections.length - 1,
         Math.max(0, activeSectionIndexRef.current + direction)
@@ -237,6 +264,24 @@ export default function Home() {
       if (nextIndex === activeSectionIndexRef.current) {
         return;
       }
+
+      lastScrollTimeRef.current = now;
+
+      // Reset scroll position of all scrollable elements in the target section
+      const targetSection = sections[nextIndex];
+      const scrollableElements = Array.from(
+        targetSection.querySelectorAll(SCROLLABLE_SELECTORS)
+      );
+      // Fallback: if no matching descendants, include the section itself if it is scrollable
+      if (scrollableElements.length === 0 && isScrollableElement(targetSection)) {
+        scrollableElements.push(targetSection);
+      }
+      scrollableElements.forEach((el) => {
+        // Only reset if element has scrollable content (using same tolerance as isScrollableElement)
+        if (el.scrollHeight - el.clientHeight > 1) {
+          el.scrollTop = 0;
+        }
+      });
 
       isAnimatingRef.current = true;
       sections[nextIndex].scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -252,13 +297,20 @@ export default function Home() {
     };
 
     const handleWheel = (event) => {
+      // Check if we're in a scrollable area first
       if (event.ctrlKey || allowNativeScroll(event.target, event.deltaY > 0 ? 1 : -1)) {
         return;
       }
 
+      // Always prevent default for section scrolling, even when animating
       event.preventDefault();
 
-      if (isAnimatingRef.current || Math.abs(event.deltaY) < MIN_WHEEL_DELTA) {
+      // Block scroll attempts while an animation is currently running
+      if (isAnimatingRef.current) {
+        return;
+      }
+
+      if (Math.abs(event.deltaY) < MIN_WHEEL_DELTA) {
         return;
       }
 
@@ -272,15 +324,17 @@ export default function Home() {
 
       // Ignore key events when focus is inside interactive/input elements
       const target = event.target;
-      
+
       // Guard against non-Element targets (e.g., document/window)
       if (!(target instanceof Element)) {
         return;
       }
-      
+
       // Use closest to check for interactive elements in the ancestor chain
-      const interactiveAncestor = target.closest('input, textarea, select, button, a, [contenteditable="true"]');
-      
+      const interactiveAncestor = target.closest(
+        'input, textarea, select, button, a, [contenteditable="true"]'
+      );
+
       if (interactiveAncestor) {
         return;
       }
@@ -322,6 +376,13 @@ export default function Home() {
         return;
       }
 
+      // Block touch scrolling while animating - ensures only 1 section per gesture
+      if (isAnimatingRef.current) {
+        event.preventDefault();
+        resetTouchTracking();
+        return;
+      }
+
       const currentTouch = event.touches[0];
       const deltaY = currentTouch.clientY - touchStartYRef.current;
       const deltaX = currentTouch.clientX - (touchStartXRef.current ?? currentTouch.clientX);
@@ -349,9 +410,7 @@ export default function Home() {
 
       event.preventDefault();
 
-      if (!isAnimatingRef.current) {
-        scrollToSection(direction);
-      }
+      scrollToSection(direction);
 
       resetTouchTracking();
     };
@@ -367,6 +426,7 @@ export default function Home() {
     };
 
     const handleScroll = () => {
+      // Only sync section index when not animating to avoid section skipping
       if (!isAnimatingRef.current) {
         syncSectionIndex();
       }
@@ -599,7 +659,10 @@ export default function Home() {
       </section>
 
       {/* MANIFESTO SECTION */}
-      <section id="manifesto" className="mx-auto max-w-6xl px-6 py-24 mt-24 scroll-snap-section">
+      <section
+        id="manifesto"
+        className="mx-auto max-w-6xl px-6 py-12 sm:py-24 mt-12 sm:mt-24 scroll-snap-section"
+      >
         <div className="border-l-2 border-cyan-400 pl-6">
           <h2 className="text-xs uppercase tracking-widest text-cyan-400 mb-8">
             {'//'} MANIFESTO.txt
@@ -630,7 +693,10 @@ export default function Home() {
       </section>
 
       {/* WORLDVIEW SECTION */}
-      <section id="worldview" className="mx-auto max-w-6xl px-6 py-24 mt-12 scroll-snap-section">
+      <section
+        id="worldview"
+        className="mx-auto max-w-6xl px-6 py-12 sm:py-24 mt-6 sm:mt-12 scroll-snap-section"
+      >
         <div className="border-l-2 border-cyan-400/50 pl-6">
           <h2 className="text-xs uppercase tracking-widest text-cyan-400 mb-8">
             {'//'} WORLDVIEW.sys
@@ -720,7 +786,10 @@ export default function Home() {
       </section>
 
       {/* SYSTEM EXPLORER SECTION */}
-      <section id="explore" className="mx-auto max-w-6xl px-6 py-24 mt-12 scroll-snap-section">
+      <section
+        id="explore"
+        className="mx-auto max-w-6xl px-6 py-12 sm:py-24 mt-6 sm:mt-12 scroll-snap-section"
+      >
         <h2 className="text-xs uppercase tracking-widest text-cyan-400 mb-12">
           {'//'} SYSTEM_EXPLORER.exe
         </h2>
@@ -1064,7 +1133,10 @@ export default function Home() {
       </section>
 
       {/* PROJECTS & FOOTER SECTIONS */}
-      <section id="projects" className="mx-auto max-w-6xl px-6 py-24 mt-12 scroll-snap-section">
+      <section
+        id="projects"
+        className="mx-auto max-w-6xl px-6 py-12 sm:py-24 mt-6 sm:mt-12 scroll-snap-section"
+      >
         <h2 className="text-xs uppercase tracking-widest text-cyan-400 mb-12">
           {'//'} BUILD_LOG.db
         </h2>
@@ -1210,17 +1282,17 @@ export default function Home() {
       {/* CONTACT FOOTER */}
       <footer
         id="contact"
-        className="mx-auto max-w-6xl px-6 py-12 pb-0 sm:pb-12 border-t border-neutral-800 mt-12 scroll-snap-section"
+        className="mx-auto max-w-6xl px-4 sm:px-6 py-8 sm:py-12 pb-0 sm:pb-12 border-t border-neutral-800 mt-12 scroll-snap-section"
       >
         <div className="text-center">
-          <p className="text-xl sm:text-2xl text-cyan-400 italic mb-4 font-light">
+          <p className="text-lg sm:text-xl md:text-2xl text-cyan-400 italic mb-3 sm:mb-4 font-light">
             &ldquo;Love is the only way to rescue humanity from all evils.&rdquo;
           </p>
 
           {/* Terminal Output Section */}
-          <div className="max-w-3xl mx-auto mt-8 mb-6 bg-black/40 border border-neutral-700 rounded p-4 text-left font-mono text-sm">
+          <div className="max-w-3xl mx-auto mt-8 sm:mt-10 mb-6 sm:mb-8 bg-black/40 border border-neutral-700 rounded p-3 sm:p-4 text-left font-mono text-sm">
             {booting ? (
-              <div className="text-green-400 space-y-1">
+              <div className="text-green-400 space-y-0.5 sm:space-y-1">
                 <div>&gt; SYSTEM_BOOT_SEQUENCE_INITIATED...</div>
                 <div>
                   &gt; MOUNTING_FILESYSTEM... <span className="text-green-400">[OK]</span>
@@ -1231,11 +1303,11 @@ export default function Home() {
               </div>
             ) : (
               <>
-                <div className="text-green-400 mb-3">
+                <div className="text-green-400 mb-2 sm:mb-3">
                   <span className="text-cyan-400">root@devakesu</span>:
                   <span className="text-blue-400">~</span>$ list_skills --verbose
                 </div>
-                <div className="space-y-1.5 text-neutral-300">
+                <div className="space-y-1 sm:space-y-1.5 text-neutral-300">
                   <div>
                     <span className="text-cyan-400">&gt; LANGUAGES:</span> Python{' '}
                     <span className="text-green-400">[90%]</span>, TypeScript, Java/Kotlin{' '}
@@ -1262,7 +1334,7 @@ export default function Home() {
                     <span className="text-green-400 font-bold">{uptime} years</span>{' '}
                   </div>
 
-                  <div className="border-t border-neutral-800 my-1.5 opacity-50"></div>
+                  <div className="border-t border-neutral-800 my-1 sm:my-1.5 opacity-50"></div>
 
                   <div>
                     <span className="text-cyan-400">&gt; BUILD_ID:</span>{' '}
@@ -1328,24 +1400,24 @@ export default function Home() {
             )}
           </div>
 
-          <div className="flex items-center justify-center gap-3 text-sm mb-6">
-            <a href="mailto:fusion@devakesu.com" className="text-cyan-400 hover:underline">
+          <div className="flex items-center justify-center gap-2 sm:gap-3 text-sm mb-4 sm:mb-6">
+            <a href="mailto:fusion@devakesu.com" className="text-cyan-400 hover:underline break-all">
               fusion@devakesu.com
             </a>
             <span className="text-neutral-600">·</span>
             <span className="text-neutral-400">@devakesu</span>
           </div>
-          <p className="text-sm sm:text-base text-neutral-300 uppercase tracking-wider leading-relaxed mt-8 font-mono">
+          <p className="text-sm md:text-base text-neutral-300 uppercase tracking-wider leading-relaxed mt-4 sm:mt-8 font-mono">
             #LovePeaceJustice #ScienceForGood #HumanCenteredTech
             <br />
             #UnitedNations #SustainableFutures
           </p>
 
-          <p className="mt-8 mb-2 text-xs text-neutral-500">
+          <p className="mt-4 sm:mt-8 mb-2 text-xs text-neutral-500">
             © {new Date().getFullYear()} Devanarayanan. All rights reserved.
             <br />
             <a href="/legal" className="text-cyan-400 hover:underline">
-              Privacy & Legal
+              Legal & Privacy
             </a>
           </p>
         </div>
