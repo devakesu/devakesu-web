@@ -258,14 +258,17 @@ export default function Home() {
 
       // Reset scroll position of all scrollable elements in the target section
       const targetSection = sections[nextIndex];
-      const scrollableNodeList = targetSection.querySelectorAll(SCROLLABLE_SELECTORS);
-      const scrollableElements = Array.from(scrollableNodeList);
+      const scrollableElements = Array.from(
+        targetSection.querySelectorAll(SCROLLABLE_SELECTORS)
+      );
       // Fallback: if no matching descendants, include the section itself if it is scrollable
       if (scrollableElements.length === 0) {
-        const computed = window.getComputedStyle(targetSection);
         const canScroll = targetSection.scrollHeight > targetSection.clientHeight;
-        if ((computed.overflowY === 'auto' || computed.overflowY === 'scroll') && canScroll) {
-          scrollableElements.push(targetSection);
+        if (canScroll) {
+          const computed = window.getComputedStyle(targetSection);
+          if (computed.overflowY === 'auto' || computed.overflowY === 'scroll') {
+            scrollableElements.push(targetSection);
+          }
         }
       }
       scrollableElements.forEach((el) => {
