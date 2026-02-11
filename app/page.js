@@ -253,11 +253,13 @@ export default function Home() {
       const scrollableNodeList = targetSection.querySelectorAll(SCROLLABLE_SELECTORS);
       const scrollableElements = Array.from(scrollableNodeList);
       // Fallback: if no matching descendants, include the section itself if it is scrollable
-      if (
-        scrollableElements.length === 0 &&
-        targetSection.scrollHeight > targetSection.clientHeight
-      ) {
-        scrollableElements.push(targetSection);
+      if (scrollableElements.length === 0) {
+        const computed = window.getComputedStyle(targetSection);
+        const overflowY = computed.overflowY;
+        const canScroll = targetSection.scrollHeight > targetSection.clientHeight;
+        if ((overflowY === 'auto' || overflowY === 'scroll') && canScroll) {
+          scrollableElements.push(targetSection);
+        }
       }
       scrollableElements.forEach((el) => {
         if (el.scrollHeight > el.clientHeight) {
