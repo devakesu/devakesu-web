@@ -525,16 +525,14 @@ export default function Home() {
     // Only handle keyboard events on the panel container itself, not on interactive children
     if ((event.key === 'Enter' || event.key === ' ') && event.currentTarget === event.target) {
       event.preventDefault();
-      setActiveNode((prevActiveNode) => {
-        const newState = prevActiveNode === nodeId ? null : nodeId;
-        // Scroll the expanded panel into view on mobile, matching click behavior
-        if (newState) {
-          scrollIntoViewOnMobile(`${nodeId}-content`);
-        }
-        return newState;
-      });
+      const newState = activeNode === nodeId ? null : nodeId;
+      setActiveNode(newState);
+      // Scroll the expanded panel into view on mobile, matching click behavior
+      if (newState) {
+        scrollIntoViewOnMobile(`${nodeId}-content`);
+      }
     }
-  }, []);
+  }, [activeNode]);
 
   // Track social media link clicks
   const handleSocialClick = useCallback(
