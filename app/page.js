@@ -192,7 +192,8 @@ export default function Home() {
     // Helper to determine if an element is scrollable, using consistent criteria
     const isScrollableElement = (el) => {
       if (!el) return false;
-      // Use 1-pixel tolerance to account for sub-pixel/layout quirks
+      // Require more than 1px difference to be considered scrollable.
+      // This tolerance accounts for sub-pixel rendering and layout quirks.
       if (el.scrollHeight - el.clientHeight <= 1) {
         return false;
       }
@@ -276,9 +277,7 @@ export default function Home() {
         scrollableElements.push(targetSection);
       }
       scrollableElements.forEach((el) => {
-        if (isScrollableElement(el)) {
-          el.scrollTop = 0;
-        }
+        el.scrollTop = 0;
       });
 
       isAnimatingRef.current = true;
