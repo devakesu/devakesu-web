@@ -18,7 +18,15 @@ import { FaXTwitter } from 'react-icons/fa6';
 const SCROLL_LOCK_DURATION = 1500;
 const TOUCH_THRESHOLD_PX = 40;
 const MIN_WHEEL_DELTA = 2;
-const SCROLLABLE_SELECTORS = '[data-scrollable], .overflow-y-auto, .overflow-y-scroll, [style*="overflow-y: auto"], [style*="overflow-y: scroll"], [style*="overflow: auto"], [style*="overflow: scroll"]';
+const SCROLLABLE_SELECTORS = [
+  '[data-scrollable]',
+  '.overflow-y-auto',
+  '.overflow-y-scroll',
+  '[style*="overflow-y: auto"]',
+  '[style*="overflow-y: scroll"]',
+  '[style*="overflow: auto"]',
+  '[style*="overflow: scroll"]',
+].join(', ');
 
 export default function Home() {
   const { trackEvent } = useAnalytics();
@@ -255,9 +263,8 @@ export default function Home() {
       // Fallback: if no matching descendants, include the section itself if it is scrollable
       if (scrollableElements.length === 0) {
         const computed = window.getComputedStyle(targetSection);
-        const overflowY = computed.overflowY;
         const canScroll = targetSection.scrollHeight > targetSection.clientHeight;
-        if ((overflowY === 'auto' || overflowY === 'scroll') && canScroll) {
+        if ((computed.overflowY === 'auto' || computed.overflowY === 'scroll') && canScroll) {
           scrollableElements.push(targetSection);
         }
       }
