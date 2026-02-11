@@ -81,6 +81,7 @@ export default function Home() {
   const touchIsVerticalRef = useRef(null);
   const touchStartedWithinScrollableRef = useRef(false);
   const lastScrollTimeRef = useRef(0);
+  const scrollTargetRef = useRef(null);
 
   // Approximate uptime in years based on birth year
   const birthYear = 2006;
@@ -108,6 +109,15 @@ export default function Home() {
 
     return () => clearInterval(interval);
   }, [taglines]);
+
+  // Handle mobile scrolling when panel is toggled via keyboard
+  useEffect(() => {
+    if (scrollTargetRef.current) {
+      const elementId = scrollTargetRef.current;
+      scrollTargetRef.current = null;
+      scrollIntoViewOnMobile(elementId);
+    }
+  }, [activeNode]);
 
   // Fetch Build Metadata
   useEffect(() => {
@@ -527,9 +537,9 @@ export default function Home() {
       event.preventDefault();
       setActiveNode((prevActiveNode) => {
         const newState = prevActiveNode === nodeId ? null : nodeId;
-        // Scroll the expanded panel into view on mobile, matching click behavior
+        // Set scroll target for useEffect to handle after state update
         if (newState) {
-          scrollIntoViewOnMobile(`${nodeId}-content`);
+          scrollTargetRef.current = `${nodeId}-content`;
         }
         return newState;
       });
