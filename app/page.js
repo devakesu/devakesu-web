@@ -18,6 +18,7 @@ import { FaXTwitter } from 'react-icons/fa6';
 const SCROLL_LOCK_DURATION = 1500;
 const TOUCH_THRESHOLD_PX = 40;
 const MIN_WHEEL_DELTA = 2;
+const SCROLLABLE_SELECTORS = '[data-scrollable], .overflow-y-auto, .overflow-y-scroll, [style*="overflow-y: auto"], [style*="overflow-y: scroll"], [style*="overflow: auto"], [style*="overflow: scroll"]';
 
 export default function Home() {
   const { trackEvent } = useAnalytics();
@@ -249,9 +250,7 @@ export default function Home() {
 
       // Reset scroll position of all scrollable elements in the target section
       const targetSection = sections[nextIndex];
-      const scrollableNodeList = targetSection.querySelectorAll(
-        '[data-scrollable], .overflow-y-auto, .overflow-y-scroll, [style*="overflow-y: auto"], [style*="overflow-y: scroll"], [style*="overflow: auto"], [style*="overflow: scroll"]'
-      );
+      const scrollableNodeList = targetSection.querySelectorAll(SCROLLABLE_SELECTORS);
       const scrollableElements = Array.from(scrollableNodeList);
       // Fallback: if no matching descendants, include the section itself if it is scrollable
       if (
