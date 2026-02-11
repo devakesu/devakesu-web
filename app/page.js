@@ -304,7 +304,6 @@ export default function Home() {
 
       // Always prevent default for section scrolling, even when animating
       event.preventDefault();
-      event.stopPropagation();
 
       // Block scroll attempts while an animation is currently running
       if (isAnimatingRef.current) {
