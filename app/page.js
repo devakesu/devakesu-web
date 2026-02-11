@@ -249,9 +249,13 @@ export default function Home() {
 
       // Reset scroll position of all scrollable elements in the target section
       const targetSection = sections[nextIndex];
-      const scrollableElements = targetSection.querySelectorAll(
+      let scrollableElements = targetSection.querySelectorAll(
         '[data-scrollable], .overflow-y-auto, .overflow-y-scroll'
       );
+      // Fallback to previous behavior if no annotated scrollable elements are found
+      if (!scrollableElements.length) {
+        scrollableElements = targetSection.querySelectorAll('*');
+      }
       scrollableElements.forEach((el) => {
         if (el.scrollHeight > el.clientHeight) {
           el.scrollTop = 0;
@@ -412,15 +416,6 @@ export default function Home() {
       }
     };
 
-    const handleScrollCapture = () => {
-      // Note: Native scroll events are not cancelable; locking is handled via wheel/touchmove.
-      const now = Date.now();
-      if (isAnimatingRef.current || now - lastScrollTimeRef.current < SCROLL_LOCK_DURATION) {
-        // During animation/lock, we simply ignore this scroll capture handler.
-        return;
-      }
-    };
-
     const handleResize = () => {
       syncSectionIndex();
     };
@@ -433,7 +428,6 @@ export default function Home() {
     window.addEventListener('touchmove', handleTouchMove, { passive: false });
     window.addEventListener('touchend', handleTouchEnd);
     window.addEventListener('touchcancel', handleTouchCancel);
-    window.addEventListener('scroll', handleScrollCapture, { passive: false, capture: true });
     window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('resize', handleResize);
 
@@ -444,7 +438,6 @@ export default function Home() {
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleTouchEnd);
       window.removeEventListener('touchcancel', handleTouchCancel);
-      window.removeEventListener('scroll', handleScrollCapture, { capture: true });
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleResize);
       resetTouchTracking();
