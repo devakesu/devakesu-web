@@ -3,7 +3,7 @@
 /**
  * Generate build metadata for the application.
  * This runs during the build process (both CI and Coolify).
- * 
+ *
  * Environment variables (optional, will use defaults if not set):
  * - GITHUB_RUN_NUMBER: Build ID
  * - GITHUB_SHA: Commit SHA
@@ -29,23 +29,33 @@ function gitCommand(command, fallback = '') {
 const isCI = process.env.CI === 'true' || process.env.GITHUB_ACTIONS === 'true';
 
 // Get metadata from environment or git
-const buildId = process.env.GITHUB_RUN_NUMBER || 
-                process.env.BUILD_ID || 
-                (isCI ? 'CI_BUILD' : 'LOCAL_BUILD');
+const buildId =
+  process.env.GITHUB_RUN_NUMBER || process.env.BUILD_ID || (isCI ? 'CI_BUILD' : 'LOCAL_BUILD');
 
-const commitSha = (process.env.GITHUB_SHA || gitCommand('git rev-parse HEAD', 'unknown')).slice(0, 7);
+const commitSha = (process.env.GITHUB_SHA || gitCommand('git rev-parse HEAD', 'unknown')).slice(
+  0,
+  7
+);
 
-const branch = process.env.GITHUB_REF 
+const branch = process.env.GITHUB_REF
   ? process.env.GITHUB_REF.replace('refs/heads/', '')
   : gitCommand('git rev-parse --abbrev-ref HEAD', 'main');
 
 const timestamp = new Date().toISOString();
 
-const auditStatus = process.env.AUDIT_STATUS || 
-                   (isCI ? 'NOT_RUN' : 'SKIPPED (dev)');
+const auditStatus = process.env.AUDIT_STATUS || (isCI ? 'NOT_RUN' : 'SKIPPED (dev)');
 
-const signatureStatus = process.env.SIGNATURE_STATUS || 
-                       (isCI ? 'NOT_VERIFIED' : 'UNSIGNED (dev)');
+const signatureStatus = process.env.SIGNATURE_STATUS || (isCI ? 'NOT_VERIFIED' : 'UNSIGNED (dev)');
+
+// Get GitHub repository information
+const githubRepo =
+  process.env.GITHUB_REPOSITORY ||
+  gitCommand('git remote get-url origin', '')
+    .replace(/^.*[:/]/, '')
+    .replace(/\.git$/, '')
+    .trim();
+
+const githubRunId = process.env.GITHUB_RUN_ID || null;
 
 // Create metadata object
 const meta = {
@@ -55,6 +65,8 @@ const meta = {
   timestamp: timestamp,
   audit_status: auditStatus,
   signature_status: signatureStatus,
+  github_repo: githubRepo || null,
+  github_run_id: githubRunId,
 };
 
 // Write to public directory

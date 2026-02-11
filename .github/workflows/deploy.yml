@@ -1,11 +1,11 @@
 name: Secure Build & Deploy
 
 on:
-  pull_request:  # Trigger on PRs to any branch
+  pull_request: # Trigger on PRs to any branch
   push:
-    branches: ['main']  # Only auto-deploy from main
+    branches: ['main'] # Only auto-deploy from main
   merge_group:
-    branches: ['main']  # Only auto-deploy from main
+    branches: ['main'] # Only auto-deploy from main
   workflow_dispatch:
 
 # 🔒 LOCK DOWN PERMISSIONS (Least Privilege)
@@ -95,7 +95,7 @@ jobs:
       id-token: write # Required for Sigstore signing
       packages: write # Required for GHCR push
     env:
-      SIGSTORE_ROOT_FILE: ""
+      SIGSTORE_ROOT_FILE: ''
       TUF_ROOT: https://tuf-repo-cdn.sigstore.dev
     outputs:
       digest: ${{ steps.build.outputs.digest }}
@@ -147,6 +147,8 @@ jobs:
             NEXT_PUBLIC_SITE_URL=https://devakesu.com
             NEXT_PUBLIC_ANALYTICS_ENABLED=true
             BUILD_ID=${{ github.run_number }}
+            GITHUB_REPOSITORY=${{ github.repository }}
+            GITHUB_RUN_ID=${{ github.run_id }}
           labels: |
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}

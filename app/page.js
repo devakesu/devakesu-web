@@ -1,23 +1,43 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback, lazy, Suspense, memo } from 'react';
 import Image from 'next/image';
 import { useAnalytics } from '@/components/Analytics';
-import {
-  FaLinkedin,
-  FaGithub,
-  FaInstagram,
-  FaFacebook,
-  FaGoogle,
-  FaReddit,
-  FaPinterest,
-  FaTelegram,
-} from 'react-icons/fa';
+import { FaLinkedin, FaGithub, FaInstagram, FaFacebook, FaGoogle } from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
+
+// Lazy load less critical icons
+const FaReddit = lazy(() => import('react-icons/fa').then((mod) => ({ default: mod.FaReddit })));
+const FaPinterest = lazy(() =>
+  import('react-icons/fa').then((mod) => ({ default: mod.FaPinterest }))
+);
+const FaTelegram = lazy(() =>
+  import('react-icons/fa').then((mod) => ({ default: mod.FaTelegram }))
+);
 
 const SCROLL_LOCK_DURATION = 1100;
 const TOUCH_THRESHOLD_PX = 40;
 const MIN_WHEEL_DELTA = 2;
+
+// Memoized social icon component to prevent unnecessary re-renders
+const SocialIcon = memo(({ href, Icon, title, platform, onClick }) => (
+  <a
+    href={href}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
+    title={title}
+    aria-label={title}
+    onClick={(e) => {
+      e.stopPropagation();
+      onClick(platform);
+    }}
+  >
+    <Icon />
+  </a>
+));
+
+SocialIcon.displayName = 'SocialIcon';
 
 export default function Home() {
   const { trackEvent } = useAnalytics();
@@ -272,15 +292,17 @@ export default function Home() {
 
       // Ignore key events when focus is inside interactive/input elements
       const target = event.target;
-      
+
       // Guard against non-Element targets (e.g., document/window)
       if (!(target instanceof Element)) {
         return;
       }
-      
+
       // Use closest to check for interactive elements in the ancestor chain
-      const interactiveAncestor = target.closest('input, textarea, select, button, a, [contenteditable="true"]');
-      
+      const interactiveAncestor = target.closest(
+        'input, textarea, select, button, a, [contenteditable="true"]'
+      );
+
       if (interactiveAncestor) {
         return;
       }
@@ -486,6 +508,7 @@ export default function Home() {
                   alt="devakesu Profile"
                   width={200}
                   height={200}
+                  sizes="200px"
                   priority
                   className="profile-image"
                 />
@@ -517,12 +540,12 @@ export default function Home() {
                     @devakesu
                   </p>
                 </div>
-                <h3
+                <h2
                   className="glitch text-xl sm:text-4xl lg:text-5xl text-cyan-400 uppercase mt-2 sm:mt-4 lg:mt-8"
                   data-text="Where code meets conscience"
                 >
                   Where code meets conscience
-                </h3>
+                </h2>
 
                 <p className="max-w-2xl text-neutral-300/90 text-sm sm:text-lg leading-relaxed lg:mt-4 min-h-12">
                   {taglines[currentTagline]}
@@ -545,6 +568,7 @@ export default function Home() {
                       alt="Kesu Profile"
                       width={200}
                       height={200}
+                      sizes="200px"
                       className="profile-image"
                     />
                   </div>
@@ -751,7 +775,22 @@ export default function Home() {
             className={`terminal-panel ${activeNode === 'ideas' ? 'panel-active' : ''}`}
             role="button"
             tabIndex={0}
-            onClick={() => setActiveNode(activeNode === 'ideas' ? null : 'ideas')}
+            onClick={() => {
+              const newState = activeNode === 'ideas' ? null : 'ideas';
+              setActiveNode(newState);
+              if (newState && window.matchMedia('(max-width: 768px)').matches) {
+                setTimeout(() => {
+                  const element = document.getElementById('ideas-content');
+                  if (element) {
+                    element.scrollIntoView({
+                      behavior: 'smooth',
+                      block: 'center',
+                      inline: 'nearest',
+                    });
+                  }
+                }, 300);
+              }
+            }}
             onKeyDown={(e) => handlePanelKeyDown(e, 'ideas')}
             aria-expanded={activeNode === 'ideas'}
             aria-controls="ideas-content"
@@ -759,8 +798,12 @@ export default function Home() {
             <div className="panel-header">
               <div className="flex items-center gap-2">
                 <span className="terminal-dot bg-cyan-400"></span>
-                <span className="terminal-dot bg-cyan-400"></span>
-                <span className="terminal-dot bg-cyan-400"></span>
+                <span
+                  className={`terminal-dot ${activeNode === 'ideas' ? 'bg-cyan-400' : 'bg-neutral-600'}`}
+                ></span>
+                <span
+                  className={`terminal-dot ${activeNode === 'ideas' ? 'bg-cyan-400' : 'bg-neutral-600'}`}
+                ></span>
               </div>
               <span className="text-xs uppercase tracking-wider">CORE_VALUES</span>
             </div>
@@ -785,7 +828,22 @@ export default function Home() {
             className={`terminal-panel ${activeNode === 'tech' ? 'panel-active' : ''}`}
             role="button"
             tabIndex={0}
-            onClick={() => setActiveNode(activeNode === 'tech' ? null : 'tech')}
+            onClick={() => {
+              const newState = activeNode === 'tech' ? null : 'tech';
+              setActiveNode(newState);
+              if (newState && window.matchMedia('(max-width: 768px)').matches) {
+                setTimeout(() => {
+                  const element = document.getElementById('tech-content');
+                  if (element) {
+                    element.scrollIntoView({
+                      behavior: 'smooth',
+                      block: 'center',
+                      inline: 'nearest',
+                    });
+                  }
+                }, 300);
+              }
+            }}
             onKeyDown={(e) => handlePanelKeyDown(e, 'tech')}
             aria-expanded={activeNode === 'tech'}
             aria-controls="tech-content"
@@ -793,8 +851,12 @@ export default function Home() {
             <div className="panel-header">
               <div className="flex items-center gap-2">
                 <span className="terminal-dot bg-cyan-400"></span>
-                <span className="terminal-dot bg-cyan-400"></span>
-                <span className="terminal-dot bg-neutral-600"></span>
+                <span
+                  className={`terminal-dot ${activeNode === 'tech' ? 'bg-cyan-400' : 'bg-neutral-600'}`}
+                ></span>
+                <span
+                  className={`terminal-dot ${activeNode === 'tech' ? 'bg-cyan-400' : 'bg-neutral-600'}`}
+                ></span>
               </div>
               <span className="text-xs uppercase tracking-wider">TECH_STACK</span>
             </div>
@@ -819,7 +881,22 @@ export default function Home() {
             className={`terminal-panel ${activeNode === 'projects' ? 'panel-active' : ''}`}
             role="button"
             tabIndex={0}
-            onClick={() => setActiveNode(activeNode === 'projects' ? null : 'projects')}
+            onClick={() => {
+              const newState = activeNode === 'projects' ? null : 'projects';
+              setActiveNode(newState);
+              if (newState && window.matchMedia('(max-width: 768px)').matches) {
+                setTimeout(() => {
+                  const element = document.getElementById('projects-content');
+                  if (element) {
+                    element.scrollIntoView({
+                      behavior: 'smooth',
+                      block: 'center',
+                      inline: 'nearest',
+                    });
+                  }
+                }, 300);
+              }
+            }}
             onKeyDown={(e) => handlePanelKeyDown(e, 'projects')}
             aria-expanded={activeNode === 'projects'}
             aria-controls="projects-content"
@@ -827,8 +904,12 @@ export default function Home() {
             <div className="panel-header">
               <div className="flex items-center gap-2">
                 <span className="terminal-dot bg-cyan-400"></span>
-                <span className="terminal-dot bg-neutral-600"></span>
-                <span className="terminal-dot bg-neutral-600"></span>
+                <span
+                  className={`terminal-dot ${activeNode === 'projects' ? 'bg-cyan-400' : 'bg-neutral-600'}`}
+                ></span>
+                <span
+                  className={`terminal-dot ${activeNode === 'projects' ? 'bg-cyan-400' : 'bg-neutral-600'}`}
+                ></span>
               </div>
               <span className="text-xs uppercase tracking-wider">THE_ARSENAL</span>
             </div>
@@ -861,7 +942,22 @@ export default function Home() {
             className={`terminal-panel ${activeNode === 'dreams' ? 'panel-active' : ''}`}
             role="button"
             tabIndex={0}
-            onClick={() => setActiveNode(activeNode === 'dreams' ? null : 'dreams')}
+            onClick={() => {
+              const newState = activeNode === 'dreams' ? null : 'dreams';
+              setActiveNode(newState);
+              if (newState && window.matchMedia('(max-width: 768px)').matches) {
+                setTimeout(() => {
+                  const element = document.getElementById('dreams-content');
+                  if (element) {
+                    element.scrollIntoView({
+                      behavior: 'smooth',
+                      block: 'center',
+                      inline: 'nearest',
+                    });
+                  }
+                }, 300);
+              }
+            }}
             onKeyDown={(e) => handlePanelKeyDown(e, 'dreams')}
             aria-expanded={activeNode === 'dreams'}
             aria-controls="dreams-content"
@@ -869,8 +965,12 @@ export default function Home() {
             <div className="panel-header">
               <div className="flex items-center gap-2">
                 <span className="terminal-dot bg-cyan-400"></span>
-                <span className="terminal-dot bg-cyan-400"></span>
-                <span className="terminal-dot bg-neutral-600"></span>
+                <span
+                  className={`terminal-dot ${activeNode === 'dreams' ? 'bg-cyan-400' : 'bg-neutral-600'}`}
+                ></span>
+                <span
+                  className={`terminal-dot ${activeNode === 'dreams' ? 'bg-cyan-400' : 'bg-neutral-600'}`}
+                ></span>
               </div>
               <span className="text-xs uppercase tracking-wider">FUTURE_STATE</span>
             </div>
@@ -895,7 +995,22 @@ export default function Home() {
             className={`terminal-panel ${activeNode === 'contact' ? 'panel-active' : ''}`}
             role="button"
             tabIndex={0}
-            onClick={() => setActiveNode(activeNode === 'contact' ? null : 'contact')}
+            onClick={() => {
+              const newState = activeNode === 'contact' ? null : 'contact';
+              setActiveNode(newState);
+              if (newState && window.matchMedia('(max-width: 768px)').matches) {
+                setTimeout(() => {
+                  const element = document.getElementById('contact-content');
+                  if (element) {
+                    element.scrollIntoView({
+                      behavior: 'smooth',
+                      block: 'center',
+                      inline: 'nearest',
+                    });
+                  }
+                }, 300);
+              }
+            }}
             onKeyDown={(e) => handlePanelKeyDown(e, 'contact')}
             aria-expanded={activeNode === 'contact'}
             aria-controls="contact-content"
@@ -903,8 +1018,12 @@ export default function Home() {
             <div className="panel-header">
               <div className="flex items-center gap-2">
                 <span className="terminal-dot bg-cyan-400"></span>
-                <span className="terminal-dot bg-cyan-400"></span>
-                <span className="terminal-dot bg-neutral-600"></span>
+                <span
+                  className={`terminal-dot ${activeNode === 'contact' ? 'bg-cyan-400' : 'bg-neutral-600'}`}
+                ></span>
+                <span
+                  className={`terminal-dot ${activeNode === 'contact' ? 'bg-cyan-400' : 'bg-neutral-600'}`}
+                ></span>
               </div>
               <span className="text-xs uppercase tracking-wider">CONNECT</span>
             </div>
@@ -929,132 +1048,75 @@ export default function Home() {
                   </a>
                 </p>
                 <div className="flex flex-wrap items-center gap-3 mt-3">
-                  <a
+                  <SocialIcon
                     href="https://www.linkedin.com/in/devakesu"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
+                    Icon={FaLinkedin}
                     title="LinkedIn"
-                    aria-label="LinkedIn"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleSocialClick('linkedin');
-                    }}
-                  >
-                    <FaLinkedin />
-                  </a>
-                  <a
+                    platform="linkedin"
+                    onClick={handleSocialClick}
+                  />
+                  <SocialIcon
                     href="https://github.com/devakesu/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
+                    Icon={FaGithub}
                     title="GitHub"
-                    aria-label="GitHub"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleSocialClick('github');
-                    }}
-                  >
-                    <FaGithub />
-                  </a>
-                  <a
+                    platform="github"
+                    onClick={handleSocialClick}
+                  />
+                  <SocialIcon
                     href="https://www.instagram.com/deva.kesu/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
+                    Icon={FaInstagram}
                     title="Instagram"
-                    aria-label="Instagram"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleSocialClick('instagram');
-                    }}
-                  >
-                    <FaInstagram />
-                  </a>
-                  <a
+                    platform="instagram"
+                    onClick={handleSocialClick}
+                  />
+                  <SocialIcon
                     href="https://g.dev/devakesu"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
+                    Icon={FaGoogle}
                     title="Google Developer"
-                    aria-label="Google Developer"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleSocialClick('google-dev');
-                    }}
-                  >
-                    <FaGoogle />
-                  </a>
-                  <a
+                    platform="google-dev"
+                    onClick={handleSocialClick}
+                  />
+                  <SocialIcon
                     href="https://x.com/devakesu"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
+                    Icon={FaXTwitter}
                     title="X (Twitter)"
-                    aria-label="X (Twitter)"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleSocialClick('x');
-                    }}
-                  >
-                    <FaXTwitter />
-                  </a>
-                  <a
+                    platform="x"
+                    onClick={handleSocialClick}
+                  />
+                  <SocialIcon
                     href="https://www.facebook.com/deva4kesu"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
+                    Icon={FaFacebook}
                     title="Facebook"
-                    aria-label="Facebook"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleSocialClick('facebook');
-                    }}
-                  >
-                    <FaFacebook />
-                  </a>
-                  <a
-                    href="https://www.reddit.com/user/devakesu/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
-                    title="Reddit"
-                    aria-label="Reddit"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleSocialClick('reddit');
-                    }}
-                  >
-                    <FaReddit />
-                  </a>
-                  <a
-                    href="https://pin.it/A7QjJQvTE"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
-                    title="Pinterest"
-                    aria-label="Pinterest"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleSocialClick('pinterest');
-                    }}
-                  >
-                    <FaPinterest />
-                  </a>
-                  <a
-                    href="https://t.me/devakesu"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
-                    title="Telegram"
-                    aria-label="Telegram"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleSocialClick('telegram');
-                    }}
-                  >
-                    <FaTelegram />
-                  </a>
+                    platform="facebook"
+                    onClick={handleSocialClick}
+                  />
+                  <Suspense fallback={<span className="text-cyan-400 text-xl">...</span>}>
+                    <SocialIcon
+                      href="https://www.reddit.com/user/devakesu/"
+                      Icon={FaReddit}
+                      title="Reddit"
+                      platform="reddit"
+                      onClick={handleSocialClick}
+                    />
+                  </Suspense>
+                  <Suspense fallback={<span className="text-cyan-400 text-xl">...</span>}>
+                    <SocialIcon
+                      href="https://pin.it/A7QjJQvTE"
+                      Icon={FaPinterest}
+                      title="Pinterest"
+                      platform="pinterest"
+                      onClick={handleSocialClick}
+                    />
+                  </Suspense>
+                  <Suspense fallback={<span className="text-cyan-400 text-xl">...</span>}>
+                    <SocialIcon
+                      href="https://t.me/devakesu"
+                      Icon={FaTelegram}
+                      title="Telegram"
+                      platform="telegram"
+                      onClick={handleSocialClick}
+                    />
+                  </Suspense>
                 </div>
                 <p className="text-sm text-neutral-400 mt-3">@devakesu</p>
               </div>
@@ -1210,7 +1272,7 @@ export default function Home() {
       {/* CONTACT FOOTER */}
       <footer
         id="contact"
-        className="mx-auto max-w-6xl px-6 py-12 pb-0 sm:pb-12 border-t border-neutral-800 mt-12 scroll-snap-section"
+        className="mx-auto max-w-6xl px-6 py-12 pb-24 sm:pb-12 border-t border-neutral-800 mt-12 scroll-snap-section"
       >
         <div className="text-center">
           <p className="text-xl sm:text-2xl text-cyan-400 italic mb-4 font-light">
@@ -1266,9 +1328,33 @@ export default function Home() {
 
                   <div>
                     <span className="text-cyan-400">&gt; BUILD_ID:</span>{' '}
-                    <span className="text-green-400">#{meta?.build_id || 'N/A'}</span>{' '}
+                    {meta?.github_run_id && meta?.github_repo ? (
+                      <a
+                        href={`https://github.com/${meta.github_repo}/actions/runs/${meta.github_run_id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-green-400 hover:text-green-300 hover:underline"
+                      >
+                        #{meta.build_id || 'N/A'}
+                      </a>
+                    ) : (
+                      <span className="text-green-400">#{meta?.build_id || 'N/A'}</span>
+                    )}{' '}
                     <span className="text-neutral-600">
-                      ({meta?.commit_sha?.substring(0, 7) || 'unknown'})
+                      (
+                      {meta?.commit_sha && meta?.github_repo ? (
+                        <a
+                          href={`https://github.com/${meta.github_repo}/commit/${meta.commit_sha}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="hover:text-cyan-400 hover:underline"
+                        >
+                          {meta.commit_sha.substring(0, 7)}
+                        </a>
+                      ) : (
+                        meta?.commit_sha?.substring(0, 7) || 'unknown'
+                      )}
+                      )
                     </span>
                   </div>
                   <div>
@@ -1303,22 +1389,34 @@ export default function Home() {
                   </div>
                   <div>
                     <span className="text-cyan-400">&gt; PROVENANCE:</span>{' '}
-                    <span
-                      className={`border-b border-dashed cursor-help ${
-                        meta?.signature_status === 'SLSA_PROVENANCE_GENERATED'
-                          ? 'text-blue-400 border-blue-400'
-                          : meta?.signature_status === 'UNSIGNED'
-                            ? 'text-yellow-400 border-yellow-400'
-                            : 'text-neutral-400 border-neutral-400'
-                      }`}
-                      title={
-                        meta?.signature_status === 'SLSA_PROVENANCE_GENERATED'
-                          ? 'SLSA Level 3 Verified'
-                          : 'Development Mode'
-                      }
-                    >
-                      {meta?.signature_status || 'UNKNOWN'}
-                    </span>{' '}
+                    {meta?.signature_status === 'SLSA_PROVENANCE_GENERATED' && meta?.github_repo ? (
+                      <a
+                        href={`https://github.com/${meta.github_repo}/attestations`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="border-b border-dashed text-blue-400 border-blue-400 hover:text-blue-300 hover:border-blue-300"
+                        title="SLSA Level 3 Verified - Click to view attestations"
+                      >
+                        {meta.signature_status}
+                      </a>
+                    ) : (
+                      <span
+                        className={`border-b border-dashed cursor-help ${
+                          meta?.signature_status === 'SLSA_PROVENANCE_GENERATED'
+                            ? 'text-blue-400 border-blue-400'
+                            : meta?.signature_status === 'UNSIGNED'
+                              ? 'text-yellow-400 border-yellow-400'
+                              : 'text-neutral-400 border-neutral-400'
+                        }`}
+                        title={
+                          meta?.signature_status === 'SLSA_PROVENANCE_GENERATED'
+                            ? 'SLSA Level 3 Verified'
+                            : 'Development Mode'
+                        }
+                      >
+                        {meta?.signature_status || 'UNKNOWN'}
+                      </span>
+                    )}{' '}
                     {meta?.signature_status === 'SLSA_PROVENANCE_GENERATED' && (
                       <span className="text-green-400"> ✔ Verified</span>
                     )}
@@ -1341,7 +1439,7 @@ export default function Home() {
             #UnitedNations #SustainableFutures
           </p>
 
-          <p className="mt-8 mb-2 text-xs text-neutral-500">
+          <p className="mt-8 mb-12 sm:mb-2 text-xs text-neutral-500">
             © {new Date().getFullYear()} Devanarayanan. All rights reserved.
             <br />
             <a href="/legal" className="text-cyan-400 hover:underline">
