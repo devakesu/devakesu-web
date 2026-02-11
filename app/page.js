@@ -266,7 +266,14 @@ export default function Home() {
         const canScroll = targetSection.scrollHeight > targetSection.clientHeight;
         if (canScroll) {
           const computed = window.getComputedStyle(targetSection);
-          if (computed.overflowY === 'auto' || computed.overflowY === 'scroll') {
+          const overflow = computed.overflow;
+          const overflowY = computed.overflowY;
+          if (
+            overflowY === 'auto' ||
+            overflowY === 'scroll' ||
+            overflow === 'auto' ||
+            overflow === 'scroll'
+          ) {
             scrollableElements.push(targetSection);
           }
         }
