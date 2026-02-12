@@ -262,7 +262,7 @@ export default function PrivacyPage() {
               {CONTACT_EMAIL}
             </a>
           </p>
-          <p className="text-xs text-neutral-600 text-center mt-2">
+          <p className="text-xs text-neutral-600 text-center mt-2 mb-12 sm:mb-2">
             This site is open source. View the{' '}
             <a
               href="https://github.com/devakesu/devakesu-web"
