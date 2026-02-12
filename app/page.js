@@ -564,6 +564,15 @@ export default function Home() {
 
     if (!revealItems.length) return undefined;
 
+    // Check if user prefers reduced motion
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // If reduced motion is preferred, immediately show all elements
+    if (prefersReducedMotion) {
+      revealItems.forEach((el) => el.classList.add('visible'));
+      return undefined;
+    }
+
     if ('IntersectionObserver' in window) {
       const io = new IntersectionObserver(
         (entries) => {
