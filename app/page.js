@@ -204,24 +204,34 @@ export default function Home() {
       setCurrentTime(formattedTime);
     };
 
-    updateTime(); // Initial call
-    let interval = setInterval(updateTime, 1000);
+    const intervalRef = { current: null };
 
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        // Pause interval when page is hidden
-        clearInterval(interval);
-      } else {
-        // Restart interval when page becomes visible
-        updateTime(); // Update immediately
-        interval = setInterval(updateTime, 1000);
+    const startInterval = () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      updateTime(); // Update immediately
+      intervalRef.current = setInterval(updateTime, 1000);
+    };
+
+    const stopInterval = () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
       }
     };
 
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        stopInterval();
+      } else {
+        startInterval();
+      }
+    };
+
+    startInterval(); // Initial start
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
-      clearInterval(interval);
+      stopInterval();
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
