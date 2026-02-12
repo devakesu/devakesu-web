@@ -4,6 +4,7 @@
 
 [![Security: SLSA Level 3](https://img.shields.io/badge/SLSA-Level%203-brightgreen)](https://slsa.dev)
 [![Security Scan: Trivy](https://img.shields.io/badge/Security-Trivy%20Scanned-blue)](.github/workflows/deploy.yml)
+[![Attestations](https://img.shields.io/badge/Attestations-Enabled-success)](https://github.com/devakesu/devakesu-web/attestations)
 [![Build Status](https://img.shields.io/badge/Build-Passing-success)](.github/workflows/deploy.yml)
 
 [![Next.js](https://img.shields.io/badge/Next.js-16.1.6-black?logo=next.js)](https://nextjs.org)
@@ -28,7 +29,10 @@
 ### 🔒 Security
 
 - ✅ **SLSA Level 3 Provenance** - Supply chain security
+- ✅ **GitHub Attestations** - Verifiable build provenance in GitHub UI
+- ✅ **Sigstore Signatures** - Cryptographic signing with cosign
 - ✅ **Trivy Vulnerability Scanning** - Automated CVE detection
+- ✅ **SBOM Generation** - CycloneDX format for transparency
 - ✅ **Security Headers** - CSP, X-Frame-Options
 - ✅ **No Third-Party Tracking** - Privacy-first approach
 - ✅ **XSS/CSRF Protection** - React & Next.js built-in
@@ -157,6 +161,9 @@ devakesu-web/
 ### Application Security
 
 - **SLSA Level 3 Provenance** - Verifiable build integrity
+- **GitHub Attestations** - Build provenance visible in repository UI
+- **Sigstore Signing** - Keyless image signing with cosign
+- **SBOM** - Software Bill of Materials (CycloneDX format)
 - **Trivy Scanning** - Automated vulnerability detection in CI/CD
 - **Security Headers**:
   - `X-Frame-Options: SAMEORIGIN` - Same-origin-only framing to mitigate clickjacking
@@ -239,10 +246,29 @@ The primary favicon for the App Router is located at `app/favicon.svg` and is se
 
 The project uses GitHub Actions with a secure, multi-stage pipeline:
 
-1. **Security Audit** - Trivy vulnerability scanning
-2. **Build** - Next.js build with metadata injection
-3. **SLSA Provenance** - Cryptographic build verification
+1. **Guard** - Lint and build validation
+2. **Security Audit** - Trivy vulnerability scanning
+3. **Build & Sign** - Docker image build with SBOM, Sigstore signing, and GitHub attestations
 4. **Deploy** - Coolify deployment via webhook
+
+#### Attestation & Verification
+
+Every production build generates:
+
+- **GitHub Attestations** - Visible at [github.com/devakesu/devakesu-web/attestations](https://github.com/devakesu/devakesu-web/attestations)
+- **Cosign Signatures** - Stored in OCI registry
+- **SBOM** - CycloneDX format bill of materials
+
+Verify the image:
+
+```bash
+# Using GitHub CLI
+gh attestation verify oci://ghcr.io/devakesu/devakesu-web:latest --owner devakesu
+
+# Using cosign
+cosign verify ghcr.io/devakesu/devakesu-web:latest
+cosign verify-attestation ghcr.io/devakesu/devakesu-web:latest --type slsaprovenance
+```
 
 See [.github/workflows/deploy.yml](.github/workflows/deploy.yml) for details.
 
@@ -378,5 +404,5 @@ _Love is the only way to rescue humanity from all evils._
 
 ---
 
-**Last Updated**: February 11, 2026  
-**Version**: 1.0.8
+**Last Updated**: February 12, 2026  
+**Version**: 1.0.9

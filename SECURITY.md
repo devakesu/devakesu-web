@@ -14,6 +14,9 @@ This project implements multiple layers of security:
 ### Application Security
 
 - **SLSA Level 3 Provenance** - Build integrity verification via GitHub Actions
+- **GitHub Attestations** - Verifiable build provenance in repository UI
+- **Sigstore Signing** - Cryptographic image signatures with cosign
+- **SBOM Generation** - Software Bill of Materials (CycloneDX format)
 - **Trivy Vulnerability Scanning** - Automated CVE detection in dependencies
 - **Content Security Policy (CSP)** - Strict CSP with per-request nonces
 - **Security Headers**:
@@ -145,5 +148,5 @@ We appreciate security researchers who responsibly disclose vulnerabilities.
 
 ---
 
-**Last Updated**: February 11, 2026  
-**Version**: 1.0.8
+**Last Updated**: February 12, 2026  
+**Version**: 1.0.9

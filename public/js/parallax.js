@@ -13,6 +13,12 @@
     // Skip parallax effect for users who prefer reduced motion
     if (prefersReducedMotion) return;
 
+    // Skip on mobile/touch devices for better performance
+    const isMobile =
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(pointer: coarse)').matches;
+    if (isMobile) return;
+
     const parallaxLayers = document.querySelectorAll('.parallax-layer');
     if (parallaxLayers.length === 0) return;
 

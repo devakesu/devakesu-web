@@ -3,12 +3,33 @@
 import { useState, useEffect, useMemo, useRef, useCallback, memo } from 'react';
 import Image from 'next/image';
 import { useAnalytics } from '@/components/Analytics';
-import { FaLinkedin, FaGithub, FaInstagram, FaFacebook, FaGoogle, FaReddit, FaPinterest, FaTelegram } from 'react-icons/fa';
+import {
+  FaLinkedin,
+  FaGithub,
+  FaInstagram,
+  FaFacebook,
+  FaGoogle,
+  FaReddit,
+  FaPinterest,
+  FaTelegram,
+} from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
 
 const SCROLL_LOCK_DURATION = 1100;
 const TOUCH_THRESHOLD_PX = 40;
 const MIN_WHEEL_DELTA = 2;
+
+// Throttle utility for performance optimization
+const throttle = (func, delay) => {
+  let lastCall = 0;
+  return (...args) => {
+    const now = Date.now();
+    if (now - lastCall >= delay) {
+      lastCall = now;
+      func(...args);
+    }
+  };
+};
 // NOTE: Inline style attribute selectors (e.g., [style*="overflow-y: auto"]) are
 // whitespace- and order-sensitive and may miss valid inline style syntax variations
 // (e.g., "overflow-y:auto" without space, or multiple spaces). Scrollable elements
@@ -46,7 +67,7 @@ const SocialIcon = memo(({ href, Icon, title, platform, onClick }) => (
     href={href}
     target="_blank"
     rel="noopener noreferrer"
-    className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl"
+    className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl inline-flex items-center justify-center min-h-[44px] min-w-[44px]"
     title={title}
     aria-label={title}
     onClick={(e) => {
@@ -83,9 +104,14 @@ export default function Home() {
   const lastScrollTimeRef = useRef(0);
   const scrollTargetRef = useRef(null);
 
-  // Approximate uptime in years based on birth year
+  // Calculate age based on birth date (April 19)
   const birthYear = 2006;
-  const uptime = new Date().getFullYear() - birthYear;
+  const currentDate = new Date();
+  const currentYear = currentDate.getFullYear();
+  const currentMonth = currentDate.getMonth(); // 0-indexed (April = 3)
+  const currentDay = currentDate.getDate();
+  const hasHadBirthdayThisYear = currentMonth > 3 || (currentMonth === 3 && currentDay >= 19);
+  const uptime = currentYear - birthYear - (hasHadBirthdayThisYear ? 0 : 1);
 
   const taglines = useMemo(
     () => [
@@ -163,7 +189,7 @@ export default function Home() {
     };
   }, []);
 
-  // Update time every second for UTC+5:30 (IST)
+  // Update time every second for UTC+5:30 (IST) - only when page visible
   useEffect(() => {
     const formatter = new Intl.DateTimeFormat('en-GB', {
       hour: '2-digit',
@@ -174,14 +200,42 @@ export default function Home() {
     });
 
     const updateTime = () => {
+      // Guard against race conditions where interval fires while page is hidden
+      if (document.hidden) return;
       const formattedTime = formatter.format(new Date());
       setCurrentTime(formattedTime);
     };
 
-    updateTime(); // Initial call
-    const interval = setInterval(updateTime, 1000);
+    let intervalId = null;
 
-    return () => clearInterval(interval);
+    const startInterval = () => {
+      if (intervalId !== null) clearInterval(intervalId);
+      updateTime(); // Update immediately
+      intervalId = setInterval(updateTime, 1000);
+    };
+
+    const stopInterval = () => {
+      if (intervalId !== null) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        stopInterval();
+      } else {
+        startInterval();
+      }
+    };
+
+    handleVisibilityChange(); // Initialize based on current visibility state
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      stopInterval();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   // Respect reduced-motion preference before enabling section scroll snapping
@@ -306,9 +360,7 @@ export default function Home() {
 
       // Reset scroll position of all scrollable elements in the target section
       const targetSection = sections[nextIndex];
-      const scrollableElements = Array.from(
-        targetSection.querySelectorAll(SCROLLABLE_SELECTORS)
-      );
+      const scrollableElements = Array.from(targetSection.querySelectorAll(SCROLLABLE_SELECTORS));
       // Fallback: if no matching descendants, include the section itself if it is scrollable
       if (scrollableElements.length === 0 && isScrollableElement(targetSection)) {
         scrollableElements.push(targetSection);
@@ -462,16 +514,16 @@ export default function Home() {
       resetTouchTracking();
     };
 
-    const handleScroll = () => {
+    const handleScroll = throttle(() => {
       // Only sync section index when not animating to avoid section skipping
       if (!isAnimatingRef.current) {
-        syncSectionIndex();
+        requestAnimationFrame(syncSectionIndex);
       }
-    };
+    }, 100);
 
-    const handleResize = () => {
-      syncSectionIndex();
-    };
+    const handleResize = throttle(() => {
+      requestAnimationFrame(syncSectionIndex);
+    }, 150);
 
     syncSectionIndex();
 
@@ -558,39 +610,39 @@ export default function Home() {
     <main className="relative isolate">
       {/* HERO SECTION */}
       <section className="relative overflow-hidden vhs-flicker scroll-snap-section">
-        {/* Parallax layers */}
+        {/* Parallax layers - hidden on mobile via CSS for performance */}
         <div
-          className="absolute -top-24 -left-24 h-72 w-72 rounded-full bg-cyan-400/20 blur-3xl parallax-layer"
+          className="absolute -top-24 -left-24 h-72 w-72 rounded-full bg-cyan-400/20 blur-3xl parallax-layer pointer-events-none hidden md:block"
           data-depth="0.15"
         ></div>
 
         <div
-          className="absolute -bottom-24 -right-24 h-[28rem] w-[28rem] rounded-full bg-cyan-400/20 blur-3xl parallax-layer"
+          className="absolute -bottom-24 -right-24 h-[28rem] w-[28rem] rounded-full bg-cyan-400/20 blur-3xl parallax-layer pointer-events-none hidden md:block"
           data-depth="0.25"
         ></div>
 
         {/* Background grid (also parallaxed) */}
         <div
-          className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,#00ffff20,transparent_60%)] pointer-events-none parallax-layer"
+          className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,#00ffff20,transparent_60%)] pointer-events-none parallax-layer hidden md:block"
           data-depth="0.05"
         ></div>
 
         {/* Cyan glow blobs */}
-        <div className="absolute -top-24 -left-24 h-72 w-72 rounded-full bg-cyan-400/20 blur-3xl"></div>
-        <div className="absolute -bottom-24 -right-24 h-[28rem] w-[28rem] rounded-full bg-cyan-400/20 blur-3xl"></div>
+        <div className="absolute -top-24 -left-24 h-72 w-72 rounded-full bg-cyan-400/20 blur-3xl pointer-events-none"></div>
+        <div className="absolute -bottom-24 -right-24 h-[28rem] w-[28rem] rounded-full bg-cyan-400/20 blur-3xl pointer-events-none"></div>
 
         {/* Content */}
         <div className="relative scanlines">
           <div className="mx-auto max-w-6xl px-6 pt-8 sm:pt-12 lg:pt-16 pb-2 sm:pb-4 lg:pb-6">
             {/* Profile Image - Mobile First */}
             <div className="flex justify-center mb-8 lg:hidden">
-              <div className="profile-image-container">
+              <div className="profile-image-container w-40 h-40 sm:w-48 sm:h-48">
                 <Image
                   src="/profile.jpg"
                   alt="devakesu Profile"
                   width={200}
                   height={200}
-                  sizes="200px"
+                  sizes="(max-width: 640px) 160px, 200px"
                   priority
                   className="profile-image"
                 />
@@ -747,7 +799,7 @@ export default function Home() {
           <h2 className="text-xs uppercase tracking-widest text-cyan-400 mb-8">
             {'//'} WORLDVIEW.sys
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-neutral-300">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-6 text-neutral-300">
             <div className="space-y-2">
               <h3 className="text-sm font-semibold text-cyan-400 uppercase tracking-wider mb-2">
                 Continuous Integration
@@ -1338,7 +1390,7 @@ export default function Home() {
               <>
                 <div className="text-green-400 mb-2 sm:mb-3">
                   <span className="text-cyan-400">root@devakesu</span>:
-                  <span className="text-blue-400">~</span>$ list_skills --verbose
+                  <span className="text-blue-400">~</span>$ ls_skills --verbose
                 </div>
                 <div className="space-y-1 sm:space-y-1.5 text-neutral-300">
                   <div>
@@ -1426,9 +1478,6 @@ export default function Home() {
                     >
                       {meta?.audit_status || 'UNKNOWN'}
                     </span>{' '}
-                    {meta?.audit_status?.includes('PASSED') && (
-                      <span className="text-neutral-500">(Trivy: 0 Vulns)</span>
-                    )}
                   </div>
                   <div>
                     <span className="text-cyan-400">&gt; PROVENANCE:</span>{' '}
@@ -1470,7 +1519,10 @@ export default function Home() {
           </div>
 
           <div className="flex items-center justify-center gap-2 sm:gap-3 text-sm mb-4 sm:mb-6">
-            <a href="mailto:fusion@devakesu.com" className="text-cyan-400 hover:underline break-all">
+            <a
+              href="mailto:fusion@devakesu.com"
+              className="text-cyan-400 hover:underline break-all"
+            >
               fusion@devakesu.com
             </a>
             <span className="text-neutral-600">·</span>
