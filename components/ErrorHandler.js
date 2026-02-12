@@ -3,8 +3,9 @@
 import { useEffect } from 'react';
 
 /**
- * Global error handler for uncaught promise rejections
- * Prevents "Connection closed" and other async errors from appearing in console
+ * Global error handler for uncaught promise rejections.
+ * Suppresses unhandled rejections whose reason.message includes "Connection closed"
+ * (e.g. certain Next.js chunk loading errors) from being logged in the console.
  */
 export default function ErrorHandler() {
   useEffect(() => {
