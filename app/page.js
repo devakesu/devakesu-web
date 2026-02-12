@@ -229,7 +229,7 @@ export default function Home() {
       }
     };
 
-    startInterval(); // Initial start
+    handleVisibilityChange(); // Initialize based on current visibility state
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
