@@ -556,6 +556,57 @@ export default function Home() {
     };
   }, [isSectionScrollEnabled, isCoarsePointer]);
 
+  // Initialize scroll reveal animations - re-observe on every mount to handle client-side navigation
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+
+    const revealItems = document.querySelectorAll('.reveal');
+
+    if (!revealItems.length) return undefined;
+
+    // Check if user prefers reduced motion (guard matchMedia for older/test environments)
+    let prefersReducedMotion = false;
+
+    if (typeof window.matchMedia === 'function') {
+      prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    }
+    // If reduced motion is preferred, immediately show all elements without animating
+    if (prefersReducedMotion) {
+      revealItems.forEach((el) => {
+        // Disable transitions and apply final state to respect reduced motion
+        el.style.transition = 'none';
+        el.style.opacity = '1';
+        el.style.transform = 'none';
+        el.classList.add('visible');
+      });
+      return undefined;
+    }
+
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('visible');
+              io.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.2, rootMargin: '50px' }
+      );
+
+      revealItems.forEach((el) => io.observe(el));
+
+      return () => {
+        io.disconnect();
+      };
+    } else {
+      // Fallback for older browsers
+      revealItems.forEach((el) => el.classList.add('visible'));
+      return undefined;
+    }
+  }, []);
+
   const mindMapContent = {
     tech: {
       title: 'TECH_STACK',

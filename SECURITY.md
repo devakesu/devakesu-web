@@ -149,4 +149,4 @@ We appreciate security researchers who responsibly disclose vulnerabilities.
 ---
 
 **Last Updated**: February 12, 2026  
-**Version**: 1.0.9
+**Version**: 1.1.0
