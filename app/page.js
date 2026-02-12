@@ -564,6 +564,25 @@ export default function Home() {
 
     if (!revealItems.length) return undefined;
 
+    // Check if user prefers reduced motion (guard matchMedia for older/test environments)
+    let prefersReducedMotion = false;
+
+    if (typeof window.matchMedia === 'function') {
+      prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    }
+    // If reduced motion is preferred, immediately show all elements without animating
+    if (prefersReducedMotion) {
+      revealItems.forEach((el) => {
+        // Disable transitions and apply final state to respect reduced motion
+        el.style.transition = 'none';
+        el.style.opacity = '1';
+        el.style.transform = 'none';
+        el.classList.remove('reveal');
+        el.classList.add('visible');
+      });
+      return undefined;
+    }
+
     if ('IntersectionObserver' in window) {
       const io = new IntersectionObserver(
         (entries) => {
