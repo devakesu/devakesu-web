@@ -14,7 +14,9 @@
     if (prefersReducedMotion) return;
 
     // Skip on mobile/touch devices for better performance
-    const isMobile = window.matchMedia('(pointer: coarse)').matches;
+    const isMobile =
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(pointer: coarse)').matches;
     if (isMobile) return;
 
     const parallaxLayers = document.querySelectorAll('.parallax-layer');

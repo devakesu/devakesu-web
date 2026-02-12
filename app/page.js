@@ -67,7 +67,7 @@ const SocialIcon = memo(({ href, Icon, title, platform, onClick }) => (
     href={href}
     target="_blank"
     rel="noopener noreferrer"
-    className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl inline-flex items-center justify-center min-h-11 min-w-11"
+    className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl inline-flex items-center justify-center min-h-[44px] min-w-[44px]"
     title={title}
     aria-label={title}
     onClick={(e) => {
@@ -200,16 +200,22 @@ export default function Home() {
     });
 
     const updateTime = () => {
-      if (document.hidden) return; // Skip update when page is hidden
       const formattedTime = formatter.format(new Date());
       setCurrentTime(formattedTime);
     };
 
     updateTime(); // Initial call
-    const interval = setInterval(updateTime, 1000);
+    let interval = setInterval(updateTime, 1000);
 
     const handleVisibilityChange = () => {
-      if (!document.hidden) updateTime(); // Update immediately when visible
+      if (document.hidden) {
+        // Pause interval when page is hidden
+        clearInterval(interval);
+      } else {
+        // Restart interval when page becomes visible
+        updateTime(); // Update immediately
+        interval = setInterval(updateTime, 1000);
+      }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -599,7 +605,7 @@ export default function Home() {
         ></div>
 
         <div
-          className="absolute -bottom-24 -right-24 h-112 w-112 rounded-full bg-cyan-400/20 blur-3xl parallax-layer pointer-events-none hidden md:block"
+          className="absolute -bottom-24 -right-24 h-[28rem] w-[28rem] rounded-full bg-cyan-400/20 blur-3xl parallax-layer pointer-events-none hidden md:block"
           data-depth="0.25"
         ></div>
 
@@ -611,14 +617,14 @@ export default function Home() {
 
         {/* Cyan glow blobs */}
         <div className="absolute -top-24 -left-24 h-72 w-72 rounded-full bg-cyan-400/20 blur-3xl pointer-events-none"></div>
-        <div className="absolute -bottom-24 -right-24 h-112 w-112 rounded-full bg-cyan-400/20 blur-3xl pointer-events-none"></div>
+        <div className="absolute -bottom-24 -right-24 h-[28rem] w-[28rem] rounded-full bg-cyan-400/20 blur-3xl pointer-events-none"></div>
 
         {/* Content */}
         <div className="relative scanlines">
           <div className="mx-auto max-w-6xl px-6 pt-8 sm:pt-12 lg:pt-16 pb-2 sm:pb-4 lg:pb-6">
             {/* Profile Image - Mobile First */}
             <div className="flex justify-center mb-8 lg:hidden">
-              <div className="profile-image-container w-40 h-40 sm:w-50 sm:h-50">
+              <div className="profile-image-container w-40 h-40 sm:w-48 sm:h-48">
                 <Image
                   src="/profile.jpg"
                   alt="devakesu Profile"

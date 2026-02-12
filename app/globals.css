@@ -617,14 +617,18 @@ body {
 /* ========================= */
 .profile-image-container {
   position: relative;
-  width: 200px;
-  height: 200px;
   border: 2px solid #00ffff;
   border-radius: 4px;
   padding: 8px;
   background: #0a0a0a;
   box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
   transition: all 0.3s ease;
+}
+
+/* Default size when no Tailwind size utilities are present */
+.profile-image-container:not([class*='w-']):not([class*='h-']) {
+  width: 200px;
+  height: 200px;
 }
 
 .profile-image-container:hover {
@@ -666,8 +670,9 @@ body {
   filter: grayscale(0%) contrast(1.2);
 }
 
+/* Desktop size for containers without Tailwind utilities */
 @media (min-width: 1024px) {
-  .profile-image-container {
+  .profile-image-container:not([class*='w-']):not([class*='h-']) {
     width: 180px;
     height: 180px;
   }
