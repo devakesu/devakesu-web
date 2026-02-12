@@ -577,7 +577,6 @@ export default function Home() {
         el.style.transition = 'none';
         el.style.opacity = '1';
         el.style.transform = 'none';
-        el.classList.remove('reveal');
         el.classList.add('visible');
       });
       return undefined;
