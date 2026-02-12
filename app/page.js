@@ -200,6 +200,8 @@ export default function Home() {
     });
 
     const updateTime = () => {
+      // Guard against race conditions where interval fires while page is hidden
+      if (document.hidden) return;
       const formattedTime = formatter.format(new Date());
       setCurrentTime(formattedTime);
     };
