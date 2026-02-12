@@ -51,11 +51,11 @@ function MarkdownContent({ content }) {
   };
 
   const processed = content.split('\n').map(processLine).filter(Boolean);
-  
+
   // Group consecutive list items into <ul> blocks
   const elements = [];
   let currentList = [];
-  
+
   processed.forEach((item) => {
     if (item.type === 'li') {
       currentList.push(item);
@@ -73,7 +73,7 @@ function MarkdownContent({ content }) {
         );
         currentList = [];
       }
-      
+
       // Add the non-list element
       if (item.type === 'h3') {
         elements.push(
@@ -83,7 +83,10 @@ function MarkdownContent({ content }) {
         );
       } else if (item.type === 'h4') {
         elements.push(
-          <h4 key={item.index} className="text-base font-semibold text-neutral-200 first:mt-0 mt-5 mb-2">
+          <h4
+            key={item.index}
+            className="text-base font-semibold text-neutral-200 first:mt-0 mt-5 mb-2"
+          >
             {item.content}
           </h4>
         );
@@ -96,7 +99,7 @@ function MarkdownContent({ content }) {
       }
     }
   });
-  
+
   // Handle any remaining list items at the end
   if (currentList.length > 0) {
     elements.push(
@@ -109,7 +112,7 @@ function MarkdownContent({ content }) {
       </ul>
     );
   }
-  
+
   return <>{elements}</>;
 }
 

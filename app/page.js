@@ -561,7 +561,7 @@ export default function Home() {
     if (typeof window === 'undefined') return undefined;
 
     const revealItems = document.querySelectorAll('.reveal');
-    
+
     if (!revealItems.length) return undefined;
 
     if ('IntersectionObserver' in window) {
