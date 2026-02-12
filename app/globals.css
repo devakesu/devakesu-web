@@ -69,6 +69,25 @@ body {
   font-family: var(--font-space-grotesk, 'Space Grotesk', system-ui, sans-serif);
 }
 
+/* Mobile performance optimizations */
+@media (pointer: coarse) {
+  /* Reduce animation complexity on touch devices */
+  .glitch::before,
+  .glitch::after {
+    animation-duration: 3s;
+  }
+
+  .vhs-flicker {
+    animation: none;
+    filter: brightness(1) contrast(1);
+  }
+
+  .scanlines::after {
+    animation: none;
+    opacity: 0.08;
+  }
+}
+
 /* ========================= */
 /* 1) GLITCH & FLICKER EFFECT */
 /* ========================= */
