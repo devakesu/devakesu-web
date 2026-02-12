@@ -206,18 +206,18 @@ export default function Home() {
       setCurrentTime(formattedTime);
     };
 
-    const intervalRef = { current: null };
+    let intervalId = null;
 
     const startInterval = () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
+      if (intervalId !== null) clearInterval(intervalId);
       updateTime(); // Update immediately
-      intervalRef.current = setInterval(updateTime, 1000);
+      intervalId = setInterval(updateTime, 1000);
     };
 
     const stopInterval = () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
+      if (intervalId !== null) {
+        clearInterval(intervalId);
+        intervalId = null;
       }
     };
 
