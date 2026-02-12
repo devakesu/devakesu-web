@@ -4,6 +4,7 @@ import { JetBrains_Mono, Space_Grotesk } from 'next/font/google';
 import { headers } from 'next/headers';
 import { isAnalyticsEnabled } from '@/lib/analytics-config';
 import Analytics from '@/components/Analytics';
+import ErrorHandler from '@/components/ErrorHandler';
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
@@ -207,6 +208,7 @@ export default async function RootLayout({ children }) {
       data-scroll-behavior="smooth"
     >
       <body className="ambient-noise">
+        <ErrorHandler />
         {isAnalyticsEnabled() && <Analytics />}
         {children}
         <Script src="/js/cursor.js" strategy="afterInteractive" nonce={nonce} />
