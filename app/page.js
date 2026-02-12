@@ -564,9 +564,12 @@ export default function Home() {
 
     if (!revealItems.length) return undefined;
 
-    // Check if user prefers reduced motion
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // Check if user prefers reduced motion (guard matchMedia for older/test environments)
+    let prefersReducedMotion = false;
 
+    if (typeof window.matchMedia === 'function') {
+      prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    }
     // If reduced motion is preferred, immediately show all elements
     if (prefersReducedMotion) {
       revealItems.forEach((el) => el.classList.add('visible'));
