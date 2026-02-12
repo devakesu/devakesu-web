@@ -24,7 +24,7 @@ export function proxy(request) {
 
   const cspDirectives = [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' https://ajax.cloudflare.com 'sha256-OBTN3RiyCV4Bq7dFqZ5a2pAXjnCcCYeTJMO2I/LYKeo=' 'sha256-wCEBBZjyyenUYTwHgORDLdQV2Xz2GaiyYNETH13HKEc=' 'sha256-SHydTPg9eI7buFL4QcwaXLxh0QCRsIZvkcw9VmBfxYQ=' 'sha256-X7b+vEZ3YLsYQTYy1nSSwU8bZahGVKYk8gpJBOQBnC8=' 'sha256-oUFNo4QOSgVlhumjnTsP7sKEcvemInoVC0A6V5EAwUY=' 'sha256-Vr4boE1UMY9Pgaw9cFLBOiSEl2EpWw/NMlrBNcbsPN4=' 'sha256-oAdjtc3gkMsbXznOG367hb/FfPEWtOqVdYHmteM186o=' 'sha256-H8bHfyf6h1r2n89JsxIP+YztEGbJBdy8rNCsU5NVR4o=' 'sha256-fodWrcTASLzXsipMAHm3aa4RPWW4zL8EZfPSWp5PbPg='`,
+    `script-src 'self' 'nonce-${nonce}'`,
     `style-src 'self' 'nonce-${nonce}' 'unsafe-hashes' 'sha256-zlqnbDt84zf1iSefLU/ImC54isoprH/MRiVZGskwexk=' https://fonts.googleapis.com`,
     "style-src-attr 'self' 'unsafe-inline'",
     "font-src 'self' https://fonts.gstatic.com data:",
