@@ -570,9 +570,16 @@ export default function Home() {
     if (typeof window.matchMedia === 'function') {
       prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     }
-    // If reduced motion is preferred, immediately show all elements
+    // If reduced motion is preferred, immediately show all elements without animating
     if (prefersReducedMotion) {
-      revealItems.forEach((el) => el.classList.add('visible'));
+      revealItems.forEach((el) => {
+        // Disable transitions and apply final state to respect reduced motion
+        el.style.transition = 'none';
+        el.style.opacity = '1';
+        el.style.transform = 'none';
+        el.classList.remove('reveal');
+        el.classList.add('visible');
+      });
       return undefined;
     }
 
