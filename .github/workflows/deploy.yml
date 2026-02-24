@@ -95,6 +95,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      packages: read
     steps:
       # 🛡️ HARDEN RUNNER: Monitor network traffic
       - name: Harden Runner
@@ -116,6 +117,7 @@ jobs:
           format: 'table'
           exit-code: '1'
           severity: 'CRITICAL,HIGH'
+          github-pat: ${{ secrets.GITHUB_TOKEN }}
 
   # ------------------------------------------------------------------
   # JOB 3: BUILD, PUSH & SIGN DOCKER IMAGE
