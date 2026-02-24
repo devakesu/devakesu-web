@@ -1,9 +1,31 @@
 version: 2
 updates:
-  # Enable version updates for npm
-  - package-ecosystem: "npm"
-    # Look for `package.json` and `lock` files in the `root` directory
-    directory: "/"
-    # Check the npm registry for updates every day (weekdays)
+  # npm dependency updates
+  - package-ecosystem: 'npm'
+    directory: '/'
     schedule:
-      interval: "daily"
+      interval: 'weekly'
+      day: 'monday'
+    groups:
+      all-dependencies:
+        update-types:
+          - 'minor'
+          - 'patch'
+    ignore:
+      # Keep eslint pinned at v9 — v10 breaks eslint-config-next
+      - dependency-name: 'eslint'
+        versions: ['>= 10']
+    open-pull-requests-limit: 10
+
+  # GitHub Actions version updates
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+    groups:
+      all-actions:
+        update-types:
+          - 'minor'
+          - 'patch'
+    open-pull-requests-limit: 5

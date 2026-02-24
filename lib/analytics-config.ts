@@ -9,7 +9,7 @@
  * Accepts common truthy values: 'true', '1', 'yes', 'y', 'on', 'enable', 'enabled' (case-insensitive).
  * @returns {boolean} True if analytics is enabled, false otherwise
  */
-export function isAnalyticsEnabled() {
+export function isAnalyticsEnabled(): boolean {
   const rawValue = process.env.NEXT_PUBLIC_ANALYTICS_ENABLED;
 
   if (rawValue === undefined || rawValue === null) {

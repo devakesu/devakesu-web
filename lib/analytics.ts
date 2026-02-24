@@ -7,11 +7,24 @@
  * Check if Google Analytics is properly configured
  * @returns {boolean} true if GA_MEASUREMENT_ID and GA_API_SECRET are both set
  */
-export function isAnalyticsConfigured() {
+export function isAnalyticsConfigured(): boolean {
   return !!(process.env.GA_MEASUREMENT_ID && process.env.GA_API_SECRET);
 }
 
-export async function sendAnalyticsEvent(params) {
+export interface AnalyticsEventParams {
+  eventName?: string;
+  pageLocation?: string;
+  pageTitle?: string;
+  referrer?: string;
+  clientId?: string;
+  sessionId?: string;
+  engagementTime?: number;
+  customParams?: Record<string, string | number | boolean | null>;
+  userAgent?: string;
+  clientIp?: string;
+}
+
+export async function sendAnalyticsEvent(params: AnalyticsEventParams): Promise<void> {
   if (!isAnalyticsConfigured()) {
     // Analytics not configured - skip silently
     return;
@@ -45,7 +58,7 @@ export async function sendAnalyticsEvent(params) {
   try {
     // Build Measurement Protocol endpoint with optional client IP override
     let endpoint = `https://www.google-analytics.com/mp/collect?measurement_id=${measurementId}&api_secret=${apiSecret}`;
-    
+
     // Forward client IP to Google Analytics for accurate geolocation
     // Only include if explicitly provided (respects privacy settings)
     if (params.clientIp) {
@@ -53,10 +66,10 @@ export async function sendAnalyticsEvent(params) {
     }
 
     // Build headers, forwarding client User-Agent when available
-    const headers = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
-    
+
     // Forward User-Agent to Google Analytics for accurate device/browser detection
     // Only include if explicitly provided (respects privacy settings)
     if (params.userAgent) {
@@ -77,12 +90,12 @@ export async function sendAnalyticsEvent(params) {
   }
 }
 
-function generateClientId() {
+function generateClientId(): string {
   // Generate a random client ID in GA format: timestamp.random
   return `${Date.now()}.${Math.random().toString(36).substring(2, 15)}`;
 }
 
-export function getClientId(request) {
+export function getClientId(request: Request): string {
   const cookies = request.headers.get('cookie') || '';
 
   // Prefer a custom first-party tracking cookie (set by the application)
@@ -101,20 +114,20 @@ export function getClientId(request) {
   return generateClientId();
 }
 
-export function getSessionId(request) {
+export function getSessionId(request: Request): string {
   // Try to get session ID from cookie
   const cookies = request?.headers?.get('cookie') || '';
   const sessionMatch = cookies.match(/ga_session_id=([^;]+)(?:;|$)/);
-  
+
   if (sessionMatch) {
     return sessionMatch[1];
   }
-  
+
   // Generate a random, opaque session ID
   return generateSessionId();
 }
 
-function generateSessionId() {
+function generateSessionId(): string {
   // Generate a (best-effort) cryptographically secure random session ID
   if (typeof crypto !== 'undefined') {
     if (typeof crypto.randomUUID === 'function') {
@@ -125,7 +138,7 @@ function generateSessionId() {
     if (typeof crypto.getRandomValues === 'function') {
       const array = new Uint8Array(16);
       crypto.getRandomValues(array);
-      return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+      return Array.from(array, (byte) => byte.toString(16).padStart(2, '0')).join('');
     }
   }
 

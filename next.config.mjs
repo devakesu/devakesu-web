@@ -6,6 +6,24 @@ const nextConfig = {
   output: 'standalone',
 
   async headers() {
+    const isProduction = process.env.NODE_ENV === 'production';
+    const devNoCacheHeaders = isProduction
+      ? []
+      : [
+          {
+            key: 'Cache-Control',
+            value: 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+          },
+          {
+            key: 'Pragma',
+            value: 'no-cache',
+          },
+          {
+            key: 'Expires',
+            value: '0',
+          },
+        ];
+
     // Define security headers common to all environments
     const securityHeaders = [
       {
@@ -33,7 +51,7 @@ const nextConfig = {
     ];
 
     // Only add HSTS in production to prevent local SSL errors
-    if (process.env.NODE_ENV === 'production') {
+    if (isProduction) {
       securityHeaders.push({
         key: 'Strict-Transport-Security',
         value: 'max-age=31536000; includeSubDomains; preload',
@@ -43,16 +61,14 @@ const nextConfig = {
     return [
       {
         source: '/:path*',
-        headers: securityHeaders,
+        headers: [...securityHeaders, ...devNoCacheHeaders],
       },
       {
         source: '/js/:path*',
         headers: [
           {
             key: 'Cache-Control',
-            // Reduced from 1 year to 1 hour because JS files are not content-hashed
-            // and browsers need to pick up updates without waiting for cache expiration
-            value: 'public, max-age=3600',
+            value: isProduction ? 'public, max-age=3600' : 'no-store',
           },
         ],
       },
@@ -63,10 +79,7 @@ const nextConfig = {
         headers: [
           {
             key: 'Cache-Control',
-            value:
-              process.env.NODE_ENV === 'production'
-                ? 'public, max-age=300, must-revalidate'
-                : 'no-store',
+            value: isProduction ? 'public, max-age=300, must-revalidate' : 'no-store',
           },
         ],
       },
@@ -76,7 +89,7 @@ const nextConfig = {
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=2592000',
+            value: isProduction ? 'public, max-age=2592000' : 'no-store',
           },
         ],
       },
@@ -87,7 +100,7 @@ const nextConfig = {
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
+            value: isProduction ? 'public, max-age=31536000, immutable' : 'no-store',
           },
         ],
       },
@@ -99,7 +112,7 @@ const nextConfig = {
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=3600',
+            value: isProduction ? 'public, max-age=3600' : 'no-store',
           },
         ],
       },
