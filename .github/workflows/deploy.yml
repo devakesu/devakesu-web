@@ -108,6 +108,8 @@ jobs:
       # 🔍 TRIVY: Scan for known vulnerabilities in dependencies
       - name: Run Trivy Vulnerability Scanner
         uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8 # v0.33.1
+        env:
+          TRIVY_DB_REPOSITORY: ghcr.io/aquasec/trivy-db:2
         with:
           scan-type: 'fs'
           ignore-unfixed: true
