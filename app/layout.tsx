@@ -125,14 +125,21 @@ export const metadata = {
     'recycling',
     'inclusivity',
   ],
-  authors: [{ name: 'Devanarayanan (Kesu)', url: 'https://devakesu.com' }],
-  creator: 'Devanarayanan',
-  publisher: 'Devanarayanan',
+  authors: [{ name: "Devanarayanan (Kesu)", url: "https://devakesu.com" }],
+  creator: "Devanarayanan",
+  publisher: "Devanarayanan",
+  referrer: "origin-when-cross-origin",
+
+  alternates: {
+    canonical: "https://devakesu.com",
+  },
 
   // Robots & Indexing
   robots: {
     index: true,
     follow: true,
+    nocache: false,
+    noimageindex: false,
     googleBot: {
       index: true,
       follow: true,
@@ -155,18 +162,21 @@ export const metadata = {
         url: '/profile.jpg',
         width: 1200,
         height: 630,
-        alt: 'devakesu - Portfolio',
+        alt: "devakesu - Portfolio",
+        type: "image/jpeg",
       },
     ],
   },
 
   // Twitter Card
   twitter: {
-    card: 'summary_large_image',
-    title: 'devakesu - Devanarayanan',
-    description: 'Where code meets conscience. Disciplined chaos meets brutalist design.',
-    creator: '@devakesu',
-    images: ['/profile.jpg'],
+    card: "summary_large_image",
+    title: "devakesu - Devanarayanan",
+    description:
+      "Where code meets conscience. Disciplined chaos meets brutalist design.",
+    creator: "@devakesu",
+    site: "@devakesu",
+    images: [{ url: "/profile.jpg", alt: "devakesu - Devanarayanan portfolio" }],
   },
 
   // Additional Meta
@@ -177,16 +187,10 @@ export const metadata = {
 
   // Icons & Manifest
   icons: {
-    icon: [{ url: '/favicon.svg', type: 'image/svg+xml' }],
-    // TODO: Create apple-touch-icon.png (180x180) - iOS requires PNG for home screen icons
-    // apple: [{ url: '/apple-touch-icon.png', type: 'image/png', sizes: '180x180' }],
+    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+    shortcut: [{ url: '/favicon.svg', type: 'image/svg+xml' }],
+    apple: [{ url: '/apple-touch-icon.png', type: 'image/png', sizes: '180x180' }],
   },
-
-  // Verification (add when you set these up)
-  // verification: {
-  //   google: "your-google-verification-code",
-  //   yandex: "your-yandex-verification-code",
-  // },
 
   // Other
   formatDetection: {
