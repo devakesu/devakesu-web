@@ -7,22 +7,6 @@ const nextConfig = {
 
   async headers() {
     const isProduction = process.env.NODE_ENV === 'production';
-    const devNoCacheHeaders = isProduction
-      ? []
-      : [
-          {
-            key: 'Cache-Control',
-            value: 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
-          },
-          {
-            key: 'Pragma',
-            value: 'no-cache',
-          },
-          {
-            key: 'Expires',
-            value: '0',
-          },
-        ];
 
     // Define security headers common to all environments
     const securityHeaders = [
@@ -61,7 +45,7 @@ const nextConfig = {
     return [
       {
         source: '/:path*',
-        headers: [...securityHeaders, ...devNoCacheHeaders],
+        headers: [...securityHeaders],
       },
       {
         source: '/js/:path*',
