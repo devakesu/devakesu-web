@@ -155,7 +155,8 @@ devakesu-web/
 ├── proxy.ts                      # CSP middleware with per-request nonces
 ├── tsconfig.json                 # TypeScript configuration
 ├── tailwind.config.js            # Tailwind CSS configuration
-├── lighthouserc.json             # Lighthouse CI thresholds
+├── lighthouserc.json             # Lighthouse CI thresholds (desktop)
+├── lighthouserc.mobile.json      # Lighthouse CI thresholds (mobile)
 ├── package.json                  # Dependencies & scripts
 ├── SECURITY.md                   # Security policy & reporting
 ├── .env.example                  # Environment variable template

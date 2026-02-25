@@ -74,12 +74,21 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Run Lighthouse CI
+      - name: Run Lighthouse CI (desktop)
         uses: treosh/lighthouse-ci-action@2f8dda6cf4de7d73b29853c3f29e73a01e297bd8 # v12.1.0
         with:
           configPath: ./lighthouserc.json
           uploadArtifacts: true
           temporaryPublicStorage: true
+          artifactName: lighthouse-results-desktop
+
+      - name: Run Lighthouse CI (mobile)
+        uses: treosh/lighthouse-ci-action@2f8dda6cf4de7d73b29853c3f29e73a01e297bd8 # v12.1.0
+        with:
+          configPath: ./lighthouserc.mobile.json
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+          artifactName: lighthouse-results-mobile
 
   # ------------------------------------------------------------------
   # JOB 2: SECURITY AUDIT (SAST + SCA)
