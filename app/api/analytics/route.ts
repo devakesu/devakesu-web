@@ -1,5 +1,10 @@
-import { NextResponse } from 'next/server';
-import { sendAnalyticsEvent, getClientId, getSessionId, isAnalyticsConfigured } from '@/lib/analytics';
+import { NextRequest, NextResponse } from 'next/server';
+import {
+  sendAnalyticsEvent,
+  getClientId,
+  getSessionId,
+  isAnalyticsConfigured,
+} from '@/lib/analytics';
 import { isIP } from 'node:net';
 
 // Module-level flag to prevent log flooding during misconfiguration
@@ -26,7 +31,12 @@ let hasLoggedProdIpWarning = false;
 //
 // For single-instance deployments (e.g., traditional VPS, single Docker container),
 // this in-memory approach is sufficient and performant.
-const rateLimitMap = new Map();
+interface RateLimitRecord {
+  count: number;
+  resetTime: number;
+}
+
+const rateLimitMap = new Map<string, RateLimitRecord>();
 const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
 const RATE_LIMIT_MAX_REQUESTS = 60; // 60 requests per minute per IP
 const RATE_LIMIT_MAX_REQUESTS_UNKNOWN = 10; // Stricter limit for unknown IPs
@@ -40,7 +50,7 @@ const UNKNOWN_IP_KEY = '__unknown__'; // Special key for requests without valid 
  * @param {Map} map - The rate limit map
  * @param {number} targetSize - Target size to reduce the map to
  */
-function evictOldestEntries(map, targetSize) {
+function evictOldestEntries(map: Map<string, RateLimitRecord>, targetSize: number): void {
   const excess = map.size - targetSize;
   if (excess <= 0) return;
 
@@ -55,7 +65,7 @@ function evictOldestEntries(map, targetSize) {
   }
 }
 
-function checkRateLimit(ip, isUnknown = false) {
+function checkRateLimit(ip: string, isUnknown = false): boolean {
   const now = Date.now();
   const record = rateLimitMap.get(ip);
   const maxRequests = isUnknown ? RATE_LIMIT_MAX_REQUESTS_UNKNOWN : RATE_LIMIT_MAX_REQUESTS;
@@ -66,7 +76,7 @@ function checkRateLimit(ip, isUnknown = false) {
       count: 1,
       resetTime: now + RATE_LIMIT_WINDOW_MS,
     });
-    
+
     // Incremental cleanup: remove a limited number of expired entries per request
     if (rateLimitMap.size > MAX_MAP_SIZE) {
       let cleaned = 0;
@@ -79,13 +89,13 @@ function checkRateLimit(ip, isUnknown = false) {
           }
         }
       }
-      
+
       // Hard cap: if still over limit after cleanup, evict oldest entries
       if (rateLimitMap.size > MAX_MAP_SIZE) {
         evictOldestEntries(rateLimitMap, MAX_MAP_SIZE);
       }
     }
-    
+
     return true;
   }
 
@@ -99,71 +109,71 @@ function checkRateLimit(ip, isUnknown = false) {
 
 /**
  * Extracts the client IP address from request headers.
- * 
+ *
  * DEPLOYMENT ARCHITECTURE ASSUMPTIONS:
  * This function prioritizes headers in the following order, which assumes a specific deployment setup:
  * 1. cf-connecting-ip (Cloudflare CDN) - Most trusted when behind Cloudflare
  * 2. x-real-ip (nginx/Apache reverse proxy) - Common for traditional reverse proxies
  * 3. x-forwarded-for (various proxies/load balancers) - Takes first IP in chain
- * 
+ *
  * CONFIGURATION NOTES:
  * - If NOT behind Cloudflare: Consider prioritizing x-real-ip or x-forwarded-for
  * - Behind AWS ALB/ELB: x-forwarded-for is the standard header
  * - Behind Google Cloud Load Balancer: x-forwarded-for is used
  * - Behind Azure Front Door: x-azure-clientip or x-forwarded-for
- * 
+ *
  * The current order assumes Cloudflare as the primary CDN. If your deployment differs,
  * you can modify the priority order in this function, or consider making it configurable
  * via an environment variable (e.g., PRIMARY_IP_HEADER=x-real-ip) for better flexibility
  * across different deployment architectures without code changes.
- * 
+ *
  * SECURITY WARNING:
  * These headers can be spoofed if not properly configured at the reverse proxy level.
  * Ensure your reverse proxy strips/overwrites these headers from client requests.
- * 
+ *
  * DEVELOPMENT TESTING:
  * In development mode, set TEST_CLIENT_IP environment variable to test IP-based logic
  * with a specific IP address (e.g., TEST_CLIENT_IP=203.0.113.45).
- * 
+ *
  * @param {Headers} headerList - The Headers object from the request
  * @returns {string|null} The client IP address or null if it cannot be determined
  */
-function getClientIp(headerList) {
-  const cf = headerList.get("cf-connecting-ip")?.trim();
+function getClientIp(headerList: Headers): string | null {
+  const cf = headerList.get('cf-connecting-ip')?.trim();
   if (cf && isIP(cf)) return cf;
 
-  const realIp = headerList.get("x-real-ip")?.trim();
+  const realIp = headerList.get('x-real-ip')?.trim();
   if (realIp && isIP(realIp)) return realIp;
 
-  const forwarded = headerList.get("x-forwarded-for");
-  const forwardedIp = forwarded?.split(",")[0]?.trim();
+  const forwarded = headerList.get('x-forwarded-for');
+  const forwardedIp = forwarded?.split(',')[0]?.trim();
   if (forwardedIp && isIP(forwardedIp)) return forwardedIp;
 
   // In development, allow testing with a specific IP via environment variable
   // SECURITY NOTE: NODE_ENV should be set securely in deployment configuration
   // to prevent accidental exposure of development-only behavior in production
-  if (process.env.NODE_ENV === "development") {
+  if (process.env.NODE_ENV === 'development') {
     const testIp = process.env.TEST_CLIENT_IP;
-    
+
     // Log warning once per server start to make it prominent but avoid spam
     if (!hasLoggedDevIpWarning) {
       hasLoggedDevIpWarning = true;
       console.warn(
-        "\n" +
-        "═══════════════════════════════════════════════════════════════════════\n" +
-        "⚠️  DEVELOPMENT MODE: Client IP Detection\n" +
-        "═══════════════════════════════════════════════════════════════════════\n" +
-        "No IP forwarding headers found. This affects IP-based security features\n" +
-        "such as rate limiting, geolocation, and audit logging.\n\n" +
-        "To test real IP logic in development:\n" +
-        "  1. Set TEST_CLIENT_IP environment variable (e.g., TEST_CLIENT_IP=203.0.113.45)\n" +
-        "  2. Or send x-real-ip or cf-connecting-ip headers in your requests\n" +
-        `\nCurrent fallback: ${testIp || "127.0.0.1"}\n` +
-        "═══════════════════════════════════════════════════════════════════════\n"
+        '\n' +
+          '═══════════════════════════════════════════════════════════════════════\n' +
+          '⚠️  DEVELOPMENT MODE: Client IP Detection\n' +
+          '═══════════════════════════════════════════════════════════════════════\n' +
+          'No IP forwarding headers found. This affects IP-based security features\n' +
+          'such as rate limiting, geolocation, and audit logging.\n\n' +
+          'To test real IP logic in development:\n' +
+          '  1. Set TEST_CLIENT_IP environment variable (e.g., TEST_CLIENT_IP=203.0.113.45)\n' +
+          '  2. Or send x-real-ip or cf-connecting-ip headers in your requests\n' +
+          `\nCurrent fallback: ${testIp || '127.0.0.1'}\n` +
+          '═══════════════════════════════════════════════════════════════════════\n'
       );
     }
-    
-    return testIp || "127.0.0.1";
+
+    return testIp || '127.0.0.1';
   }
 
   // In production, return null to signal that IP extraction failed
@@ -172,15 +182,15 @@ function getClientIp(headerList) {
   if (!hasLoggedProdIpWarning) {
     hasLoggedProdIpWarning = true;
     console.warn(
-      "[getClientIp] No IP forwarding headers found in production. " +
-      "Ensure reverse proxy is configured to set x-forwarded-for, x-real-ip, or cf-connecting-ip headers. " +
-      "Request will be rejected if IP is required for security checks."
+      '[getClientIp] No IP forwarding headers found in production. ' +
+        'Ensure reverse proxy is configured to set x-forwarded-for, x-real-ip, or cf-connecting-ip headers. ' +
+        'Request will be rejected if IP is required for security checks.'
     );
   }
   return null;
 }
 
-export async function POST(request) {
+export async function POST(request: NextRequest) {
   try {
     // Extract client IP using the priority-ordered header check
     // This replaces the old TRUST_PROXY-based logic with a more robust approach
@@ -208,7 +218,9 @@ export async function POST(request) {
     const referer = request.headers.get('referer');
 
     if (!origin && !referer) {
-      console.warn('Analytics request missing both Origin and Referer headers - rejecting non-browser request');
+      console.warn(
+        'Analytics request missing both Origin and Referer headers - rejecting non-browser request'
+      );
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -222,22 +234,25 @@ export async function POST(request) {
     // Origin/referer check to prevent cross-origin abuse
     // Validate against server-side allowlist instead of client-controlled Host header
     const allowedOrigin = process.env.NEXT_PUBLIC_SITE_URL;
-    
+
     // Pre-validate and parse the allowed origin configuration
-    let allowedUrl = null;
+    let allowedUrl: URL | null = null;
     if (allowedOrigin) {
       try {
         allowedUrl = new URL(allowedOrigin);
-      } catch (configError) {
+      } catch (configError: unknown) {
         // Misconfigured NEXT_PUBLIC_SITE_URL - log and reject
-        console.error('Invalid NEXT_PUBLIC_SITE_URL configuration:', allowedOrigin, configError.message);
+        const message = configError instanceof Error ? configError.message : String(configError);
+        console.error('Invalid NEXT_PUBLIC_SITE_URL configuration:', allowedOrigin, message);
         return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
       }
     } else if (process.env.NODE_ENV === 'production') {
       // Missing NEXT_PUBLIC_SITE_URL in production is a server misconfiguration
       // Guard log to emit only once per process to prevent log flooding
       if (!hasLoggedMissingUrl) {
-        console.error('NEXT_PUBLIC_SITE_URL is not configured. Analytics origin validation cannot be performed.');
+        console.error(
+          'NEXT_PUBLIC_SITE_URL is not configured. Analytics origin validation cannot be performed.'
+        );
         hasLoggedMissingUrl = true;
       }
       return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
@@ -248,7 +263,7 @@ export async function POST(request) {
     // Note: Older browsers may not send these headers; validation is opt-in when present for defense-in-depth
     const secFetchSite = request.headers.get('sec-fetch-site');
     const secFetchMode = request.headers.get('sec-fetch-mode');
-    
+
     // If Sec-Fetch headers are present (modern browser), validate them
     if (secFetchSite !== null) {
       // Allow same-origin, same-site, and none (direct navigation)
@@ -258,7 +273,7 @@ export async function POST(request) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
       }
     }
-    
+
     // If Sec-Fetch-Mode is present, validate it's an appropriate mode for analytics
     if (secFetchMode !== null) {
       // Only allow modes typically used for legitimate fetch/navigation requests:
@@ -272,35 +287,39 @@ export async function POST(request) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
       }
     }
-    
+
     // Enforce same-origin policy
     const source = origin || referer;
     try {
-      const url = new URL(source);
-      
+      const url = new URL(source!);
+
       // In production, validate against NEXT_PUBLIC_SITE_URL
       // In development, allow localhost and 127.0.0.1 with common dev ports
-      const isDevelopmentLocal = process.env.NODE_ENV !== 'production' && 
+      const isDevelopmentLocal =
+        process.env.NODE_ENV !== 'production' &&
         (url.hostname === 'localhost' || url.hostname === '127.0.0.1') &&
-        (url.port === '3000' || url.port === '3001' || url.port === '' || url.port === '80' || url.port === '443');
-      
+        (url.port === '3000' ||
+          url.port === '3001' ||
+          url.port === '' ||
+          url.port === '80' ||
+          url.port === '443');
+
       // Compare full origin (protocol + host) to prevent http/https scheme mismatches
-      const isAllowed = 
-        (allowedUrl && url.origin === allowedUrl.origin) ||
-        isDevelopmentLocal;
-      
+      const isAllowed = (allowedUrl && url.origin === allowedUrl.origin) || isDevelopmentLocal;
+
       if (!isAllowed) {
         console.warn(
-          'Analytics request from unexpected origin:', 
-          source, 
-          'expected:', 
+          'Analytics request from unexpected origin:',
+          source,
+          'expected:',
           allowedOrigin || 'localhost:3000/3001'
         );
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
       }
-    } catch (e) {
+    } catch (e: unknown) {
       // Malformed origin/referer from client: treat as suspicious and block
-      console.warn('Analytics request with invalid origin/referer:', source, 'error:', e.message);
+      const message = e instanceof Error ? e.message : String(e);
+      console.warn('Analytics request with invalid origin/referer:', source, 'error:', message);
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -310,14 +329,20 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Content-Type must be application/json' }, { status: 400 });
     }
 
-    let body;
+    let body: Record<string, unknown>;
     try {
       body = await request.json();
-    } catch (parseError) {
+    } catch {
       return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 });
     }
 
-    const { eventName, pageLocation, pageTitle, referrer, customParams } = body;
+    const { eventName, pageLocation, pageTitle, referrer, customParams } = body as {
+      eventName: unknown;
+      pageLocation: unknown;
+      pageTitle: unknown;
+      referrer: unknown;
+      customParams: unknown;
+    };
 
     // Basic validation
     if (!eventName || typeof eventName !== 'string' || eventName.length > 100) {
@@ -338,27 +363,48 @@ export async function POST(request) {
 
     if (customParams !== undefined && customParams !== null) {
       if (typeof customParams !== 'object' || Array.isArray(customParams)) {
-        return NextResponse.json({ error: 'Invalid customParams: must be a plain object' }, { status: 400 });
+        return NextResponse.json(
+          { error: 'Invalid customParams: must be a plain object' },
+          { status: 400 }
+        );
       }
-      
-      const keys = Object.keys(customParams);
+
+      const params = customParams as Record<string, unknown>;
+      const keys = Object.keys(params);
       if (keys.length > 20) {
-        return NextResponse.json({ error: 'Invalid customParams: too many keys (max 20)' }, { status: 400 });
+        return NextResponse.json(
+          { error: 'Invalid customParams: too many keys (max 20)' },
+          { status: 400 }
+        );
       }
-      
+
       for (const key of keys) {
         if (typeof key !== 'string' || key.length > 100) {
-          return NextResponse.json({ error: 'Invalid customParams: key too long' }, { status: 400 });
+          return NextResponse.json(
+            { error: 'Invalid customParams: key too long' },
+            { status: 400 }
+          );
         }
-        
-        const value = customParams[key];
+
+        const value = params[key];
         const valueType = typeof value;
-        if (valueType !== 'string' && valueType !== 'number' && valueType !== 'boolean' && value !== null) {
-          return NextResponse.json({ error: 'Invalid customParams: values must be string/number/boolean/null' }, { status: 400 });
+        if (
+          valueType !== 'string' &&
+          valueType !== 'number' &&
+          valueType !== 'boolean' &&
+          value !== null
+        ) {
+          return NextResponse.json(
+            { error: 'Invalid customParams: values must be string/number/boolean/null' },
+            { status: 400 }
+          );
         }
-        
-        if (valueType === 'string' && value.length > 500) {
-          return NextResponse.json({ error: 'Invalid customParams: string value too long' }, { status: 400 });
+
+        if (valueType === 'string' && (value as string).length > 500) {
+          return NextResponse.json(
+            { error: 'Invalid customParams: string value too long' },
+            { status: 400 }
+          );
         }
       }
     }
@@ -370,7 +416,7 @@ export async function POST(request) {
     // Extract client context for forwarding to Google Analytics
     // This enables accurate device/browser/location attribution
     const userAgent = request.headers.get('user-agent') || undefined;
-    
+
     // Forward client IP to Google Analytics if it was successfully extracted
     // The IP was already extracted using getClientIp() which validates headers
     // and ensures we only forward IPs from trusted proxy headers
@@ -378,13 +424,13 @@ export async function POST(request) {
 
     // Send event to Google Analytics
     await sendAnalyticsEvent({
-      eventName,
-      pageLocation,
-      pageTitle,
-      referrer,
+      eventName: eventName as string,
+      pageLocation: pageLocation as string | undefined,
+      pageTitle: pageTitle as string | undefined,
+      referrer: referrer as string | undefined,
       clientId,
       sessionId,
-      customParams,
+      customParams: customParams as Record<string, string | number | boolean | null> | undefined,
       userAgent,
       clientIp,
     });

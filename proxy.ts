@@ -1,7 +1,7 @@
-// proxy.js
-import { NextResponse } from 'next/server';
+// proxy.ts
+import { NextRequest, NextResponse } from 'next/server';
 
-export function proxy(request) {
+export function proxy(request: NextRequest): NextResponse {
   // Generate a random nonce for each request with proper entropy (192 bits)
   const nonceArray = new Uint8Array(24);
   crypto.getRandomValues(nonceArray);

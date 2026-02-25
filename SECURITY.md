@@ -55,7 +55,7 @@ If you discover a security vulnerability, please report it responsibly:
 
 ### How to Report
 
-1. **Email**: fusion@devakesu.com
+1. **Email**: [fusion@devakesu.com](mailto:fusion@devakesu.com)
 2. **Subject**: Security Vulnerability Report
 3. **Include**:
    - Description of the vulnerability
@@ -148,5 +148,5 @@ We appreciate security researchers who responsibly disclose vulnerabilities.
 
 ---
 
-**Last Updated**: February 12, 2026  
-**Version**: 1.1.0
+**Last Updated**: February 25, 2026  
+**Version**: 1.1.1

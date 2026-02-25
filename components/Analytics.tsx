@@ -8,9 +8,9 @@ import { isAnalyticsEnabled } from '@/lib/analytics-config';
  * Client-side Analytics component that sends events via server-side API
  * This avoids CSP issues by not loading external scripts
  */
-export default function Analytics() {
+export default function Analytics(): null {
   const pathname = usePathname();
-  const lastTrackedPathnameRef = useRef(null);
+  const lastTrackedPathnameRef = useRef<string | null>(null);
 
   useEffect(() => {
     const trackPageView = async () => {
@@ -31,7 +31,7 @@ export default function Analytics() {
 
       try {
         lastTracked = sessionStorage.getItem(sessionKey);
-      } catch (e) {
+      } catch {
         // sessionStorage unavailable (privacy mode, disabled storage, etc.)
         // Fall back to ref-only de-duplication
       }
@@ -50,7 +50,7 @@ export default function Analytics() {
           if (lastPath === pathname && now - timestamp < 100) {
             return;
           }
-        } catch (e) {
+        } catch {
           // Invalid storage data, continue with tracking
         }
       }
@@ -63,7 +63,7 @@ export default function Analytics() {
 
       try {
         sessionStorage.setItem(sessionKey, JSON.stringify({ pathname, timestamp: now }));
-      } catch (e) {
+      } catch {
         // sessionStorage unavailable - continue without persisting
       }
 
@@ -97,8 +97,8 @@ export default function Analytics() {
  * Returns a stable trackEvent function reference via useCallback
  * When NEXT_PUBLIC_ANALYTICS_ENABLED is not truthy, returns a no-op function to avoid unnecessary API requests
  */
-export function useAnalytics() {
-  const trackEvent = useCallback(async (eventName, customParams = {}) => {
+export function useAnalytics(): { trackEvent: (eventName: string, customParams?: Record<string, string | number | boolean>) => Promise<void> } {
+  const trackEvent = useCallback(async (eventName: string, customParams: Record<string, string | number | boolean> = {}) => {
     // Short-circuit if analytics is disabled to avoid unnecessary API requests
     // Note: NEXT_PUBLIC_* env vars are replaced at build time, so this check is constant
     if (!isAnalyticsEnabled()) {

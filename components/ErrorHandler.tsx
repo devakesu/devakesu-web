@@ -9,7 +9,7 @@ import { useEffect } from 'react';
  */
 export default function ErrorHandler() {
   useEffect(() => {
-    const handleUnhandledRejection = (event) => {
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
       // Check if this is a "Connection closed" error from Next.js chunks
       if (event.reason?.message?.includes('Connection closed')) {
         // Prevent the error from being logged to console

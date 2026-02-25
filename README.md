@@ -2,7 +2,8 @@
 
 **Where code meets conscience.** A brutalist × cyberpunk portfolio built with Next.js 16.
 
-[![Security: SLSA Level 3](https://img.shields.io/badge/SLSA-Level%203-brightgreen)](https://slsa.dev)
+[![Version](https://img.shields.io/badge/version-1.1.1-cyan?logo=github)](package.json)
+[![Security: SLSA Level 3](https://img.shields.io/badge/SLSA-Level%203-brightgreen)](https://github.com/devakesu/devakesu-web/attestations)
 [![Security Scan: Trivy](https://img.shields.io/badge/Security-Trivy%20Scanned-blue)](.github/workflows/deploy.yml)
 [![Attestations](https://img.shields.io/badge/Attestations-Enabled-success)](https://github.com/devakesu/devakesu-web/attestations)
 [![Build Status](https://img.shields.io/badge/Build-Passing-success)](.github/workflows/deploy.yml)
@@ -11,13 +12,15 @@
 [![React](https://img.shields.io/badge/React-19.2-61DAFB?logo=react&logoColor=white)](https://react.dev)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.1.18-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
 [![Node.js](https://img.shields.io/badge/Node.js-20.x-339933?logo=node.js&logoColor=white)](https://nodejs.org)
-[![TypeScript](https://img.shields.io/badge/TypeScript-Ready-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![React Icons](https://img.shields.io/badge/React%20Icons-5.5-e91e63?logo=react&logoColor=white)](https://react-icons.github.io/react-icons/)
 
 ## ✨ Features
 
 ### 🎨 Design & UX
 
 - **Cyberpunk Aesthetic** - Glitch effects, VHS flicker, scanlines, neon glow
+- **Floating Background Icons** - Hardware, trading & physics icons layered at low opacity across the full page
 - **Interactive Elements** - Laser cursor, parallax scrolling, click burst animations
 - **Smooth Section Scrolling** - Ultra-smooth one-section-per-scroll navigation on desktop
 - **Haptic Feedback** - Mobile vibration on interactions
@@ -68,12 +71,13 @@
 ## 🛠️ Tech Stack
 
 - **Framework**: Next.js 16.1.6 (App Router)
+- **Language**: TypeScript 5.9 (strict mode, full coverage)
 - **Styling**: Tailwind CSS 4.1.18 (CSS-based configuration)
 - **Fonts**: Space Grotesk, JetBrains Mono
-- **Icons**: React Icons 5.5.0
+- **Icons**: React Icons 5.5.0 (hardware, trading, physics, social)
 - **Analytics**: Server-side Google Analytics (optional)
 - **Deployment**: Coolify (Self-hosted)
-- **CI/CD**: GitHub Actions with SLSA provenance
+- **CI/CD**: GitHub Actions with SLSA provenance & Lighthouse CI
 
 ---
 
@@ -114,24 +118,26 @@ npm start
 
 ## 📁 Project Structure
 
-```
+```text
 devakesu-web/
 ├── app/
 │   ├── api/
 │   │   └── analytics/
-│   │       └── route.js          # Server-side analytics API
+│   │       └── route.ts          # Server-side analytics API
 │   ├── legal/
-│   │   └── page.js               # Privacy & legal policies
-│   ├── page.js                   # Main portfolio page
-│   ├── layout.js                 # Root layout with fonts & scripts
+│   │   └── page.tsx              # Privacy & legal policies
+│   ├── page.tsx                  # Main portfolio page (Client Component)
+│   ├── layout.tsx                # Root layout with fonts & scripts
 │   ├── globals.css               # Global styles, animations & scroll config
-│   ├── not-found.js              # Custom 404 page
-│   └── favicon.svg               # Site icon (Next.js App Router)
+│   ├── not-found.tsx             # Custom 404 page
+│   └── sitemap.ts                # Dynamic XML sitemap
 ├── components/
-│   └── Analytics.js              # Client analytics component
+│   ├── Analytics.tsx             # Client analytics component
+│   └── ErrorHandler.tsx          # Global error boundary
 ├── lib/
-│   ├── analytics.js              # Analytics helper functions
-│   └── legal.js                  # Legal content (privacy, terms, cookies)
+│   ├── analytics.ts              # Analytics helper functions
+│   ├── analytics-config.ts       # Analytics configuration
+│   └── legal.ts                  # Legal content (privacy, terms, cookies)
 ├── public/
 │   ├── js/
 │   │   ├── cursor.js             # Laser cursor effect
@@ -146,8 +152,11 @@ devakesu-web/
 │       └── deploy.yml            # CI/CD pipeline with SLSA provenance
 ├── .vscode/                      # VSCode workspace settings
 ├── next.config.mjs               # Next.js configuration
-├── middleware.js                 # CSP middleware with nonce support
+├── proxy.ts                      # CSP middleware with per-request nonces
+├── tsconfig.json                 # TypeScript configuration
 ├── tailwind.config.js            # Tailwind CSS configuration
+├── lighthouserc.json             # Lighthouse CI thresholds (desktop)
+├── lighthouserc.mobile.json      # Lighthouse CI thresholds (mobile)
 ├── package.json                  # Dependencies & scripts
 ├── SECURITY.md                   # Security policy & reporting
 ├── .env.example                  # Environment variable template
@@ -198,7 +207,7 @@ devakesu-web/
 
 If you discover a security vulnerability in this project, please report it privately:
 
-- **Email**: fusion@devakesu.com
+- **Email**: [fusion@devakesu.com](mailto:fusion@devakesu.com)
 - **Subject**: Security Vulnerability Report
 - **See**: [SECURITY.md](SECURITY.md) for detailed reporting guidelines
 
@@ -373,10 +382,10 @@ This is a personal portfolio, but suggestions and bug reports are welcome!
 
 ## 📡 Contact
 
-**Devanarayanan (Kesu)**
+### Devanarayanan (Kesu)
 
 - 🌐 Website: [devakesu.com](https://devakesu.com)
-- 📧 Email: fusion@devakesu.com
+- 📧 Email: [fusion@devakesu.com](mailto:fusion@devakesu.com)
 - 💼 LinkedIn: [@devakesu](https://linkedin.com/in/devakesu)
 - 🐙 GitHub: [@devakesu](https://github.com/devakesu)
 - 📸 Instagram: [@deva.kesu](https://instagram.com/deva.kesu)
@@ -404,5 +413,5 @@ _Love is the only way to rescue humanity from all evils._
 
 ---
 
-**Last Updated**: February 12, 2026  
-**Version**: 1.1.0
+**Last Updated**: February 25, 2026  
+**Version**: 1.1.1

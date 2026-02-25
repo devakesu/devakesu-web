@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, type ReactNode } from 'react';
 import Link from 'next/link';
 import {
   PRIVACY_POLICY,
@@ -10,9 +10,15 @@ import {
   CONTACT_EMAIL,
 } from '@/lib/legal';
 
+interface ProcessedLine {
+  type: 'h3' | 'h4' | 'li' | 'p';
+  content: string;
+  index: number;
+}
+
 // Proper markdown to React component renderer
-function MarkdownContent({ content }) {
-  const processLine = (line, index) => {
+function MarkdownContent({ content }: { content: string }) {
+  const processLine = (line: string, index: number): ProcessedLine | null => {
     // Skip empty lines
     if (!line.trim()) return null;
 
@@ -50,11 +56,11 @@ function MarkdownContent({ content }) {
     };
   };
 
-  const processed = content.split('\n').map(processLine).filter(Boolean);
+  const processed = content.split('\n').map(processLine).filter((item): item is ProcessedLine => item !== null);
 
   // Group consecutive list items into <ul> blocks
-  const elements = [];
-  let currentList = [];
+  const elements: ReactNode[] = [];
+  let currentList: ProcessedLine[] = [];
 
   processed.forEach((item) => {
     if (item.type === 'li') {
@@ -117,8 +123,8 @@ function MarkdownContent({ content }) {
 }
 
 // Process inline markdown (bold, links, emails)
-function InlineMarkdown({ text }) {
-  const parts = [];
+function InlineMarkdown({ text }: { content?: never; text: string }) {
+  const parts: ReactNode[] = [];
   let lastIndex = 0;
 
   // Combined regex to match bold, links, and emails.
