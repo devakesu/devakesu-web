@@ -731,6 +731,13 @@ export default function Home() {
         return;
       }
 
+      const isDownKey = ["ArrowDown", "PageDown", " "].includes(event.key);
+      const isUpKey = ["ArrowUp", "PageUp"].includes(event.key);
+
+      if (!isDownKey && !isUpKey) {
+        return;
+      }
+
       // Ignore key events when focus is inside interactive/input elements
       const target = event.target;
 
@@ -748,18 +755,25 @@ export default function Home() {
         return;
       }
 
-      if (["ArrowDown", "PageDown", " "].includes(event.key)) {
+      // While animating, always block native keyboard scroll to avoid
+      // drifting between sections during smooth snap transitions.
+      if (isAnimatingRef.current) {
+        event.preventDefault();
+        return;
+      }
+
+      if (isDownKey) {
         if (canScrollWithinSection(1)) {
           return; // Allow native keyboard scroll within tall section
         }
         event.preventDefault();
-        if (!isAnimatingRef.current) scrollToSection(1);
-      } else if (["ArrowUp", "PageUp"].includes(event.key)) {
+        scrollToSection(1);
+      } else if (isUpKey) {
         if (canScrollWithinSection(-1)) {
           return;
         }
         event.preventDefault();
-        if (!isAnimatingRef.current) scrollToSection(-1);
+        scrollToSection(-1);
       }
     };
 
