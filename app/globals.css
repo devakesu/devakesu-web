@@ -4,8 +4,8 @@ html {
   scroll-behavior: smooth;
   scroll-padding-top: 0px;
   /* Improve mouse wheel scrolling smoothness */
-  overscroll-behavior-y: contain;
-  scroll-snap-type: y proximity;
+  overscroll-behavior: none;
+  scroll-snap-type: none;
   /* Mobile optimization */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
