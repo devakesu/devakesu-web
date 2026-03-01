@@ -28,8 +28,6 @@ import {
 import { FaXTwitter } from "react-icons/fa6";
 
 const SCROLL_LOCK_DURATION = 800;
-const TOUCH_THRESHOLD_PX = 25;
-const MIN_WHEEL_DELTA = 2;
 
 // Throttle utility for performance optimization
 const throttle = <T extends (...args: unknown[]) => void>(
@@ -45,21 +43,6 @@ const throttle = <T extends (...args: unknown[]) => void>(
     }
   };
 };
-// NOTE: Inline style attribute selectors (e.g., [style*="overflow-y: auto"]) are
-// whitespace- and order-sensitive and may miss valid inline style syntax variations
-// (e.g., "overflow-y:auto" without space, or multiple spaces). Scrollable elements
-// should preferably use data attributes or classes for reliable detection. The
-// fallback logic in scrollToSection only runs when no elements match SCROLLABLE_SELECTORS.
-const SCROLLABLE_SELECTORS = [
-  "[data-scrollable]",
-  ".overflow-y-auto",
-  ".overflow-y-scroll",
-  '[style*="overflow-y: auto"]',
-  '[style*="overflow-y: scroll"]',
-  '[style*="overflow: auto"]',
-  '[style*="overflow: scroll"]',
-].join(", ");
-
 // Helper function to scroll element into view on mobile after a delay
 const scrollIntoViewOnMobile = (elementId: string, delay = 300): void => {
   if (window.matchMedia("(max-width: 768px)").matches) {

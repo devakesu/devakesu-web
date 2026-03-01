@@ -12,9 +12,18 @@ updates:
           - 'minor'
           - 'patch'
     ignore:
-      # Keep eslint pinned at v9 — v10 breaks eslint-config-next
+      # Ignore eslint updates entirely
       - dependency-name: 'eslint'
-        versions: ['>= 10']
+        update-types:
+          - 'version-update:semver-major'
+          - 'version-update:semver-minor'
+          - 'version-update:semver-patch'
+      # Ignore minimatch updates entirely
+      - dependency-name: 'minimatch'
+        update-types:
+          - 'version-update:semver-major'
+          - 'version-update:semver-minor'
+          - 'version-update:semver-patch'
     open-pull-requests-limit: 10
 
   # GitHub Actions version updates
