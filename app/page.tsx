@@ -28,8 +28,6 @@ import {
 import { FaXTwitter } from "react-icons/fa6";
 
 const SCROLL_LOCK_DURATION = 800;
-const TOUCH_THRESHOLD_PX = 40;
-const MIN_WHEEL_DELTA = 2;
 
 // Throttle utility for performance optimization
 const throttle = <T extends (...args: unknown[]) => void>(
@@ -45,21 +43,6 @@ const throttle = <T extends (...args: unknown[]) => void>(
     }
   };
 };
-// NOTE: Inline style attribute selectors (e.g., [style*="overflow-y: auto"]) are
-// whitespace- and order-sensitive and may miss valid inline style syntax variations
-// (e.g., "overflow-y:auto" without space, or multiple spaces). Scrollable elements
-// should preferably use data attributes or classes for reliable detection. The
-// fallback logic in scrollToSection only runs when no elements match SCROLLABLE_SELECTORS.
-const SCROLLABLE_SELECTORS = [
-  "[data-scrollable]",
-  ".overflow-y-auto",
-  ".overflow-y-scroll",
-  '[style*="overflow-y: auto"]',
-  '[style*="overflow-y: scroll"]',
-  '[style*="overflow: auto"]',
-  '[style*="overflow: scroll"]',
-].join(", ");
-
 // Helper function to scroll element into view on mobile after a delay
 const scrollIntoViewOnMobile = (elementId: string, delay = 300): void => {
   if (window.matchMedia("(max-width: 768px)").matches) {
@@ -332,11 +315,15 @@ export default function Home() {
   const activeSectionIndexRef = useRef(0);
   const isAnimatingRef = useRef(false);
   const unlockTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const touchStartYRef = useRef<number | null>(null);
-  const touchStartXRef = useRef<number | null>(null);
-  const touchIsVerticalRef = useRef<boolean | null>(null);
-  const touchStartedWithinScrollableRef = useRef(false);
   const lastScrollTimeRef = useRef(0);
+  const wheelAccumulatorRef = useRef(0);
+  const wheelLockTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+  const scrollEndTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+  const isInertiaScrollingRef = useRef(false);
   const scrollTargetRef = useRef<string | null>(null);
 
   // Calculate age based on birth date (April 19)
@@ -506,8 +493,9 @@ export default function Home() {
   // Force section-by-section scroll with smooth snapping across input methods
   useEffect(() => {
     if (
-      !isSectionScrollEnabled || isCoarsePointer ||
-      typeof window === "undefined"
+      !isSectionScrollEnabled ||
+      typeof window === "undefined" ||
+      isCoarsePointer
     ) {
       return undefined;
     }
@@ -589,6 +577,32 @@ export default function Home() {
       activeSectionIndexRef.current = closestIndex;
     };
 
+    // Check if the current section is taller than the viewport and the user
+    // hasn't reached its edge in the given direction. If true, allow native
+    // (free) scrolling within the section instead of jumping to the next one.
+    const canScrollWithinSection = (direction: number): boolean => {
+      const currentSection = sections[activeSectionIndexRef.current];
+      if (!currentSection) return false;
+
+      const rect = currentSection.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      const tolerance = 5; // px — accounts for sub-pixel rendering
+
+      // Section fits within the viewport — no intra-section scroll needed
+      if (rect.height <= viewportHeight + tolerance) {
+        return false;
+      }
+
+      // Section is taller than viewport — check boundary
+      if (direction > 0) {
+        // Scrolling down: allow free scroll if section bottom is still below viewport
+        return rect.bottom > viewportHeight + tolerance;
+      } else {
+        // Scrolling up: allow free scroll if section top is still above viewport
+        return rect.top < -tolerance;
+      }
+    };
+
     const scrollToSection = (direction: number) => {
       // Prevent any scroll if we're already animating or scrolled too recently
       const now = Date.now();
@@ -609,43 +623,47 @@ export default function Home() {
       }
 
       lastScrollTimeRef.current = now;
-
-      // Reset scroll position of all scrollable elements in the target section
-      const targetSection = sections[nextIndex];
-      const scrollableElements = Array.from(
-        targetSection.querySelectorAll(SCROLLABLE_SELECTORS),
-      );
-      // Fallback: if no matching descendants, include the section itself if it is scrollable
-      if (
-        scrollableElements.length === 0 && isScrollableElement(targetSection)
-      ) {
-        scrollableElements.push(targetSection);
-      }
-      scrollableElements.forEach((el) => {
-        // Only reset if element has scrollable content (using same tolerance as isScrollableElement)
-        if (el.scrollHeight - el.clientHeight > 1) {
-          el.scrollTop = 0;
-        }
-      });
-
       isAnimatingRef.current = true;
-      sections[nextIndex].scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
       activeSectionIndexRef.current = nextIndex;
 
+      // Ensure the scroll feels smooth but strictly locks to 1 section
+      // using the document's scrolling element
+      const targetSection = sections[nextIndex];
+      const targetTop = targetSection.getBoundingClientRect().top +
+        window.scrollY;
+
+      window.scrollTo({
+        top: targetTop,
+        behavior: "smooth",
+      });
+
+      // Clear any existing timeout
       if (unlockTimeoutRef.current) {
         clearTimeout(unlockTimeoutRef.current);
       }
 
+      // Reset scroll tracking and allow next scroll after animation completes
       unlockTimeoutRef.current = setTimeout(() => {
         isAnimatingRef.current = false;
+        wheelAccumulatorRef.current = 0; // reset accumulator after animation
+        syncSectionIndex();
       }, SCROLL_LOCK_DURATION);
     };
 
     const handleWheel = (event: WheelEvent) => {
-      // Check if we're in a scrollable area first
+      // Setup scrolling ends detector to reset inertia blocking
+      if (scrollEndTimeoutRef.current) {
+        clearTimeout(scrollEndTimeoutRef.current);
+      }
+
+      // If we don't see wheel events for 150ms, assume the trackpad gesture/momentum has thoroughly ended
+      scrollEndTimeoutRef.current = setTimeout(() => {
+        isInertiaScrollingRef.current = false;
+        wheelAccumulatorRef.current = 0;
+      }, 150);
+
+      // Always prevent default native scroll immediately if we intend to handle it via snap
+      // but only if it's not a modifying shortcut or inside a scrollable div
       if (
         event.ctrlKey ||
         allowNativeScroll(event.target, event.deltaY > 0 ? 1 : -1)
@@ -653,23 +671,70 @@ export default function Home() {
         return;
       }
 
-      // Always prevent default for section scrolling, even when animating
+      const direction = event.deltaY > 0 ? 1 : -1;
+
+      // Allow free native scrolling within sections taller than the viewport
+      if (canScrollWithinSection(direction)) {
+        return;
+      }
+
+      // We are in snap-mode territory, immediately prevent native default scroll
+      // so trackpad inertia doesn't bleed into the actual page scroll
       event.preventDefault();
 
-      // Block scroll attempts while an animation is currently running
+      const now = Date.now();
+
+      // Block all hardware scroll attempts during animation
       if (isAnimatingRef.current) {
+        // Since we got an event during animation, extend the inertia block flag
+        // to prevent immediate skipping once the animation unlocks
+        isInertiaScrollingRef.current = true;
         return;
       }
 
-      if (Math.abs(event.deltaY) < MIN_WHEEL_DELTA) {
+      // If we are currently "coasting" (receiving inertia events from a previous swipe)
+      // or if we haven't crossed the time lock threshold, block the scroll
+      if (
+        isInertiaScrollingRef.current ||
+        now - lastScrollTimeRef.current < SCROLL_LOCK_DURATION
+      ) {
+        // Still trackpad coasting
+        isInertiaScrollingRef.current = true;
         return;
       }
 
-      scrollToSection(event.deltaY > 0 ? 1 : -1);
+      // Trackpads fire hundreds of tiny wheel events. We use an accumulator
+      // to ensure a deliberate swipe happens, ignoring delicate resting finger movements
+      wheelAccumulatorRef.current += event.deltaY;
+
+      if (wheelLockTimeoutRef.current) {
+        clearTimeout(wheelLockTimeoutRef.current);
+      }
+
+      // Accumulator reset for slow continuous touches vs rapid flicks
+      wheelLockTimeoutRef.current = setTimeout(() => {
+        wheelAccumulatorRef.current = 0;
+      }, 50);
+
+      // Require a larger accumulation for trackpads to trigger the next section
+      if (Math.abs(wheelAccumulatorRef.current) < 50) {
+        return;
+      }
+
+      // Mark that a heavy stroke happened, lock down further events as inertia
+      isInertiaScrollingRef.current = true;
+      scrollToSection(direction);
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.defaultPrevented) {
+        return;
+      }
+
+      const isDownKey = ["ArrowDown", "PageDown", " "].includes(event.key);
+      const isUpKey = ["ArrowUp", "PageUp"].includes(event.key);
+
+      if (!isDownKey && !isUpKey) {
         return;
       }
 
@@ -690,93 +755,26 @@ export default function Home() {
         return;
       }
 
-      if (["ArrowDown", "PageDown", " "].includes(event.key)) {
-        event.preventDefault();
-        if (!isAnimatingRef.current) scrollToSection(1);
-      } else if (["ArrowUp", "PageUp"].includes(event.key)) {
-        event.preventDefault();
-        if (!isAnimatingRef.current) scrollToSection(-1);
-      }
-    };
-
-    const resetTouchTracking = () => {
-      touchStartYRef.current = null;
-      touchStartXRef.current = null;
-      touchIsVerticalRef.current = null;
-    };
-
-    const handleTouchStart = (event: TouchEvent) => {
-      if (
-        event.touches.length !== 1 || allowNativeScroll(event.touches[0].target)
-      ) {
-        touchStartedWithinScrollableRef.current = true;
-        resetTouchTracking();
-        return;
-      }
-
-      touchStartedWithinScrollableRef.current = false;
-      touchStartYRef.current = event.touches[0].clientY;
-      touchStartXRef.current = event.touches[0].clientX;
-      touchIsVerticalRef.current = null;
-    };
-
-    const handleTouchMove = (event: TouchEvent) => {
-      if (touchStartYRef.current === null || event.touches.length !== 1) {
-        return;
-      }
-
-      if (touchStartedWithinScrollableRef.current) {
-        return;
-      }
-
-      // Block touch scrolling while animating - ensures only 1 section per gesture
+      // While animating, always block native keyboard scroll to avoid
+      // drifting between sections during smooth snap transitions.
       if (isAnimatingRef.current) {
         event.preventDefault();
-        resetTouchTracking();
         return;
       }
 
-      const currentTouch = event.touches[0];
-      const deltaY = currentTouch.clientY - touchStartYRef.current;
-      const deltaX = currentTouch.clientX -
-        (touchStartXRef.current ?? currentTouch.clientX);
-
-      if (touchIsVerticalRef.current === null) {
-        const totalDelta = Math.hypot(deltaX, deltaY);
-        if (totalDelta < 6) {
+      if (isDownKey) {
+        if (canScrollWithinSection(1)) {
+          return; // Allow native keyboard scroll within tall section
+        }
+        event.preventDefault();
+        scrollToSection(1);
+      } else if (isUpKey) {
+        if (canScrollWithinSection(-1)) {
           return;
         }
-        touchIsVerticalRef.current = Math.abs(deltaY) >= Math.abs(deltaX);
+        event.preventDefault();
+        scrollToSection(-1);
       }
-
-      if (!touchIsVerticalRef.current) {
-        return;
-      }
-
-      if (Math.abs(deltaY) < TOUCH_THRESHOLD_PX) {
-        return;
-      }
-
-      const direction = deltaY > 0 ? -1 : 1;
-      if (allowNativeScroll(currentTouch.target, direction)) {
-        return;
-      }
-
-      event.preventDefault();
-
-      scrollToSection(direction);
-
-      resetTouchTracking();
-    };
-
-    const handleTouchEnd = () => {
-      touchStartedWithinScrollableRef.current = false;
-      resetTouchTracking();
-    };
-
-    const handleTouchCancel = () => {
-      touchStartedWithinScrollableRef.current = false;
-      resetTouchTracking();
     };
 
     const handleScroll = throttle(() => {
@@ -794,23 +792,14 @@ export default function Home() {
 
     window.addEventListener("wheel", handleWheel, { passive: false });
     window.addEventListener("keydown", handleKeyDown);
-    window.addEventListener("touchstart", handleTouchStart, { passive: false });
-    window.addEventListener("touchmove", handleTouchMove, { passive: false });
-    window.addEventListener("touchend", handleTouchEnd);
-    window.addEventListener("touchcancel", handleTouchCancel);
     window.addEventListener("scroll", handleScroll, { passive: true });
     window.addEventListener("resize", handleResize);
 
     return () => {
       window.removeEventListener("wheel", handleWheel);
       window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("touchstart", handleTouchStart);
-      window.removeEventListener("touchmove", handleTouchMove);
-      window.removeEventListener("touchend", handleTouchEnd);
-      window.removeEventListener("touchcancel", handleTouchCancel);
       window.removeEventListener("scroll", handleScroll);
       window.removeEventListener("resize", handleResize);
-      resetTouchTracking();
 
       if (unlockTimeoutRef.current) {
         clearTimeout(unlockTimeoutRef.current);
