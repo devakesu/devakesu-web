@@ -8,8 +8,8 @@ html {
   text-rendering: optimizeLegibility;
 }
 
-/* Desktop-only scroll behavior — avoids killing iOS momentum / rubber-band scrolling */
-@media (pointer: fine) {
+/* Desktop-only scroll behavior — avoids killing iOS momentum / rubber-band scrolling on touch/hybrid devices */
+@media (pointer: fine) and (not (any-pointer: coarse)) {
   html {
     scroll-behavior: smooth;
     /* Improve mouse wheel scrolling smoothness */
