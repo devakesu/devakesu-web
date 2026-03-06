@@ -651,13 +651,21 @@ export default function Home() {
       }, SCROLL_LOCK_DURATION);
     };
 
-    const rootLineHeight = Number.parseFloat(
-      window.getComputedStyle(document.documentElement).lineHeight,
-    );
-    const cachedLineHeight = Number.isFinite(rootLineHeight) && rootLineHeight > 0
-      ? rootLineHeight
-      : 16;
+    const rootComputedStyle = window.getComputedStyle(document.documentElement);
+    const rawLineHeight = rootComputedStyle.lineHeight;
 
+    let cachedLineHeight: number;
+    const parsedLineHeight = Number.parseFloat(rawLineHeight);
+
+    if (Number.isFinite(parsedLineHeight) && parsedLineHeight > 0) {
+      cachedLineHeight = parsedLineHeight;
+    } else {
+      const fontSize = Number.parseFloat(rootComputedStyle.fontSize);
+      const derivedFromFontSize = Number.isFinite(fontSize) && fontSize > 0
+        ? fontSize * 1.2
+        : 16;
+      cachedLineHeight = derivedFromFontSize;
+    }
     const getNormalizedWheelDeltaY = (event: WheelEvent): number => {
       // Firefox on Linux often reports wheel deltas in lines/pages instead of
       // pixels. Normalize to px so threshold checks stay consistent.
