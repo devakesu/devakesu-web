@@ -2,7 +2,7 @@
 
 **Where code meets conscience.** A brutalist × cyberpunk portfolio built with Next.js 16.
 
-[![Version](https://img.shields.io/badge/version-1.1.3-cyan?logo=github)](package.json)
+[![Version](https://img.shields.io/badge/version-1.1.4-cyan?logo=github)](package.json)
 [![Security: SLSA Level 3](https://img.shields.io/badge/SLSA-Level%203-brightgreen)](https://github.com/devakesu/devakesu-web/attestations)
 [![Security Scan: Trivy](https://img.shields.io/badge/Security-Trivy%20Scanned-blue)](.github/workflows/deploy.yml)
 [![Attestations](https://img.shields.io/badge/Attestations-Enabled-success)](https://github.com/devakesu/devakesu-web/attestations)
@@ -414,4 +414,4 @@ _Love is the only way to rescue humanity from all evils._
 ---
 
 **Last Updated**: March 02, 2026  
-**Version**: 1.1.3
+**Version**: 1.1.4

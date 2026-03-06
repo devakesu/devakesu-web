@@ -28,6 +28,7 @@ import {
 import { FaXTwitter } from "react-icons/fa6";
 
 const SCROLL_LOCK_DURATION = 800;
+const WHEEL_SNAP_THRESHOLD_PX = 50;
 
 // Throttle utility for performance optimization
 const throttle = <T extends (...args: unknown[]) => void>(
@@ -650,7 +651,41 @@ export default function Home() {
       }, SCROLL_LOCK_DURATION);
     };
 
+    const rootComputedStyle = window.getComputedStyle(document.documentElement);
+    const rawLineHeight = rootComputedStyle.lineHeight;
+
+    const parsedLineHeight = Number.parseFloat(rawLineHeight);
+    const cachedLineHeight: number = (() => {
+      if (Number.isFinite(parsedLineHeight) && parsedLineHeight > 0) {
+        return parsedLineHeight;
+      }
+      const fontSize = Number.parseFloat(rootComputedStyle.fontSize);
+      const derivedFromFontSize = Number.isFinite(fontSize) && fontSize > 0
+        ? fontSize * 1.2
+        : 16;
+      return derivedFromFontSize;
+    })();
+    const getNormalizedWheelDeltaY = (event: WheelEvent): number => {
+      // Firefox on Linux often reports wheel deltas in lines/pages instead of
+      // pixels. Normalize to px so threshold checks stay consistent.
+      if (event.deltaMode === WheelEvent.DOM_DELTA_LINE) {
+        return event.deltaY * cachedLineHeight;
+      }
+
+      if (event.deltaMode === WheelEvent.DOM_DELTA_PAGE) {
+        return event.deltaY * window.innerHeight;
+      }
+
+      return event.deltaY;
+    };
+
     const handleWheel = (event: WheelEvent) => {
+      const normalizedDeltaY = getNormalizedWheelDeltaY(event);
+
+      if (normalizedDeltaY === 0) {
+        return;
+      }
+
       // Setup scrolling ends detector to reset inertia blocking
       if (scrollEndTimeoutRef.current) {
         clearTimeout(scrollEndTimeoutRef.current);
@@ -666,12 +701,12 @@ export default function Home() {
       // but only if it's not a modifying shortcut or inside a scrollable div
       if (
         event.ctrlKey ||
-        allowNativeScroll(event.target, event.deltaY > 0 ? 1 : -1)
+        allowNativeScroll(event.target, normalizedDeltaY > 0 ? 1 : -1)
       ) {
         return;
       }
 
-      const direction = event.deltaY > 0 ? 1 : -1;
+      const direction = normalizedDeltaY > 0 ? 1 : -1;
 
       // Allow free native scrolling within sections taller than the viewport
       if (canScrollWithinSection(direction)) {
@@ -705,7 +740,7 @@ export default function Home() {
 
       // Trackpads fire hundreds of tiny wheel events. We use an accumulator
       // to ensure a deliberate swipe happens, ignoring delicate resting finger movements
-      wheelAccumulatorRef.current += event.deltaY;
+      wheelAccumulatorRef.current += normalizedDeltaY;
 
       if (wheelLockTimeoutRef.current) {
         clearTimeout(wheelLockTimeoutRef.current);
@@ -717,7 +752,7 @@ export default function Home() {
       }, 50);
 
       // Require a larger accumulation for trackpads to trigger the next section
-      if (Math.abs(wheelAccumulatorRef.current) < 50) {
+      if (Math.abs(wheelAccumulatorRef.current) < WHEEL_SNAP_THRESHOLD_PX) {
         return;
       }
 
