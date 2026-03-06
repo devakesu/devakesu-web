@@ -654,18 +654,17 @@ export default function Home() {
     const rootComputedStyle = window.getComputedStyle(document.documentElement);
     const rawLineHeight = rootComputedStyle.lineHeight;
 
-    let cachedLineHeight: number;
     const parsedLineHeight = Number.parseFloat(rawLineHeight);
-
-    if (Number.isFinite(parsedLineHeight) && parsedLineHeight > 0) {
-      cachedLineHeight = parsedLineHeight;
-    } else {
+    const cachedLineHeight: number = (() => {
+      if (Number.isFinite(parsedLineHeight) && parsedLineHeight > 0) {
+        return parsedLineHeight;
+      }
       const fontSize = Number.parseFloat(rootComputedStyle.fontSize);
       const derivedFromFontSize = Number.isFinite(fontSize) && fontSize > 0
         ? fontSize * 1.2
         : 16;
-      cachedLineHeight = derivedFromFontSize;
-    }
+      return derivedFromFontSize;
+    })();
     const getNormalizedWheelDeltaY = (event: WheelEvent): number => {
       // Firefox on Linux often reports wheel deltas in lines/pages instead of
       // pixels. Normalize to px so threshold checks stay consistent.
