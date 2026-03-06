@@ -651,17 +651,18 @@ export default function Home() {
       }, SCROLL_LOCK_DURATION);
     };
 
+    const rootLineHeight = Number.parseFloat(
+      window.getComputedStyle(document.documentElement).lineHeight,
+    );
+    const cachedLineHeight = Number.isFinite(rootLineHeight) && rootLineHeight > 0
+      ? rootLineHeight
+      : 16;
+
     const getNormalizedWheelDeltaY = (event: WheelEvent): number => {
       // Firefox on Linux often reports wheel deltas in lines/pages instead of
       // pixels. Normalize to px so threshold checks stay consistent.
       if (event.deltaMode === WheelEvent.DOM_DELTA_LINE) {
-        const rootLineHeight = Number.parseFloat(
-          window.getComputedStyle(document.documentElement).lineHeight,
-        );
-        const lineHeight = Number.isFinite(rootLineHeight) && rootLineHeight > 0
-          ? rootLineHeight
-          : 16;
-        return event.deltaY * lineHeight;
+        return event.deltaY * cachedLineHeight;
       }
 
       if (event.deltaMode === WheelEvent.DOM_DELTA_PAGE) {
