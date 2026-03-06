@@ -48,9 +48,14 @@
     );
 
     // Skip scroll pulse effect on touch devices (causes jank during mobile scroll)
-    const isTouchDevice =
+    const hasAnyCoarsePointer =
       typeof window.matchMedia === 'function' &&
-      window.matchMedia('(pointer: coarse)').matches;
+      window.matchMedia('(any-pointer: coarse)').matches;
+    const hasTouchPoints =
+      typeof navigator !== 'undefined' &&
+      typeof navigator.maxTouchPoints === 'number' &&
+      navigator.maxTouchPoints > 0;
+    const isTouchDevice = hasAnyCoarsePointer || hasTouchPoints;
 
     // Scroll velocity → pulse strength (throttled with rAF)
     if (!isTouchDevice) {
