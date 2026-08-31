@@ -29,7 +29,7 @@ const nextConfig = {
       {
         key: 'Permissions-Policy',
         value:
-          'camera=(), microphone=(), geolocation=(), interest-cohort=(), browsing-topics=(), attribution-reporting=(), run-ad-auction=(), join-ad-interest-group=(), shared-storage=()',
+          'camera=(), microphone=(), geolocation=(), usb=(), payment=(), sync-xhr=(), interest-cohort=(), browsing-topics=(), attribution-reporting=(), run-ad-auction=(), join-ad-interest-group=(), shared-storage=()',
       },
       // CSP headers are configured outside of this Next.js headers() configuration (e.g., via middleware/proxy) to support nonces
     ];

@@ -24,7 +24,7 @@ updates:
           - 'version-update:semver-major'
           - 'version-update:semver-minor'
           - 'version-update:semver-patch'
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 0
 
   # GitHub Actions version updates
   - package-ecosystem: 'github-actions'
@@ -37,4 +37,12 @@ updates:
         update-types:
           - 'minor'
           - 'patch'
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 0
+
+  # Docker base image updates
+  - package-ecosystem: 'docker'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+    open-pull-requests-limit: 0

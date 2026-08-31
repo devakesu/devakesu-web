@@ -3,6 +3,7 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { IconType } from 'react-icons';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useAnalytics } from '@/components/Analytics';
 import {
   FaAtom,
@@ -1895,9 +1896,9 @@ export default function Home() {
           <p className="mt-8 mb-12 sm:mb-2 text-xs text-neutral-500">
             © {new Date().getFullYear()} Devanarayanan. All rights reserved.
             <br />
-            <a href="/legal" className="text-cyan-400 hover:underline">
+            <Link href="/legal" className="text-cyan-400 hover:underline">
               Legal & Privacy
-            </a>
+            </Link>
           </p>
         </div>
       </footer>
