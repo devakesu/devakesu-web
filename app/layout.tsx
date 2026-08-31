@@ -125,13 +125,13 @@ export const metadata = {
     'recycling',
     'inclusivity',
   ],
-  authors: [{ name: "Devanarayanan (Kesu)", url: "https://devakesu.com" }],
-  creator: "Devanarayanan",
-  publisher: "Devanarayanan",
-  referrer: "origin-when-cross-origin",
+  authors: [{ name: 'Devanarayanan (Kesu)', url: 'https://devakesu.com' }],
+  creator: 'Devanarayanan',
+  publisher: 'Devanarayanan',
+  referrer: 'origin-when-cross-origin',
 
   alternates: {
-    canonical: "https://devakesu.com",
+    canonical: 'https://devakesu.com',
   },
 
   // Robots & Indexing
@@ -162,21 +162,20 @@ export const metadata = {
         url: '/profile.jpg',
         width: 1200,
         height: 630,
-        alt: "devakesu - Portfolio",
-        type: "image/jpeg",
+        alt: 'devakesu - Portfolio',
+        type: 'image/jpeg',
       },
     ],
   },
 
   // Twitter Card
   twitter: {
-    card: "summary_large_image",
-    title: "devakesu - Devanarayanan",
-    description:
-      "Where code meets conscience. Disciplined chaos meets brutalist design.",
-    creator: "@devakesu",
-    site: "@devakesu",
-    images: [{ url: "/profile.jpg", alt: "devakesu - Devanarayanan portfolio" }],
+    card: 'summary_large_image',
+    title: 'devakesu - Devanarayanan',
+    description: 'Where code meets conscience. Disciplined chaos meets brutalist design.',
+    creator: '@devakesu',
+    site: '@devakesu',
+    images: [{ url: '/profile.jpg', alt: 'devakesu - Devanarayanan portfolio' }],
   },
 
   // Additional Meta
@@ -187,9 +186,9 @@ export const metadata = {
 
   // Icons & Manifest
   icons: {
-    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+    icon: [{ url: '/favicon.svg', type: 'image/svg+xml' }],
     shortcut: [{ url: '/favicon.svg', type: 'image/svg+xml' }],
-    apple: [{ url: '/apple-touch-icon.png', type: 'image/png', sizes: '180x180' }],
+    apple: [{ url: '/favicon.svg', type: 'image/svg+xml' }],
   },
 
   // Other

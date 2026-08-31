@@ -20,15 +20,13 @@ export const metadata: Metadata = {
     type: 'website',
     url: 'https://devakesu.com/legal',
     title: 'Privacy & Legal | @devakesu',
-    description:
-      'Privacy Policy, Terms of Use, and Cookie Notice for devakesu.com.',
+    description: 'Privacy Policy, Terms of Use, and Cookie Notice for devakesu.com.',
     siteName: 'devakesu',
   },
   twitter: {
     card: 'summary',
     title: 'Privacy & Legal | @devakesu',
-    description:
-      'Privacy Policy, Terms of Use, and Cookie Notice for devakesu.com.',
+    description: 'Privacy Policy, Terms of Use, and Cookie Notice for devakesu.com.',
     creator: '@devakesu',
     site: '@devakesu',
   },
