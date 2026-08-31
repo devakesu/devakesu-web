@@ -56,7 +56,10 @@ function MarkdownContent({ content }: { content: string }) {
     };
   };
 
-  const processed = content.split('\n').map(processLine).filter((item): item is ProcessedLine => item !== null);
+  const processed = content
+    .split('\n')
+    .map(processLine)
+    .filter((item): item is ProcessedLine => item !== null);
 
   // Group consecutive list items into <ul> blocks
   const elements: ReactNode[] = [];

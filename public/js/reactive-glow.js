@@ -49,8 +49,7 @@
 
     // Skip scroll pulse effect on touch devices (causes jank during mobile scroll)
     const hasAnyCoarsePointer =
-      typeof window.matchMedia === 'function' &&
-      window.matchMedia('(any-pointer: coarse)').matches;
+      typeof window.matchMedia === 'function' && window.matchMedia('(any-pointer: coarse)').matches;
     const hasTouchPoints =
       typeof navigator !== 'undefined' &&
       typeof navigator.maxTouchPoints === 'number' &&

@@ -13,9 +13,7 @@
   "[css]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "tailwindCSS.experimental.classRegex": [
-    ["className=\"([^\"]*)\"", "([\\w-]+)"]
-  ],
+  "tailwindCSS.experimental.classRegex": [["className=\"([^\"]*)\"", "([\\w-]+)"]],
   "files.associations": {
     "*.css": "tailwindcss"
   }

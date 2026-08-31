@@ -97,33 +97,41 @@ export default function Analytics(): null {
  * Returns a stable trackEvent function reference via useCallback
  * When NEXT_PUBLIC_ANALYTICS_ENABLED is not truthy, returns a no-op function to avoid unnecessary API requests
  */
-export function useAnalytics(): { trackEvent: (eventName: string, customParams?: Record<string, string | number | boolean>) => Promise<void> } {
-  const trackEvent = useCallback(async (eventName: string, customParams: Record<string, string | number | boolean> = {}) => {
-    // Short-circuit if analytics is disabled to avoid unnecessary API requests
-    // Note: NEXT_PUBLIC_* env vars are replaced at build time, so this check is constant
-    if (!isAnalyticsEnabled()) {
-      return;
-    }
+export function useAnalytics(): {
+  trackEvent: (
+    eventName: string,
+    customParams?: Record<string, string | number | boolean>
+  ) => Promise<void>;
+} {
+  const trackEvent = useCallback(
+    async (eventName: string, customParams: Record<string, string | number | boolean> = {}) => {
+      // Short-circuit if analytics is disabled to avoid unnecessary API requests
+      // Note: NEXT_PUBLIC_* env vars are replaced at build time, so this check is constant
+      if (!isAnalyticsEnabled()) {
+        return;
+      }
 
-    try {
-      await fetch('/api/analytics', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          eventName,
-          pageLocation: window.location.href,
-          pageTitle: document.title,
-          customParams,
-        }),
-        // Keep request alive even if page navigates away (e.g., opening links in new tabs)
-        keepalive: true,
-      });
-    } catch (error) {
-      console.error('Failed to track event:', error);
-    }
-  }, []);
+      try {
+        await fetch('/api/analytics', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            eventName,
+            pageLocation: window.location.href,
+            pageTitle: document.title,
+            customParams,
+          }),
+          // Keep request alive even if page navigates away (e.g., opening links in new tabs)
+          keepalive: true,
+        });
+      } catch (error) {
+        console.error('Failed to track event:', error);
+      }
+    },
+    []
+  );
 
   return { trackEvent };
 }
