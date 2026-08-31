@@ -8,12 +8,12 @@
 [![Attestations](https://img.shields.io/badge/Attestations-Enabled-success)](https://github.com/devakesu/devakesu-web/attestations)
 [![Build Status](https://img.shields.io/badge/Build-Passing-success)](.github/workflows/deploy.yml)
 
-[![Next.js](https://img.shields.io/badge/Next.js-16.1.6-black?logo=next.js)](https://nextjs.org)
+[![Next.js](https://img.shields.io/badge/Next.js-16.3.3-black?logo=next.js)](https://nextjs.org)
 [![React](https://img.shields.io/badge/React-19.2-61DAFB?logo=react&logoColor=white)](https://react.dev)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.1.18-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.3.3-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
 [![Node.js](https://img.shields.io/badge/Node.js-20.x-339933?logo=node.js&logoColor=white)](https://nodejs.org)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
-[![React Icons](https://img.shields.io/badge/React%20Icons-5.5-e91e63?logo=react&logoColor=white)](https://react-icons.github.io/react-icons/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-6.0-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![React Icons](https://img.shields.io/badge/React%20Icons-5.7-e91e63?logo=react&logoColor=white)](https://react-icons.github.io/react-icons/)
 
 ## ✨ Features
 
@@ -70,11 +70,11 @@
 
 ## 🛠️ Tech Stack
 
-- **Framework**: Next.js 16.1.6 (App Router)
-- **Language**: TypeScript 5.9 (strict mode, full coverage)
-- **Styling**: Tailwind CSS 4.1.18 (CSS-based configuration)
+- **Framework**: Next.js 16.3.3 (App Router)
+- **Language**: TypeScript 6.0.3 (strict mode, full coverage)
+- **Styling**: Tailwind CSS 4.3.3 (CSS-based configuration)
 - **Fonts**: Space Grotesk, JetBrains Mono
-- **Icons**: React Icons 5.5.0 (hardware, trading, physics, social)
+- **Icons**: React Icons 5.7.0 (hardware, trading, physics, social)
 - **Analytics**: Server-side Google Analytics (optional)
 - **Deployment**: Coolify (Self-hosted)
 - **CI/CD**: GitHub Actions with SLSA provenance & Lighthouse CI
@@ -180,7 +180,7 @@ devakesu-web/
   - `Referrer-Policy: strict-origin-when-cross-origin` - Enhanced privacy
   - `Strict-Transport-Security` - HSTS with preload (production only)
   - `Permissions-Policy` - Feature restrictions
-  - Content Security Policy with nonces (via middleware.js)
+  - Content Security Policy with nonces (via proxy.ts)
 - **React Strict Mode** - Development safety checks
 - **No Powered-By Header** - Reduced information disclosure
 
@@ -225,14 +225,14 @@ The cyan accent color is defined in `app/globals.css`:
 
 ### Fonts
 
-Fonts are loaded in `app/layout.js`:
+Fonts are loaded in `app/layout.tsx`:
 
 - **Space Grotesk** - Body text
 - **JetBrains Mono** - Terminal/code elements
 
 ### Content
 
-Edit `app/page.js` to update:
+Edit `app/page.tsx` to update:
 
 - Personal information
 - Projects showcase

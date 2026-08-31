@@ -304,8 +304,17 @@ export async function POST(request: NextRequest) {
           url.port === '80' ||
           url.port === '443');
 
-      // Compare full origin (protocol + host) to prevent http/https scheme mismatches
-      const isAllowed = (allowedUrl && url.origin === allowedUrl.origin) || isDevelopmentLocal;
+      // Compare protocol, port, and hostname (allowing www and apex domain variants)
+      const isAllowedOrigin =
+        allowedUrl &&
+        url.protocol === allowedUrl.protocol &&
+        url.port === allowedUrl.port &&
+        (url.hostname === allowedUrl.hostname ||
+          url.hostname === `www.${allowedUrl.hostname}` ||
+          (allowedUrl.hostname.startsWith('www.') &&
+            url.hostname === allowedUrl.hostname.replace(/^www\./, '')));
+
+      const isAllowed = isAllowedOrigin || isDevelopmentLocal;
 
       if (!isAllowed) {
         console.warn(
